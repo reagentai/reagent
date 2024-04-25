@@ -3,26 +3,31 @@ import cleanSet from "clean-set";
 import delve from "dlv";
 import { AbstractExecutor, ResolveOptions } from "./executor";
 import { FunctionRunnable, Runnable } from "./runable";
+import { dset } from "dset";
 
 export class Runtime {
   state: any;
+  subscribers: Record<string, StateChangeSubscriber<unknown>>;
   constructor(options: { state: any }) {
     this.state = options.state;
+    this.subscribers = {};
   }
 }
 
+export type StateChangeSubscriber<S> = (state: S, prev: any) => void;
+
 export class Context {
-  executor: AbstractExecutor | null;
-  runtime: Runtime;
-  namespace: string | undefined;
+  #executor: AbstractExecutor | null;
+  #runtime: Runtime;
+  #namespace: string | undefined;
   private constructor(options: {
     executor: AbstractExecutor | null;
     runtime: Runtime;
     namespace?: string;
   }) {
-    this.executor = options.executor;
-    this.runtime = options.runtime;
-    this.namespace = options.namespace;
+    this.#executor = options.executor;
+    this.#runtime = options.runtime;
+    this.#namespace = options.namespace;
   }
 
   static fromExecutor(executor: AbstractExecutor | null) {
@@ -38,39 +43,89 @@ export class Context {
     namespace: string,
     options: ResolveOptions = {}
   ): Promise<Output> {
-    const state = delve(this.runtime.state, namespace);
+    const state = delve(this.#runtime.state, namespace);
     if (state) {
       return state;
     }
 
-    if (!this.executor) {
+    if (!this.#executor) {
       throw new Error("Unexpected error: executor isn't set for this context");
     }
-    const resolved = await this.executor.run(namespace, this, options);
-    if (resolved != undefined) {
-      this.setState(namespace, resolved);
+    const value = await this.#executor.run(namespace, this, options);
+    if (value != undefined) {
+      this.setGlobalState(namespace, value);
     }
-    return resolved;
+    return value;
+  }
+
+  /**
+   * Explicity run the runnable corresponding to the runnable
+   */
+  async run<Output>(namespace: string, argument?: any): Promise<Output> {
+    if (!this.#executor) {
+      throw new Error("Unexpected error: executor isn't set for this context");
+    }
+    return await this.#executor.run(namespace, this, {
+      argument,
+    });
   }
 
   get state() {
-    return this.runtime.state;
+    return this.#runtime.state;
+  }
+
+  get namespace() {
+    return this.#namespace;
   }
 
   setState<T>(namespace: string, value: T) {
-    const finalNamespace = this.namespace
-      ? `${this.namespace}.${namespace}`
+    const finalNamespace = this.#namespace
+      ? `${this.#namespace}.${namespace}`
       : namespace;
-    const newState = cleanSet(this.runtime.state, finalNamespace, value);
-    this.runtime.state = newState;
+    this.setGlobalState(finalNamespace, value);
+  }
+
+  setGlobalState<T>(namespace: string, value: T) {
+    const prevState = this.#runtime.state;
+    const ns = namespace.split(".");
+    const newState = cleanSet(this.#runtime.state, ns, (prev) => {
+      return value;
+    });
+    this.#runtime.state = newState;
+
+    // notify subscribers
+    const len = ns.length;
+    const stack = [...ns];
+    for (let i = 0; i < len; i++) {
+      const subscribers = delve(this.#runtime.subscribers, stack);
+      const callbacks = subscribers?._cbs;
+      if (callbacks) {
+        callbacks.forEach((callback: any) => {
+          callback(delve(newState, stack), delve(prevState, stack));
+        });
+      }
+      stack.pop();
+    }
   }
 
   bindNamespace(namespace: string) {
     return new Context({
-      executor: this.executor,
-      runtime: this.runtime,
+      executor: this.#executor,
+      runtime: this.#runtime,
       namespace,
     });
+  }
+
+  // subscribe to state change
+  subscribe<S>(namespace: string, callback: StateChangeSubscriber<S>) {
+    const subscribers = delve(this.#runtime.subscribers, namespace);
+    if (subscribers) {
+      subscribers["_cbs"].push(callback);
+    } else {
+      dset(this.#runtime.subscribers, namespace, {
+        _cbs: [callback],
+      });
+    }
   }
 }
 

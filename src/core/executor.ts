@@ -19,6 +19,10 @@ export type ResolveOptions = {
   argument?: any;
 };
 
+export type InvokeOptions = {
+  hook?: <S>(context: Context) => void;
+};
+
 export abstract class AbstractExecutor {
   #runnables: Record<string, Runnable | FunctionRunnable<unknown>>;
   #context: Context;
@@ -64,7 +68,7 @@ export abstract class AbstractExecutor {
   }
 
   get initState() {
-    return klona(this.#context.runtime.state);
+    return klona(this.#context.state);
   }
 
   async run(namespace: string, ctxt: Context, options: ResolveOptions) {
@@ -77,6 +81,7 @@ export abstract class AbstractExecutor {
         `No resolved found for "${namespace}". Required by [namespace = "${ctxt.namespace}"]`
       );
     }
+
     if (runnable instanceof Runnable) {
       const res = await runnable.run(
         ctxt.bindNamespace(namespace),
@@ -86,7 +91,9 @@ export abstract class AbstractExecutor {
     } else if (typeof runnable == "function") {
       return runnable(ctxt.bindNamespace(namespace));
     } else {
-      throw new Error("runnable must be a function or Runnable class");
+      throw new Error(`Invalid runnable [namespace = ${namespace}]`);
     }
   }
+
+  abstract invoke(input: string, options: InvokeOptions): Promise<void>;
 }
