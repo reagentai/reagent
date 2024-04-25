@@ -75,8 +75,13 @@ export class Context {
 }
 
 export type InitContext = Pick<Context, "setState"> & {
-  addRunnable(
+  // adds the runnable to the context in the namespace of the runnable
+  addRunnable(runnable: Runnable): void;
+
+  // adds the function runnable to the context in the given namespace
+  // prefixed by the namespace of the runnable adding the new runnnable
+  addFunctionRunnable(
     namespace: string,
-    runnable: Runnable | FunctionRunnable<unknown>
+    runnable: FunctionRunnable<unknown>
   ): void;
 };

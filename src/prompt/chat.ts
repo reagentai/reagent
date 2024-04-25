@@ -1,21 +1,24 @@
 import { Context, InitContext, Runnable } from "../core";
 
-type ChatMessage = [
-  "system" | "user" | "ai",
-  (
-    | string
-    | [
-        {
-          type: "text";
-          text: string;
-        },
-        {
-          type: "image_url";
-          image_url: string;
-        }
-      ]
-  )
-];
+type ChatMessage =
+  | [
+      "system" | "user" | "ai",
+      (
+        | string
+        | [
+            {
+              type: "text";
+              text: string;
+            },
+            {
+              type: "image_url";
+              image_url: string;
+            }
+          ]
+      )
+    ];
+
+type MessageProvider = ChatMessage | Runnable;
 
 class ChatPromptTemplate extends Runnable {
   #messages: any[];
@@ -26,7 +29,7 @@ class ChatPromptTemplate extends Runnable {
     this.#variables = [];
   }
 
-  static fromMessages(messages: ChatMessage[]) {
+  static fromMessages(messages: MessageProvider[]) {
     return new ChatPromptTemplate(messages);
   }
 
@@ -36,6 +39,10 @@ class ChatPromptTemplate extends Runnable {
 
   init(ctxt: InitContext) {
     for (const message of this.#messages) {
+      if (message instanceof Runnable) {
+        ctxt.addRunnable(message);
+        continue;
+      }
       const vars = parseTemplateVariables(message[1]);
       vars.forEach((variable) => {
         this.#variables.push(variable);
@@ -52,12 +59,20 @@ class ChatPromptTemplate extends Runnable {
       )
     );
 
-    return this.#messages.map((message) => {
-      return {
-        role: message[0],
-        content: this.formatMessageContent(message[1], { variables }),
-      };
-    });
+    const messages = await Promise.all(
+      this.#messages.map(async (message) => {
+        if (message instanceof Runnable) {
+          return await ctxt.resolve(message.namespace);
+        }
+        return [
+          {
+            role: message[0],
+            content: this.formatMessageContent(message[1], { variables }),
+          },
+        ];
+      })
+    );
+    return messages.flat();
   }
 
   private formatMessageContent(
@@ -102,4 +117,5 @@ const parseTemplateVariables = (template: string) => {
   return regex.map((match) => match[1]);
 };
 
-export { ChatPromptTemplate, ChatMessage };
+export { ChatPromptTemplate };
+export type { ChatMessage };

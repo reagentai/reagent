@@ -1,1 +1,2 @@
-export { ChatMessage, ChatPromptTemplate } from "./chat";
+export { ChatPromptTemplate } from "./chat";
+export type { ChatMessage } from "./chat";

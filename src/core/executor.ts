@@ -30,11 +30,29 @@ export abstract class AbstractExecutor {
       dset(this.#runnables, runnable.namespace, runnable);
       const baseContext = this.#context.bindNamespace(runnable.namespace);
       const context = Object.assign(baseContext, {
-        addRunnable(namespace: string, runnable: any) {
+        addRunnable(runnable: Runnable) {
+          if (delve(self.#runnables, runnable.namespace)) {
+            throw new Error(
+              `Runnable already set for namespace: ${runnable.namespace}`
+            );
+          }
+
+          dset(self.#runnables, runnable.namespace, runnable);
+        },
+        addFunctionRunnable(
+          namespace: string,
+          runnable: FunctionRunnable<unknown>
+        ) {
           const finalNamespace = baseContext.namespace
             ? `${baseContext.namespace}.${namespace}`
             : namespace;
-          self.#runnables[finalNamespace] = runnable;
+          if (delve(self.#runnables, finalNamespace)) {
+            throw new Error(
+              `Runnable already set for namespace: ${finalNamespace}`
+            );
+          }
+
+          dset(self.#runnables, finalNamespace, runnable);
         },
       });
       runnable.init(context);
