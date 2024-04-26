@@ -28,10 +28,6 @@ export class DummyModel extends BaseModelProvider {
     await new Promise((resolve) => {
       let count = 0;
       const interval = setInterval(() => {
-        if (count > this.#response.length) {
-          clearInterval(interval);
-          resolve(null);
-        }
         ctxt.setGlobalState("core.llm.response.messages", [
           {
             message: {
@@ -40,17 +36,12 @@ export class DummyModel extends BaseModelProvider {
             },
           },
         ]);
+        if (count > this.#response.length) {
+          clearInterval(interval);
+          resolve(null);
+        }
         count += 2;
-      }, 1000);
+      }, 100);
     });
-
-    ctxt.setGlobalState("core.llm.response.messages", [
-      {
-        message: {
-          user: "assistant",
-          content: "hello there!",
-        },
-      },
-    ]);
   }
 }
