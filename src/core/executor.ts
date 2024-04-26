@@ -21,7 +21,13 @@ export type ResolveOptions = {
 
 export type Plugin = (context: Context) => void;
 
+export type InvokeConfig = Partial<{
+  stream: boolean;
+  temperature: number;
+}>;
+
 export type InvokeOptions = {
+  config?: InvokeConfig;
   plugins?: Plugin[];
 };
 
