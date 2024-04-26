@@ -120,7 +120,12 @@ export class Context {
   subscribe<S>(namespace: string, callback: StateChangeSubscriber<S>) {
     const subscribers = delve(this.#runtime.subscribers, namespace);
     if (subscribers) {
-      subscribers["_cbs"].push(callback);
+      console.log("subscribers =", subscribers);
+      if (subscribers._cbs) {
+        subscribers["_cbs"].push(callback);
+      } else {
+        subscribers._cbs = [callback];
+      }
     } else {
       dset(this.#runtime.subscribers, namespace, {
         _cbs: [callback],
