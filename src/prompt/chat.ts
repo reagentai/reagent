@@ -2,7 +2,7 @@ import { Context, InitContext, Runnable } from "../core";
 
 type ChatMessage =
   | [
-      "system" | "user" | "ai",
+      "system" | "user" | "assistant",
       (
         | string
         | [

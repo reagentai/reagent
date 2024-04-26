@@ -19,8 +19,10 @@ export type ResolveOptions = {
   argument?: any;
 };
 
+export type Plugin = (context: Context) => void;
+
 export type InvokeOptions = {
-  hook?: <S>(context: Context) => void;
+  plugins?: Plugin[];
 };
 
 export abstract class AbstractExecutor {
