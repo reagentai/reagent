@@ -1,10 +1,10 @@
 {
-  "name": "agent-sdk",
+  "name": "@portal/cortex",
   "version": "0.1.0",
   "description": "A framework to build AI agents",
   "scripts": {},
   "keywords": [],
-  "license": "Apache-2.0",
+  "license": "MIT",
   "dependencies": {
     "clean-set": "^1.1.2",
     "dedent": "^1.5.1",
