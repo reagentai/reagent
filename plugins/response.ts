@@ -9,15 +9,37 @@ const parseStringResponse = (context: Context) => {
   );
 };
 
-const createStringResponseSubscriber = (
+// Returns the delta string of message stream
+const createStreamDeltaStringSubscriber = (
   callback: (message: string) => void
 ) => {
   return (context: Context) => {
-    context.subscribe("core.llm.response", (state: any, prev) => {
-      const message = state?.data.choices?.[0]?.message?.content;
-      callback(message);
+    context.subscribe("core.llm.response.stream", (stream: any) => {
+      if (stream.length > 0) {
+        const delta = stream[stream.length - 1]?.choices?.[0]?.delta?.content;
+        if (delta != undefined) {
+          callback(delta);
+        }
+      }
     });
   };
 };
 
-export { createStringResponseSubscriber, parseStringResponse };
+const createStringResponseSubscriber = (
+  callback: (message: string) => void
+) => {
+  return (context: Context) => {
+    context.subscribe("core.llm.response.data", (data: any, prev) => {
+      const message = data?.choices?.[0]?.message?.content;
+      if (message) {
+        callback(message);
+      }
+    });
+  };
+};
+
+export {
+  createStreamDeltaStringSubscriber,
+  createStringResponseSubscriber,
+  parseStringResponse,
+};
