@@ -1,11 +1,12 @@
 import { Context, Runnable } from "../core";
+import { ChatCompletionResponse } from "./schema";
 
 export type ModelOptions = {
   apiKey?: string;
   model: string;
 };
 
-export abstract class BaseModelProvider extends Runnable {
+export abstract class BaseModelProvider<I = unknown> extends Runnable<I> {
   get namespace() {
     return "core.llm.model";
   }
@@ -18,7 +19,7 @@ export abstract class BaseModelProvider extends Runnable {
   //    `ctxt.addFunctionRunnable("executor", async (ctxt) => {
   //        this.run(ctxt);
   //     });`
-  run(ctxt: Context): Promise<void> {
+  run(ctxt: Context, argument: I): Promise<ChatCompletionResponse> {
     throw new Error("not supported");
   }
 }

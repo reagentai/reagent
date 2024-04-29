@@ -37,7 +37,7 @@ type GroqModel = {
 };
 
 type Options = Pick<ModelOptions, "apiKey"> & {
-  model: (typeof models)[number]["id"];
+  model: (typeof models)[number]["id"] | string;
 };
 
 export class Groq extends BaseModelProvider {

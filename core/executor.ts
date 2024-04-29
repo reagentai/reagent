@@ -27,14 +27,16 @@ export type InvokeConfig = Partial<{
 }>;
 
 export type InvokeOptions = {
+  variables?: Record<string, any>;
   config?: InvokeConfig;
   plugins?: Plugin[];
 };
 
-export abstract class AbstractExecutor {
+export abstract class AbstractExecutor extends Runnable {
   #runnables: Record<string, Runnable | FunctionRunnable<unknown>>;
   #context: Context;
   constructor(options: AbstractExecutorOptions) {
+    super();
     this.#context = Context.fromExecutor(null);
     this.#runnables = {};
     const self = this;
@@ -51,9 +53,9 @@ export abstract class AbstractExecutor {
 
           dset(self.#runnables, runnable.namespace, runnable);
         },
-        addFunctionRunnable(
+        addFunctionRunnable<I>(
           namespace: string,
-          runnable: FunctionRunnable<unknown>
+          runnable: FunctionRunnable<unknown, I>
         ) {
           const finalNamespace = baseContext.namespace
             ? `${baseContext.namespace}.${namespace}`
@@ -75,11 +77,15 @@ export abstract class AbstractExecutor {
     }
   }
 
+  get namespace() {
+    return "core.executor";
+  }
+
   get initState() {
     return klona(this.#context.state);
   }
 
-  async run(namespace: string, ctxt: Context, options: ResolveOptions) {
+  async resolve(namespace: string, ctxt: Context, options: ResolveOptions) {
     const runnable = delve(this.#runnables, namespace);
     if (!runnable) {
       if (options.optional) {
@@ -97,11 +103,17 @@ export abstract class AbstractExecutor {
       );
       return res;
     } else if (typeof runnable == "function") {
-      return runnable(ctxt.bindNamespace(namespace));
+      const res = runnable(ctxt.bindNamespace(namespace), options.argument);
+      if (res.then) {
+        return await res;
+      }
+      return res;
     } else {
       throw new Error(`Invalid runnable [namespace = ${namespace}]`);
     }
   }
 
-  abstract invoke(input: string, options: InvokeOptions): Promise<void>;
+  async run(ctxt: Context, argument: undefined): Promise<void> {}
+
+  abstract invoke(options: InvokeOptions): Promise<Context>;
 }

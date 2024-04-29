@@ -2,9 +2,8 @@
   "name": "@portal/cortex",
   "version": "0.1.0",
   "description": "A framework to build AI agents",
+  "type": "module",
   "scripts": {},
-  "keywords": [],
-  "license": "MIT",
   "dependencies": {
     "clean-set": "^1.1.2",
     "dedent": "^1.5.1",
@@ -18,5 +17,7 @@
   "devDependencies": {
     "@types/lodash-es": "^4.17.12",
     "@types/node": "^20.12.7"
-  }
+  },
+  "keywords": [],
+  "license": "MIT"
 }

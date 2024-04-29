@@ -51,7 +51,7 @@ export class Context {
     if (!this.#executor) {
       throw new Error("Unexpected error: executor isn't set for this context");
     }
-    const value = await this.#executor.run(namespace, this, options);
+    const value = await this.#executor.resolve(namespace, this, options);
     if (value != undefined) {
       this.setGlobalState(namespace, value);
     }
@@ -65,7 +65,7 @@ export class Context {
     if (!this.#executor) {
       throw new Error("Unexpected error: executor isn't set for this context");
     }
-    return await this.#executor.run(namespace, this, {
+    return await this.#executor.resolve(namespace, this, {
       argument,
     });
   }
@@ -120,7 +120,6 @@ export class Context {
   subscribe<S>(namespace: string, callback: StateChangeSubscriber<S>) {
     const subscribers = delve(this.#runtime.subscribers, namespace);
     if (subscribers) {
-      console.log("subscribers =", subscribers);
       if (subscribers._cbs) {
         subscribers["_cbs"].push(callback);
       } else {
@@ -140,8 +139,8 @@ export type InitContext = Pick<Context, "setState"> & {
 
   // adds the function runnable to the context in the given namespace
   // prefixed by the namespace of the runnable adding the new runnnable
-  addFunctionRunnable(
+  addFunctionRunnable<I = unknown>(
     namespace: string,
-    runnable: FunctionRunnable<unknown>
+    runnable: FunctionRunnable<unknown, I>
   ): void;
 };

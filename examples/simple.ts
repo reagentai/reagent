@@ -1,9 +1,9 @@
 import dedent from "dedent";
-import { SimpleExecutor } from "../src/executors/SingleLLMQuery";
-import { ChatPromptTemplate } from "../src/prompt";
-import { MessagesPlaceholder } from "../src/prompt/history";
-import { DummyModel } from "../src/models/Dummy";
-import { createResponseSubscriber } from "../src/plugins/response";
+import { ChatCompletionExecutor } from "../executors/ChatCompletion";
+import { ChatPromptTemplate } from "../prompt";
+import { MessagesPlaceholder } from "../prompt/history";
+import { DummyModel } from "../models/dummy";
+import { createStringResponseSubscriber } from "../plugins/response";
 
 const promptTemplate = ChatPromptTemplate.fromMessages([
   [
@@ -12,14 +12,14 @@ const promptTemplate = ChatPromptTemplate.fromMessages([
     {systemPrompt}`,
   ],
   new MessagesPlaceholder("chat_history"),
-  ["user", "{input}"],
+  ["human", "{input}"],
 ]);
 
 const model = new DummyModel({
   response: "Hello there, how you doing?",
 });
 
-const executor = new SimpleExecutor({
+const executor = new ChatCompletionExecutor({
   runnables: [promptTemplate, model],
   variables: {
     systemPrompt: async () =>
@@ -30,9 +30,9 @@ const executor = new SimpleExecutor({
   },
 });
 
-executor.invoke("Hello", {
+executor.invoke({
   plugins: [
-    createResponseSubscriber((message) => {
+    createStringResponseSubscriber((message) => {
       console.log("Response =", message);
     }),
   ],

@@ -2,7 +2,7 @@ import { Context, InitContext, Runnable } from "../core";
 
 type ChatMessage =
   | [
-      "system" | "user" | "assistant",
+      "system" | "human" | "assistant",
       (
         | string
         | [
@@ -34,7 +34,7 @@ class ChatPromptTemplate extends Runnable {
   }
 
   get namespace() {
-    return "core.prompt.messages";
+    return "core.prompt.chat.messages";
   }
 
   init(ctxt: InitContext) {
@@ -64,9 +64,20 @@ class ChatPromptTemplate extends Runnable {
         if (message instanceof Runnable) {
           return await ctxt.resolve(message.namespace);
         }
+        const role =
+          message[0] == "assistant"
+            ? "assistant"
+            : message[0] == "system"
+            ? "system"
+            : message[0] == "human"
+            ? "user"
+            : "unknown";
+        if (role == "unknown") {
+          throw new Error("Unsupported role: " + message[0]);
+        }
         return [
           {
-            role: message[0],
+            role,
             content: this.formatMessageContent(message[1], { variables }),
           },
         ];

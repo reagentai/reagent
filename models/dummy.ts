@@ -1,6 +1,6 @@
 import { Context, InitContext } from "../core";
 import { BaseModelProvider } from "./base";
-import { Metadata } from "./schema";
+import { ChatCompletionResponse, Metadata } from "./schema";
 
 export class DummyModel extends BaseModelProvider {
   #response: string;
@@ -19,29 +19,40 @@ export class DummyModel extends BaseModelProvider {
     });
 
     ctxt.addFunctionRunnable("executor", async (ctxt) => {
-      this.run(ctxt);
+      return await this.run(ctxt);
     });
   }
 
   async run(ctxt: Context) {
     let count = 2;
-    await new Promise((resolve) => {
+    return await new Promise<ChatCompletionResponse>((resolve) => {
       let count = 0;
       const interval = setInterval(() => {
-        ctxt.setGlobalState("core.llm.response.messages", [
-          {
-            message: {
-              user: "assistant",
-              content: this.#response.substring(0, count),
-            },
-          },
-        ]);
+        // TODO: set `core.llm.response.messages` if streaming is on
+        // ctxt.setGlobalState("core.llm.response.messages", [
+        //   {
+        // message: {
+        //   role: "assistant",
+        //   content: this.#response.substring(0, count),
+        // },
+        //   },
+        // ]);
         if (count > this.#response.length) {
           clearInterval(interval);
-          resolve(null);
+          resolve({
+            choices: [
+              {
+                message: {
+                  role: "assistant",
+                  content: this.#response.substring(0, count),
+                },
+                finish_reason: "stop",
+              },
+            ],
+          });
         }
         count += 2;
-      }, 100);
+      }, 20);
     });
   }
 }
