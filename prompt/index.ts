@@ -1,3 +1,9 @@
 export { ChatPromptTemplate } from "./chat";
 export { MessagesPlaceholder } from "./history";
-export type { ChatMessage } from "./chat";
+export type {
+  ChatMessageTemplate,
+  HumanMessageTemplate,
+  AssistantMessageTemplate,
+  SystemMesageTemplate,
+  FormattedChatMessage,
+} from "./chat";

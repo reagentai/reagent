@@ -1,29 +1,43 @@
 import { Context, InitContext, Runnable } from "../core";
 
-type ChatMessage =
-  | [
-      "system" | "human" | "assistant",
-      (
-        | string
-        | [
-            {
-              type: "text";
-              text: string;
-            },
-            {
-              type: "image_url";
-              image_url: string;
-            }
-          ]
-      )
-    ];
+export type SystemMesageTemplate = ["system", string];
+export type AssistantMessageTemplate = ["assistant", string];
+export type HumanMessageTemplate = [
+  "human",
+  (
+    | string
+    | [
+        {
+          type: "text";
+          text: string;
+        },
+        {
+          type: "image_url";
+          image_url: string;
+        }
+      ]
+  )
+];
 
-type MessageProvider = ChatMessage | Runnable;
+type ChatMessageTemplate =
+  | SystemMesageTemplate
+  | AssistantMessageTemplate
+  | HumanMessageTemplate;
+type MessageProvider = ChatMessageTemplate | Runnable;
+type FormattedChatMessage = {
+  role: "system" | "assistant" | "user";
+  content:
+    | string
+    | (
+        | { type: "text"; text: string }
+        | { type: "image_url"; image_url: string }
+      )[];
+};
 
 class ChatPromptTemplate extends Runnable {
-  #messages: any[];
+  #messages: MessageProvider[];
   #variables: string[];
-  private constructor(messages: any[]) {
+  private constructor(messages: MessageProvider[]) {
     super();
     this.#messages = messages;
     this.#variables = [];
@@ -42,11 +56,25 @@ class ChatPromptTemplate extends Runnable {
       if (message instanceof Runnable) {
         ctxt.addRunnable(message);
         continue;
+      } else if (Array.isArray(message[1])) {
+        message[1].forEach((message: any) => {
+          const vars = parseTemplateVariables(
+            message.text || message.image_url
+          );
+          vars.forEach((variable) => {
+            this.#variables.push(variable);
+          });
+        });
+      } else if (typeof message[1] == "string") {
+        const vars = parseTemplateVariables(message[1]);
+        vars.forEach((variable) => {
+          this.#variables.push(variable);
+        });
+      } else {
+        throw new Error(
+          "Unsupported message format:" + JSON.stringify(message[1])
+        );
       }
-      const vars = parseTemplateVariables(message[1]);
-      vars.forEach((variable) => {
-        this.#variables.push(variable);
-      });
     }
   }
 
@@ -87,7 +115,7 @@ class ChatPromptTemplate extends Runnable {
   }
 
   private formatMessageContent(
-    content: ChatMessage[1],
+    content: ChatMessageTemplate[1],
     options: { variables: Record<string, any> }
   ): any {
     if (typeof content == "string") {
@@ -129,4 +157,4 @@ const parseTemplateVariables = (template: string) => {
 };
 
 export { ChatPromptTemplate };
-export type { ChatMessage };
+export type { ChatMessageTemplate, FormattedChatMessage };

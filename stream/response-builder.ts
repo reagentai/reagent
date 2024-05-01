@@ -10,7 +10,7 @@ type StreamResponseDelta = {
   tool_calls?: { name: string; arguments: string } | null;
 };
 
-const createStreamDeltaToResponseBuilder = () => {
+const createOpenAIStreamDeltaToResponseBuilder = () => {
   let role: string;
   let streamContent = "";
   let streamToolCalls: any[] = [];
@@ -58,4 +58,4 @@ const createStreamDeltaToResponseBuilder = () => {
   };
 };
 
-export { createStreamDeltaToResponseBuilder };
+export { createOpenAIStreamDeltaToResponseBuilder as createStreamDeltaToResponseBuilder };

@@ -5,6 +5,9 @@ import { Context, InitContext } from "../../core";
 import { BaseModelProvider, ModelOptions } from "../../models";
 import { Metadata } from "../../models/schema";
 import { InvokeOptions } from "../../core/executor";
+import { FormattedChatMessage } from "../../prompt";
+import { jsonStreamToAsyncIterator } from "../../stream/stream";
+import { get } from "lodash-es";
 
 type Options = Pick<ModelOptions, "model"> & {
   url?: string;
@@ -47,12 +50,16 @@ export class AnthropicChat extends BaseModelProvider<InvokeOptions> {
       .join("\n");
 
     const messages = allMessages.filter((message) => message.role != "system");
+    const formattedMessages = messages.map((message) =>
+      this.#reformatMessage(message)
+    );
 
     const tools = await context.resolve<any>("core.prompt.tools.json", {
       optional: true,
     });
-    const response = await ky
-      .post(this.#options.url || "https://api.anthropic.com/v1/messages", {
+    const request = await ky.post(
+      this.#options.url || "https://api.anthropic.com/v1/messages",
+      {
         hooks: {
           afterResponse: [
             (_request, _options, response) => {
@@ -70,35 +77,196 @@ export class AnthropicChat extends BaseModelProvider<InvokeOptions> {
           stream: options.config?.stream,
           model: this.#options.model,
           system: systemPrompt,
-          messages,
+          messages: formattedMessages,
           max_tokens: 4096,
           // tools: tools?.length > 0 ? tools : undefined,
           temperature: options.config?.temperature || 0.8,
         },
-      })
+      }
+    );
 
-      .json<any>()
-      .catch(async (e) => {
+    let response;
+    if (options.config?.stream) {
+      const body = (await request).body!;
+      const stream = jsonStreamToAsyncIterator(body);
+      const builder = createStreamDeltaToResponseBuilder();
+      let streamedMessages: any[] = [];
+      for await (const data of stream) {
+        const { json } = data;
+        if (json) {
+          builder.push(json);
+          if (json.type == "content_block_stop") {
+            stream.return();
+          }
+          const delta = get(json, "delta");
+          if (delta) {
+            if (delta.type != "text_delta" && delta.type != "end_turn") {
+              throw new Error("Unsupported delta type: " + delta.type);
+            }
+            streamedMessages = [
+              ...streamedMessages,
+              {
+                choices: [
+                  {
+                    delta: {
+                      content: delta.text,
+                    },
+                  },
+                ],
+              },
+            ];
+            context.setGlobalState(
+              "core.llm.response.stream",
+              streamedMessages
+            );
+          }
+        }
+      }
+      response = builder.build();
+      context.setGlobalState("core.llm.response.finished", true);
+    } else {
+      let raw = await request.json<any>().catch(async (e) => {
+        console.error(e);
         const error = await e.response.text();
-        context.setState("core.llm.response.error", error);
-        context.setState("core.llm.response.finished", true);
+        context.setGlobalState("core.llm.response.error", error);
+        context.setGlobalState("core.llm.response.finished", true);
         throw e;
       });
 
-    const contentType = delve(response, "content.0.type");
-    if (contentType != "text") {
-      throw new Error("Unsupported response content type: " + contentType);
-    }
-    return {
-      choices: [
-        {
-          message: {
-            role: "assistant",
-            content: delve(response, "content.0.text"),
+      const contentType = delve(raw, "content.0.type");
+      if (contentType != "text") {
+        throw new Error("Unsupported response content type: " + contentType);
+      }
+      response = {
+        choices: [
+          {
+            message: {
+              role: "assistant",
+              content: delve(raw, "content.0.text"),
+            },
+            finish_reason: raw.stop_reason,
           },
-          finish_reason: response.stop_reason,
-        },
-      ],
-    };
+        ],
+      };
+    }
+    return response;
+  }
+
+  #reformatMessage(message: FormattedChatMessage) {
+    if (typeof message.content == "string") {
+      return message;
+    } else if (Array.isArray(message.content)) {
+      const content = message.content.map((msg) => {
+        if (msg.type == "text") {
+          return {
+            type: msg.type,
+            text: msg.text,
+          };
+        } else if (msg.type == "image_url") {
+          if (!msg.image_url.startsWith("data")) {
+            throw new Error("only base64 image url supported");
+          }
+          const [metadata, data] = msg.image_url
+            .substring("data:".length)
+            .split(",");
+          const media_type = metadata.split(";")[0];
+          return {
+            type: "image",
+            source: {
+              type: "base64",
+              media_type,
+              data,
+            },
+          };
+        } else {
+          throw new Error("unknown message type: " + JSON.stringify(msg));
+        }
+      });
+      return { role: message.role, content };
+    } else {
+      throw new Error(
+        "invalid message content format:" +
+          JSON.stringify(message.content, null, 2)
+      );
+    }
   }
 }
+
+type StreamEvent =
+  | {
+      type: "message_start";
+      message: {
+        id: string;
+        type: string; // "message"
+        role: "assistant";
+        model: string;
+        stop_sequence: null;
+        usage: { input_tokens: number; output_tokens: number };
+        content: [];
+        stop_reason: string | null;
+      };
+    }
+  | {
+      type: "content_block_start";
+      content_block: {
+        type: "text";
+        text: string;
+      };
+    }
+  | {
+      type: "content_block_delta";
+      delta: {
+        type: "text_delta";
+        text: string;
+      };
+    };
+
+const createStreamDeltaToResponseBuilder = () => {
+  let role: string;
+  let streamContent = "";
+  let streamToolCalls: any[] = [];
+  return {
+    push(event: StreamEvent) {
+      if (event.type == "message_start") {
+        role = event.message.role;
+      } else if (event.type == "content_block_start") {
+        if (event.content_block.type == "text") {
+          const content = get(event, "content_block.text");
+          if (content) {
+            streamContent += content;
+          }
+        } else {
+          throw new Error(
+            "Unsupported content_block type: " + event.content_block.type
+          );
+        }
+      } else if (event.type == "content_block_delta") {
+        if (event.delta.type == "text_delta") {
+          const content = get(event, "delta.text");
+          if (content) {
+            streamContent += content;
+          }
+        } else {
+          throw new Error(
+            "Unsupported content_block_delta type: " + event.delta.type
+          );
+        }
+      }
+    },
+    build() {
+      return {
+        choices: [
+          {
+            message: {
+              role: role || "assistant",
+              content: streamContent.length > 0 ? streamContent : undefined,
+              tool_calls:
+                streamToolCalls.length > 0 ? streamToolCalls : undefined,
+            },
+            finish_reason: "stop",
+          },
+        ],
+      };
+    },
+  };
+};

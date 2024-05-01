@@ -49,16 +49,18 @@ export const chatCompletionResponse = z
                 content: z.string(),
               }),
               z.object({
-                tool_calls: z.array(
-                  z.object({
-                    id: z.string().optional(),
-                    type: z.enum(["function"]),
-                    function: z.object({
-                      name: z.string(),
-                      arguments: z.string(),
-                    }),
-                  })
-                ),
+                tool_calls: z
+                  .array(
+                    z.object({
+                      id: z.string().optional(),
+                      type: z.enum(["function"]),
+                      function: z.object({
+                        name: z.string(),
+                        arguments: z.string(),
+                      }),
+                    })
+                  )
+                  .optional(),
               }),
             ])
           ),

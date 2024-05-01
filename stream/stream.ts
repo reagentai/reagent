@@ -28,7 +28,7 @@ async function* jsonStreamToAsyncIterator(stream: ReadableStream) {
     console.error(e);
     throw e;
   } finally {
-    await reader.cancel().catch(() => {});
+    reader.cancel().catch((e) => {});
     reader.releaseLock();
   }
 }
