@@ -163,10 +163,10 @@ export class AnthropicChat extends BaseModelProvider<InvokeOptions> {
             text: msg.text,
           };
         } else if (msg.type == "image_url") {
-          if (!msg.image_url.startsWith("data")) {
+          if (!msg.image_url.url.startsWith("data")) {
             throw new Error("only base64 image url supported");
           }
-          const [metadata, data] = msg.image_url
+          const [metadata, data] = msg.image_url.url
             .substring("data:".length)
             .split(",");
           const media_type = metadata.split(";")[0];

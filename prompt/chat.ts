@@ -30,7 +30,12 @@ type FormattedChatMessage = {
     | string
     | (
         | { type: "text"; text: string }
-        | { type: "image_url"; image_url: string }
+        | {
+            type: "image_url";
+            image_url: {
+              url: string;
+            };
+          }
       )[];
 };
 
@@ -137,7 +142,9 @@ class ChatPromptTemplate extends Runnable {
         } else if (msg.type == "image_url") {
           return {
             type: msg.type,
-            image_url: this.formatMessageContent(msg.image_url, options),
+            image_url: {
+              url: this.formatMessageContent(msg.image_url, options),
+            },
           };
         } else {
           throw new Error("unknown message type: " + JSON.stringify(msg));

@@ -44,7 +44,7 @@ export class Context {
     options: ResolveOptions = {}
   ): Promise<Output> {
     const state = delve(this.#runtime.state, namespace);
-    if (state) {
+    if (state != undefined) {
       return state;
     }
 

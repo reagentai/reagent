@@ -21,7 +21,7 @@ export class ChatCompletionExecutor extends AbstractExecutor {
     const context = Context.fromExecutor(executor);
 
     Object.entries(options.variables || {}).forEach(([key, value]) => {
-      context.setState(`core.variables.${key}`, value);
+      context.setGlobalState(`core.variables.${key}`, value);
     });
 
     if (options.plugins) {
@@ -51,7 +51,7 @@ export class ChatCompletionExecutor extends AbstractExecutor {
         hooks: {
           afterResponse: [
             (_request, _options, response) => {
-              context.setState("core.llm.response.status", response.status);
+              context.setGlobalState("core.llm.response.status", response.status);
               return response;
             },
           ],
@@ -79,7 +79,7 @@ export class ChatCompletionExecutor extends AbstractExecutor {
             const delta = delve(json, "choices.0.delta");
             builder.push(delta);
             streamedMessages = [...streamedMessages, json];
-            context.setState("core.llm.response.stream", streamedMessages);
+            context.setGlobalState("core.llm.response.stream", streamedMessages);
           }
         }
         response = builder.build();
@@ -87,14 +87,14 @@ export class ChatCompletionExecutor extends AbstractExecutor {
         response = await request.json<any>().catch(async (e) => {
           console.error(e);
           const error = await e.response.text();
-          context.setState("core.llm.response.error", error);
-          context.setState("core.llm.response.finished", true);
+          context.setGlobalState("core.llm.response.error", error);
+          context.setGlobalState("core.llm.response.finished", true);
           throw e;
         });
       }
     }
-    context.setState("core.llm.response.data", response);
-    context.setState("core.llm.response.finished", true);
+    context.setGlobalState("core.llm.response.data", response);
+    context.setGlobalState("core.llm.response.finished", true);
     return context;
   }
 }
