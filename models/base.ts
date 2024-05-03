@@ -1,4 +1,4 @@
-import { Context, Runnable } from "../core";
+import { Context, InitContext, Runnable } from "../core";
 import { ChatCompletionResponse } from "./schema";
 
 export type ModelOptions = {
@@ -19,6 +19,18 @@ export abstract class BaseModelProvider<I = unknown> extends Runnable<I> {
   //    `ctxt.addFunctionRunnable("executor", async (ctxt) => {
   //        this.run(ctxt);
   //     });`
+  run(ctxt: Context, argument: I): Promise<ChatCompletionResponse> {
+    throw new Error("not supported");
+  }
+}
+
+export abstract class BaseModelExecutor<I = unknown> extends Runnable<I> {
+  get namespace() {
+    return "core.llm.model.executor";
+  }
+
+  init(ctxt: InitContext) {}
+
   run(ctxt: Context, argument: I): Promise<ChatCompletionResponse> {
     throw new Error("not supported");
   }
