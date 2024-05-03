@@ -5,7 +5,7 @@ import {
   InvokeOptions,
 } from "../core/executor";
 import type { Metadata as ModelMetadata } from "../models/schema";
-import { DefaultModelExecutor } from "../models/DefaultModelExecutor";
+import { FormattedChatMessage } from "../prompt";
 
 export class ChatCompletionExecutor extends AbstractExecutor {
   constructor(options: AbstractExecutorOptions) {
@@ -34,18 +34,28 @@ export class ChatCompletionExecutor extends AbstractExecutor {
       );
     }
 
+    const messages = await context.resolve<FormattedChatMessage[]>(
+      "core.prompt.chat.messages"
+    );
+    const tools = await context.resolve<any>("core.prompt.tools.json", {
+      optional: true,
+    });
+    const modelInvokeOptions = {
+      stream: options.config?.stream,
+      temperature: options.config?.temperature,
+      messages,
+      tools,
+    };
     try {
-      let response;
-      if (model.request == "custom") {
-        response = await context.run("core.llm.model.executor", options);
-      } else {
-        const executor = new DefaultModelExecutor();
-        response = await executor.run(context, options);
-      }
+      const response = await context.run(
+        "core.llm.model.executor",
+        modelInvokeOptions
+      );
       context.setGlobalState("core.llm.response.data", response);
-    } catch (error) {
-      console.error(error);
+    } catch (error: any) {
       context.setGlobalState("core.llm.response.error", error);
+      error.context = context;
+      throw error;
     }
     context.setGlobalState("core.llm.response.finished", true);
     return context;

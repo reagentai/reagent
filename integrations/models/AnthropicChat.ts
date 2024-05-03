@@ -4,7 +4,7 @@ import delve from "dlv";
 import { Context, InitContext } from "../../core";
 import { BaseModelProvider, ModelOptions } from "../../models";
 import { Metadata } from "../../models/schema";
-import { InvokeOptions } from "../../core/executor";
+import { ModelInvokeOptions } from "../../core/executor";
 import { FormattedChatMessage } from "../../prompt";
 import { jsonStreamToAsyncIterator } from "../../stream/stream";
 import { get } from "lodash-es";
@@ -16,14 +16,14 @@ type Options = Pick<ModelOptions, "model"> & {
   contextLength: number;
 };
 
-export class AnthropicChat extends BaseModelProvider<InvokeOptions> {
+export class AnthropicChat extends BaseModelProvider<ModelInvokeOptions> {
   #options: Options;
   constructor(options: Options) {
     super();
     this.#options = options;
   }
 
-  init(ctxt: InitContext) {
+  setup(ctxt: InitContext) {
     ctxt.setState<Metadata>("metadata", {
       provider: "ollama",
       family: "unknown",
@@ -34,29 +34,38 @@ export class AnthropicChat extends BaseModelProvider<InvokeOptions> {
 
     ctxt.addFunctionRunnable(
       "executor",
-      async (ctxt, argument: InvokeOptions) => {
+      async (ctxt, argument: ModelInvokeOptions) => {
         return await this.run(ctxt, argument);
+      },
+      {
+        override: true,
       }
     );
   }
 
-  async run(context: Context, options: InvokeOptions) {
-    const allMessages = await context.resolve<any[]>(
-      "core.prompt.chat.messages"
-    );
-    const systemPrompt = allMessages
+  async run(context: Context, options: ModelInvokeOptions) {
+    const systemPrompt = options.messages
       .filter((message) => message.role == "system")
       .map((message) => message.content)
       .join("\n");
 
-    const messages = allMessages.filter((message) => message.role != "system");
+    const messages = options.messages.filter(
+      (message) => message.role != "system"
+    );
     const formattedMessages = messages.map((message) =>
       this.#reformatMessage(message)
     );
 
-    const tools = await context.resolve<any>("core.prompt.tools.json", {
-      optional: true,
-    });
+    const payload = {
+      stream: options?.stream,
+      model: this.#options.model,
+      system: systemPrompt,
+      messages: formattedMessages,
+      max_tokens: 4096,
+      // tools: tools?.length > 0 ? tools : undefined,
+      temperature: options?.temperature || 0.8,
+    };
+    context.setGlobalState("core.llm.request.body", payload);
     const request = await ky.post(
       this.#options.url || "https://api.anthropic.com/v1/messages",
       {
@@ -73,20 +82,12 @@ export class AnthropicChat extends BaseModelProvider<InvokeOptions> {
           "x-api-key": this.#options.apiKey,
           "anthropic-version": this.#options.version,
         },
-        json: {
-          stream: options.config?.stream,
-          model: this.#options.model,
-          system: systemPrompt,
-          messages: formattedMessages,
-          max_tokens: 4096,
-          // tools: tools?.length > 0 ? tools : undefined,
-          temperature: options.config?.temperature || 0.8,
-        },
+        json: payload,
       }
     );
 
     let response;
-    if (options.config?.stream) {
+    if (options?.stream) {
       const body = (await request).body!;
       const stream = jsonStreamToAsyncIterator(body);
       const builder = createStreamDeltaToResponseBuilder();

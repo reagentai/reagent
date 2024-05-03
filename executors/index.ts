@@ -1,1 +1,1 @@
-export { ChatCompletionExecutor as SingleQueryExecutor } from "./ChatCompletion";
+export { ChatCompletionExecutor } from "./ChatCompletion";

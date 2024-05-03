@@ -16,7 +16,7 @@ export class GenericChatModel extends BaseModelProvider {
     this.#options = options;
   }
 
-  init(ctxt: InitContext) {
+  setup(ctxt: InitContext) {
     ctxt.setState<Metadata>("metadata", {
       provider: "generic",
       family: "unknown",

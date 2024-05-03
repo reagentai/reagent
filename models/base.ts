@@ -1,4 +1,5 @@
 import { Context, InitContext, Runnable } from "../core";
+import { DefaultModelExecutor } from "./DefaultModelExecutor";
 import { ChatCompletionResponse } from "./schema";
 
 export type ModelOptions = {
@@ -11,6 +12,13 @@ export abstract class BaseModelProvider<I = unknown> extends Runnable<I> {
     return "core.llm.model";
   }
 
+  init(ctxt: InitContext) {
+    ctxt.addRunnable(new DefaultModelExecutor());
+    this.setup(ctxt);
+  }
+
+  abstract setup(ctxt: InitContext): void;
+
   // sub-class can implement run to handle the API call
   // to the model provider instead of using the default one
   // provided by the executor.
@@ -19,18 +27,6 @@ export abstract class BaseModelProvider<I = unknown> extends Runnable<I> {
   //    `ctxt.addFunctionRunnable("executor", async (ctxt) => {
   //        this.run(ctxt);
   //     });`
-  run(ctxt: Context, argument: I): Promise<ChatCompletionResponse> {
-    throw new Error("not supported");
-  }
-}
-
-export abstract class BaseModelExecutor<I = unknown> extends Runnable<I> {
-  get namespace() {
-    return "core.llm.model.executor";
-  }
-
-  init(ctxt: InitContext) {}
-
   run(ctxt: Context, argument: I): Promise<ChatCompletionResponse> {
     throw new Error("not supported");
   }

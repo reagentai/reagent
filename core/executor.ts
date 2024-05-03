@@ -1,13 +1,15 @@
-import { dset } from "dset";
 import { klona } from "klona";
+import cleanSet from "clean-set";
 // @ts-expect-error
 import delve from "dlv";
-import { Context } from "./context";
+import { AddRunableOptions, Context } from "./context";
 import { FunctionRunnable, Runnable } from "./runable";
+import { FormattedChatMessage } from "../prompt";
 
 export type AbstractExecutorOptions = {
   runnables: Runnable[];
   variables?: Record<string, FunctionRunnable<any>>;
+  allowRunnableOverride?: boolean;
 };
 
 export type ResolveOptions = {
@@ -26,6 +28,11 @@ export type InvokeConfig = Partial<{
   temperature: number;
 }>;
 
+export type ModelInvokeOptions = InvokeConfig & {
+  messages: FormattedChatMessage[];
+  tools: any[];
+};
+
 export type InvokeOptions = {
   variables?: Record<string, any>;
   config?: InvokeConfig;
@@ -41,39 +48,58 @@ export abstract class AbstractExecutor extends Runnable {
     this.#runnables = {};
     const self = this;
     for (const runnable of options.runnables) {
-      dset(this.#runnables, runnable.namespace, runnable);
+      if (
+        delve(self.#runnables, runnable.namespace) &&
+        !options.allowRunnableOverride
+      ) {
+        throw new Error(
+          `Runnable already set for namespace: ${runnable.namespace}`
+        );
+      }
+      this.#runnables = cleanSet(this.#runnables, runnable.namespace, runnable);
       const baseContext = this.#context.bindNamespace(runnable.namespace);
       const context = Object.assign(baseContext, {
-        addRunnable(runnable: Runnable) {
-          if (delve(self.#runnables, runnable.namespace)) {
+        addRunnable(runnable: Runnable, options?: AddRunableOptions) {
+          if (
+            delve(self.#runnables, runnable.namespace) &&
+            !options?.override
+          ) {
             throw new Error(
               `Runnable already set for namespace: ${runnable.namespace}`
             );
           }
-
-          dset(self.#runnables, runnable.namespace, runnable);
+          self.#runnables = cleanSet(
+            self.#runnables,
+            runnable.namespace,
+            runnable
+          );
         },
         addFunctionRunnable<I>(
           namespace: string,
-          runnable: FunctionRunnable<unknown, I>
+          runnable: FunctionRunnable<unknown, I>,
+          options?: AddRunableOptions
         ) {
           const finalNamespace = baseContext.namespace
             ? `${baseContext.namespace}.${namespace}`
             : namespace;
-          if (delve(self.#runnables, finalNamespace)) {
+          if (delve(self.#runnables, finalNamespace) && !options?.override) {
             throw new Error(
               `Runnable already set for namespace: ${finalNamespace}`
             );
           }
 
-          dset(self.#runnables, finalNamespace, runnable);
+          self.#runnables = cleanSet(self.#runnables, finalNamespace, runnable);
         },
       });
       runnable.init(context);
     }
 
     for (const runnable of Object.entries(options.variables || {})) {
-      dset(this.#runnables, `core.variables.${runnable[0]}`, runnable[1]);
+      this.#runnables = cleanSet(
+        this.#runnables,
+        `core.variables.${runnable[0]}`,
+        runnable[1]
+      );
     }
   }
 

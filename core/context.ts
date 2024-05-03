@@ -135,12 +135,19 @@ export class Context {
 
 export type InitContext = Pick<Context, "setState"> & {
   // adds the runnable to the context in the namespace of the runnable
-  addRunnable(runnable: Runnable): void;
+  addRunnable(runnable: Runnable, options?: AddRunableOptions): void;
 
   // adds the function runnable to the context in the given namespace
   // prefixed by the namespace of the runnable adding the new runnnable
   addFunctionRunnable<I = unknown>(
     namespace: string,
-    runnable: FunctionRunnable<unknown, I>
+    runnable: FunctionRunnable<unknown, I>,
+    options?: AddRunableOptions
   ): void;
+};
+
+export type AddRunableOptions = {
+  // If set to true, existing runnable in the same namespace will be replaced
+  // instead of throwing a duplicate runnable error
+  override?: boolean;
 };

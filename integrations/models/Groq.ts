@@ -47,7 +47,7 @@ export class Groq extends BaseModelProvider {
     this.#options = options;
   }
 
-  init(ctxt: InitContext) {
+  setup(ctxt: InitContext) {
     const model = models.find((m) => m.id == this.#options.model);
     if (!model) {
       throw new Error("Invalid model: ", model);

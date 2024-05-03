@@ -1,36 +1,32 @@
 import ky from "ky";
 import { get } from "lodash-es";
 import { Context } from "../core";
-import { InvokeOptions } from "../core/executor";
-import { BaseModelExecutor } from "./base";
+import { ModelInvokeOptions } from "../core/executor";
 import { Metadata } from "./schema";
 import { jsonStreamToAsyncIterator } from "../stream/stream";
 import { createStreamDeltaToResponseBuilder } from "../stream/response-builder";
+import { BaseModelExecutor } from "./BaseModelExecutor";
 
 /**
  * This is a default model executor that's compatible with OpenAI API
  */
 export class DefaultModelExecutor extends BaseModelExecutor {
-  async run(context: Context, options: InvokeOptions) {
+  async run(context: Context, options: ModelInvokeOptions) {
     const model = await context.resolve<Metadata>("core.llm.model.metadata");
-    const messages = await context.resolve("core.prompt.chat.messages");
-    const tools = await context.resolve<any>("core.prompt.tools.json", {
-      optional: true,
-    });
 
     if (model.request == "custom") {
       throw new Error("Custom Model should be used when request = `custom`");
     }
     const payload = {
       ...(model.request.body || {}),
-      messages,
-      tools: tools?.length > 0 ? tools : undefined,
+      messages: options.messages,
+      tools: options.tools?.length! > 0 ? options.tools : undefined,
       // TODO: assert that model provider supports this
-      stream: options.config?.stream,
-      temperature: options.config?.temperature || 0.8,
+      stream: options?.stream,
+      temperature: options?.temperature || 0.8,
     };
 
-    context.setGlobalState("core.llm.request", payload);
+    context.setGlobalState("core.llm.request.body", payload);
     const request = ky.post(model.request.url, {
       hooks: {
         afterResponse: [
@@ -45,7 +41,7 @@ export class DefaultModelExecutor extends BaseModelExecutor {
       json: payload,
     });
 
-    if (options.config?.stream) {
+    if (options?.stream) {
       const body = (await request).body!;
       const stream = jsonStreamToAsyncIterator(body);
       const builder = createStreamDeltaToResponseBuilder();

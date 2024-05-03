@@ -1,4 +1,5 @@
-export { ChatPromptTemplate } from "./chat";
+export { ChatPromptTemplate } from "./ChatTemplate";
+export { ChatMessages } from "./ChatMessages";
 export { MessagesPlaceholder } from "./history";
 export type {
   ChatMessageTemplate,
@@ -6,4 +7,4 @@ export type {
   AssistantMessageTemplate,
   SystemMesageTemplate,
   FormattedChatMessage,
-} from "./chat";
+} from "./ChatTemplate";
