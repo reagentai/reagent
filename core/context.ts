@@ -1,9 +1,10 @@
 import cleanSet from "clean-set";
 // @ts-expect-error
 import delve from "dlv";
+import { dset } from "dset";
+import { klona } from "klona";
 import { AbstractExecutor, ResolveOptions } from "./executor";
 import { FunctionRunnable, Runnable } from "./runable";
-import { dset } from "dset";
 
 export class Runtime {
   state: any;
@@ -89,7 +90,7 @@ export class Context {
     const prevState = this.#runtime.state;
     const ns = namespace.split(".");
     const newState = cleanSet(this.#runtime.state, ns, (prev) => {
-      return value;
+      return klona(value);
     });
     this.#runtime.state = newState;
 
