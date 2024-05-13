@@ -13,6 +13,7 @@
     "klona": "^2.0.6",
     "ky": "^0.33.3",
     "lodash-es": "^4.17.21",
+    "nanoid": "^5.0.7",
     "zod": "^3.22.4"
   },
   "devDependencies": {

@@ -58,4 +58,4 @@ const createOpenAIStreamDeltaToResponseBuilder = () => {
   };
 };
 
-export { createOpenAIStreamDeltaToResponseBuilder as createStreamDeltaToResponseBuilder };
+export { createOpenAIStreamDeltaToResponseBuilder };

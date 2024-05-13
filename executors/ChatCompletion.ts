@@ -1,11 +1,14 @@
+import { klona } from "klona";
 import { Context } from "../core";
 import {
   AbstractExecutor,
   AbstractExecutorOptions,
   InvokeOptions,
+  RunInfo,
 } from "../core/executor";
 import type { Metadata as ModelMetadata } from "../models/schema";
 import { FormattedChatMessage } from "../prompt";
+import { uniqueId } from "../utils/uniqueId";
 
 export class ChatCompletionExecutor extends AbstractExecutor {
   constructor(options: AbstractExecutorOptions) {
@@ -15,6 +18,12 @@ export class ChatCompletionExecutor extends AbstractExecutor {
   async invoke(options: InvokeOptions = {}): Promise<Context> {
     let executor = this;
     const context = Context.fromExecutor(executor);
+
+    const run = klona(options.run || ({} as RunInfo));
+    if (!run.id) {
+      run.id = uniqueId(20);
+    }
+    context.setGlobalState(`core.run`, run);
 
     Object.entries(options.variables || {}).forEach(([key, value]) => {
       context.setGlobalState(`core.variables.${key}`, value);

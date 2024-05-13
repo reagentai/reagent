@@ -4,7 +4,7 @@ import { Context } from "../core";
 import { ModelInvokeOptions } from "../core/executor";
 import { Metadata } from "./schema";
 import { jsonStreamToAsyncIterator } from "../stream/stream";
-import { createStreamDeltaToResponseBuilder } from "../stream/response-builder";
+import { createOpenAIStreamDeltaToResponseBuilder } from "../stream/response-builder";
 import { BaseModelExecutor } from "./BaseModelExecutor";
 
 /**
@@ -42,9 +42,15 @@ export class DefaultModelExecutor extends BaseModelExecutor {
     });
 
     if (options?.stream) {
-      const body = (await request).body!;
+      const response = await request;
+      const body = response.body!;
+      if (response.status != 200) {
+        throw new Error(await response.text(), {
+          cause: response,
+        });
+      }
       const stream = jsonStreamToAsyncIterator(body);
-      const builder = createStreamDeltaToResponseBuilder();
+      const builder = createOpenAIStreamDeltaToResponseBuilder();
       let streamedMessages: any[] = [];
       for await (const data of stream) {
         const { json } = data;

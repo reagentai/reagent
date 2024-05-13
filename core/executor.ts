@@ -33,10 +33,16 @@ export type ModelInvokeOptions = InvokeConfig & {
   tools: any[];
 };
 
+export type RunInfo = {
+  id?: string;
+  metadata: any;
+};
+
 export type InvokeOptions = {
   variables?: Record<string, any>;
   config?: InvokeConfig;
   plugins?: Plugin[];
+  run?: RunInfo;
 };
 
 export abstract class AbstractExecutor extends Runnable {
@@ -56,7 +62,11 @@ export abstract class AbstractExecutor extends Runnable {
           `Runnable already set for namespace: ${runnable.namespace}`
         );
       }
-      this.#runnables = cleanSet(this.#runnables, runnable.namespace, runnable);
+      this.#runnables = cleanSet(
+        this.#runnables,
+        runnable.namespace,
+        () => runnable
+      );
       const baseContext = this.#context.bindNamespace(runnable.namespace);
       const context = Object.assign(baseContext, {
         addRunnable(runnable: Runnable, options?: AddRunableOptions) {
@@ -71,7 +81,7 @@ export abstract class AbstractExecutor extends Runnable {
           self.#runnables = cleanSet(
             self.#runnables,
             runnable.namespace,
-            runnable
+            () => runnable
           );
         },
         addFunctionRunnable<I>(
@@ -88,7 +98,11 @@ export abstract class AbstractExecutor extends Runnable {
             );
           }
 
-          self.#runnables = cleanSet(self.#runnables, finalNamespace, runnable);
+          self.#runnables = cleanSet(
+            self.#runnables,
+            finalNamespace,
+            () => runnable
+          );
         },
       });
       runnable.init(context);
@@ -98,7 +112,7 @@ export abstract class AbstractExecutor extends Runnable {
       this.#runnables = cleanSet(
         this.#runnables,
         `core.variables.${runnable[0]}`,
-        runnable[1]
+        () => runnable[1]
       );
     }
   }
@@ -135,7 +149,9 @@ export abstract class AbstractExecutor extends Runnable {
       }
       return res;
     } else {
-      throw new Error(`Invalid runnable [namespace = ${namespace}]`);
+      throw new Error(
+        `Invalid runnable [namespace = ${namespace}]: ${typeof runnable}`
+      );
     }
   }
 
