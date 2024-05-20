@@ -49,7 +49,7 @@ export abstract class AgentNode<
   }
 
   // If a node needs to run on partial output, the node should implement this
-  async onInputEvent(
+  onInputEvent(
     context: Context<z.infer<Config>, z.infer<Output>>,
     data: AtLeastOne<z.infer<Input>>
   ) {}
