@@ -7,6 +7,10 @@ const AgentNodeUI = (props: {} & Chat.Message["message"]["ui"]) => {
   const { nodesByTypeId } = useAgentContext();
   const components = useMemo(() => {
     const node = nodesByTypeId[props.node.type];
+    // ignore UI rendering if agent node not found
+    if (!node) {
+      return [];
+    }
     // @ts-expect-error
     return [...node.run()].reduce(
       (agg, curr) => {
