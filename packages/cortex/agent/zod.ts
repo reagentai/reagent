@@ -23,7 +23,7 @@ declare module "zod" {
   interface ZodType<
     Output = any,
     Def extends ZodTypeDef = ZodTypeDef,
-    Input = Output
+    Input = Output,
   > {
     label<T extends z.ZodTypeAny>(this: T, label: string): T;
   }
@@ -31,7 +31,7 @@ declare module "zod" {
   interface ZodType<
     Output = any,
     Def extends ZodTypeDef = ZodTypeDef,
-    Input = Output
+    Input = Output,
   > {
     uiSchema<T extends z.ZodTypeAny>(this: T, uiSchema: UISchema): T;
   }

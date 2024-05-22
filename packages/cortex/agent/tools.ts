@@ -10,7 +10,7 @@ type WithDefaultZodObjectSchema<T> = T extends ZodObjectSchema
 export const createAgentNode = <
   Config extends ZodObjectSchema | undefined,
   Input extends ZodObjectSchema | undefined,
-  Output extends ZodObjectSchema
+  Output extends ZodObjectSchema,
 >(options: {
   id: string;
   version: string;

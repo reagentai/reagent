@@ -7,7 +7,7 @@ export type Metadata<
   Config extends ZodObjectSchema,
   Input extends ZodObjectSchema,
   Output extends ZodObjectSchema,
-  State extends ZodObjectSchema
+  State extends ZodObjectSchema,
 > = {
   id: string;
   name: string;
@@ -31,7 +31,7 @@ export abstract class AbstractAgentNode<
   Config extends ZodObjectSchema,
   Input extends ZodObjectSchema,
   Output extends ZodObjectSchema,
-  State extends ZodObjectSchema = typeof emptyAgentState
+  State extends ZodObjectSchema = typeof emptyAgentState,
 > {
   static [IS_AGENT_NODE]: boolean = true;
 
@@ -85,7 +85,7 @@ type AgentNode<
   Config extends ZodObjectSchema,
   Input extends ZodObjectSchema,
   Output extends ZodObjectSchema,
-  State extends ZodObjectSchema = typeof emptyAgentState
+  State extends ZodObjectSchema = typeof emptyAgentState,
 > = AbstractAgentNode<Config, Input, Output, State> & {
   new (): AbstractAgentNode<Config, Input, Output, State>;
   run(

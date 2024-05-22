@@ -14,9 +14,9 @@ export type HumanMessageTemplate = [
         {
           type: "image_url";
           image_url: string;
-        }
+        },
       ]
-  )
+  ),
 ];
 
 type ChatMessageTemplate =
@@ -101,10 +101,10 @@ class ChatPromptTemplate extends Runnable {
           message[0] == "assistant"
             ? "assistant"
             : message[0] == "system"
-            ? "system"
-            : message[0] == "human"
-            ? "user"
-            : "unknown";
+              ? "system"
+              : message[0] == "human"
+                ? "user"
+                : "unknown";
         if (role == "unknown") {
           throw new Error("Unsupported role: " + message[0]);
         }
