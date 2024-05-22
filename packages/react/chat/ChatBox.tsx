@@ -3,7 +3,6 @@ import clsx from "clsx";
 import { HiOutlinePaperAirplane } from "react-icons/hi";
 import { uniqueId } from "@portal/cortex/utils/uniqueId";
 
-import { Chat } from "./types";
 import { adjustTextareaHeight } from "../utils/textarea";
 
 const Chatbox = (props: {
