@@ -37,7 +37,7 @@ namespace AgentEvent {
     };
     render: {
       step: string;
-      state: State;
+      data: State;
     };
   };
 }
@@ -78,7 +78,7 @@ class EventStream<Output, State = any> extends ReplaySubject<
 
   sendRenderUpdate(
     node: { id: string; type: string; version: string },
-    update: { step: string; state: any }
+    update: { step: string; data: any }
   ) {
     const { run } = this.#config;
     this.next({
@@ -89,7 +89,7 @@ class EventStream<Output, State = any> extends ReplaySubject<
       node,
       render: {
         step: update.step,
-        state: update.state,
+        data: update.data,
       },
     });
   }

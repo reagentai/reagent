@@ -11,14 +11,14 @@ export type Context<
   config: Config;
   requiredOutputFields: (keyof Output)[];
   sendOutput(output: Output): void;
-  render<State>(
-    Component: (props: { state: State }) => JSX.Element,
+  render<Data>(
+    Component: (props: { data: Data }) => JSX.Element,
     // additional props that's passed directly to component
     // props is evaludated on the server and only value is sent
     // to the client
-    state?: State
+    data?: Data
   ): {
-    update(state: State): void;
+    update(data: Data): void;
   };
 };
 

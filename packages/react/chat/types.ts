@@ -7,7 +7,7 @@ export namespace Chat {
     };
     render: {
       step: string;
-      state: any;
+      data: any;
     };
   };
 

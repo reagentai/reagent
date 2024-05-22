@@ -4,6 +4,7 @@ import { useAgentContext } from "./context";
 import { Chat } from "../chat/types";
 
 const AgentNodeUI = (props: {} & Chat.Message["message"]["ui"]) => {
+  "use client";
   const { nodesByTypeId } = useAgentContext();
   const components = useMemo(() => {
     const node = nodesByTypeId[props.node.type];
@@ -28,7 +29,7 @@ const AgentNodeUI = (props: {} & Chat.Message["message"]["ui"]) => {
   if (!Component) {
     return <></>;
   }
-  return Component({ state: props.render.state });
+  return Component({ data: props.render.data });
 };
 
 export { AgentNodeUI };
