@@ -6,7 +6,7 @@ settings:
 
 dependencies:
   '@babel/core':
-    specifier: ^7.23.7
+    specifier: ^7.24.5
     version: 7.24.5
   '@babel/types':
     specifier: ^7.23.6
