@@ -9,6 +9,7 @@ const node = z.object({
 const edge = z.object({
   id: z.string(),
   from: z.object({
+    type: z.enum(["output"]),
     node: z.string(),
     outputKey: z.string(),
   }),
