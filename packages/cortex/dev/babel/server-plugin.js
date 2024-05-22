@@ -59,13 +59,9 @@ function createPlugin() {
     return {
       visitor: {
         CallExpression(path) {
-          const { node, parent } = path;
+          const { node } = path;
+          // TODO: make sure createAgentNode is the one from "@portal/cortex/agent"
           if (path.node.callee.name == "createAgentNode") {
-            if (parent.type != "VariableDeclarator") {
-              throw new Error(
-                "expected use of createAgentNode: const x = createAgentNode(...)"
-              );
-            }
             node.arguments[0].properties.forEach((prop, index) => {
               if (prop.key.name == "run") {
                 path.traverse(tranformCreateAgentNode, { run: prop });
