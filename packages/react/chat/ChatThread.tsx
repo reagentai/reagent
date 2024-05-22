@@ -24,8 +24,8 @@ const ChatThread = (props: {
 
   const aiMessageIdsByParentId: Record<string, any> = {};
   const selectedMessageVersionByParentId: Record<string, any> = {};
-  const selectMessageVersion = () => { };
-  const regenerateMessage = () => { };
+  const selectMessageVersion = () => {};
+  const regenerateMessage = () => {};
 
   const [lastMessage, setLastMessage] = useState(null);
   useEffect(() => {

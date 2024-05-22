@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import { HiOutlinePaperAirplane } from "react-icons/hi";
+import { uniqueId } from "@portal/cortex/utils/uniqueId";
 
 import { Chat } from "./types";
-import { uniqueId } from "../../utils/uniqueId";
 import { adjustTextareaHeight } from "../utils/textarea";
 
 const Chatbox = (props: {

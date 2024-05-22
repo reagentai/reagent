@@ -1,7 +1,5 @@
 import { createContext, useContext, useMemo } from "react";
-
-import type { AgentNode } from "../../agent";
-
+import type { AgentNode } from "@portal/cortex/agent";
 
 type Context = {
   nodesByTypeId: Record<string, AgentNode<any, any, any>>;
@@ -11,7 +9,10 @@ const AgentContext = createContext<Context>({
 });
 const useAgentContext = () => useContext(AgentContext)!;
 
-const AgentContextProvider = (props: { nodes: AgentNode<any, any, any>[]; children: any }) => {
+const AgentContextProvider = (props: {
+  nodes: AgentNode<any, any, any>[];
+  children: any;
+}) => {
   const nodesByTypeId = useMemo(() => {
     return props.nodes.reduce((agg, curr) => {
       // @ts-expect-error

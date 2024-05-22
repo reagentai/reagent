@@ -8,10 +8,13 @@ const AgentNodeUI = (props: {} & Chat.Message["message"]["ui"]) => {
   const components = useMemo(() => {
     const node = nodesByTypeId[props.node.type];
     // @ts-expect-error
-    return [...node.run()].reduce((agg, curr) => {
-      agg[curr[0]] = curr[1];
-      return agg;
-    }, {} as Record<string, () => JSX.Element>);
+    return [...node.run()].reduce(
+      (agg, curr) => {
+        agg[curr[0]] = curr[1];
+        return agg;
+      },
+      {} as Record<string, () => JSX.Element>
+    );
   }, [props.node.type, nodesByTypeId]);
 
   const Component = useMemo(() => {
