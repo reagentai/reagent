@@ -30,7 +30,7 @@ const transformCreateAgentNodeRunMethod = {
         const declarations = body[index].get("declarations");
         // Since only `context.render` or `const xyz = context.render`
         // needs to be preserved, filter out other expressions
-        if (!expression.node && declarations.length == 0) {
+        if (!expression.node && (!declarations || declarations.length == 0)) {
           return false;
         }
         // if it's a var declaration, check the init expression
@@ -51,7 +51,7 @@ const transformCreateAgentNodeRunMethod = {
         return this.context.scope == context.scope;
       })
       .map(({ expression, declarations }) => {
-        if (declarations.length > 0) {
+        if (declarations && declarations.length > 0) {
           return t.yieldExpression(
             t.arrayExpression([
               // add render id as the first argument

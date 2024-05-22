@@ -1,7 +1,6 @@
 import { transformSync, DEFAULT_EXTENSIONS } from "@babel/core";
 
-import createClientBabelPlugin from "../babel/client-plugin.js";
-import createServerBabelPlugin from "../babel/server-plugin.js";
+import createBabelPlugin from "../babel/index.js";
 
 function cleanUrl(url) {
   const queryRE = /\?.*$/s;
@@ -21,6 +20,8 @@ const filterRegex = new RegExp(
  * This can either be path to individual paths or paths to the directory
  * where the tools are located. This must be provided for the tools to be
  * compiled properly. Narrowing this path could speed up build.
+ * @property {string[]} presets - babel presets
+ * @property {string[]} plugins - babel plugins
  */
 
 /**
@@ -30,16 +31,13 @@ const filterRegex = new RegExp(
  */
 const createPlugin = (options = {}) => {
   const toolsPath = options.tools;
-
-  // isSSR is true for client bundle :shrug:
-  // let isSSR = false;
   if (!toolsPath) {
     throw new Error(`missing "tools" option`);
   }
   return {
     name: "vite-plugin-portal-cortex",
-    transform(code, id, options) {
-      if (!options) {
+    transform(code, id, transformOptions) {
+      if (!transformOptions) {
         throw new Error(
           `expected valid "options" argument in vite "transform" method`
         );
@@ -58,8 +56,12 @@ const createPlugin = (options = {}) => {
         filename: id,
         sourceFileName: filepath,
         plugins: [
-          options.ssr ? createServerBabelPlugin() : createClientBabelPlugin(),
+          createBabelPlugin({
+            ssr: transformOptions.ssr,
+          }),
+          ...(options.plugins || []),
         ],
+        presets: options.presets || [],
         sourceMaps: true,
       });
       return { code: transformedCode, map };

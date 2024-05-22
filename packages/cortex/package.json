@@ -6,6 +6,9 @@
   "scripts": {},
   "dependencies": {
     "@babel/core": "^7.24.5",
+    "@babel/generator": "^7.24.5",
+    "@babel/preset-react": "^7.24.1",
+    "@babel/preset-typescript": "^7.24.1",
     "@babel/types": "^7.23.6",
     "clean-set": "^1.1.2",
     "clsx": "^2.1.1",
