@@ -1,13 +1,13 @@
 import { z } from "./zod";
 import { ZodObjectSchema } from "./types";
-import { AgentNode } from "./node";
+import { AbstractAgentNode, AgentNode } from "./node";
 
 const emptyZodObject = z.object({});
 type WithDefaultZodObjectSchema<T> = T extends ZodObjectSchema
   ? T
   : typeof emptyZodObject;
 
-export const createTool = <
+export const createAgentNode = <
   Config extends ZodObjectSchema | undefined,
   Input extends ZodObjectSchema | undefined,
   Output extends ZodObjectSchema
@@ -16,11 +16,12 @@ export const createTool = <
   version: string;
   name: string;
   type?: "tool";
+  icon?: string;
   config?: Config;
   input?: Input;
   output: Output;
   run: AgentNode<
-    WithDefaultZodObjectSchema<typeof options.config>,
+    WithDefaultZodObjectSchema<Config>,
     WithDefaultZodObjectSchema<Input>,
     Output
   >["run"];
@@ -28,7 +29,7 @@ export const createTool = <
   const config = options.config || z.object({});
   const inputSchema = options.input || z.object({});
   // @ts-expect-error
-  const clazz = class AgentTool extends AgentNode<
+  const clazz = class AgentTool extends AbstractAgentNode<
     typeof config,
     typeof inputSchema,
     Output
@@ -46,5 +47,9 @@ export const createTool = <
     }
   };
   clazz.prototype.run = options.run;
-  return clazz;
+  return clazz as unknown as AgentNode<
+    WithDefaultZodObjectSchema<Config>,
+    WithDefaultZodObjectSchema<Input>,
+    Output
+  >;
 };

@@ -6,7 +6,49 @@ type EventStreamConfig = {
   };
 };
 
-class EventStream<Output> extends ReplaySubject<any> {
+namespace AgentEvent {
+  export enum Type {
+    Output = "output",
+    Render = "render",
+  }
+
+  export type Output<O> = {
+    type: Type.Output;
+    run: {
+      id: string;
+    };
+    node: {
+      id: string;
+      type: string;
+      version: string;
+    };
+    output: O;
+  };
+
+  export type RenderUpdate<State> = {
+    type: Type.Render;
+    run: {
+      id: string;
+    };
+    node: {
+      id: string;
+      type: string;
+      version: string;
+    };
+    render: {
+      step: string;
+      state: State;
+    };
+  };
+}
+
+type AgentEvent<Output, State> =
+  | AgentEvent.Output<Output>
+  | AgentEvent.RenderUpdate<State>;
+
+class EventStream<Output, State = any> extends ReplaySubject<
+  AgentEvent<Output, State>
+> {
   #config: EventStreamConfig;
   #inner: ReplaySubject<any>;
   constructor(config: EventStreamConfig) {
@@ -19,10 +61,13 @@ class EventStream<Output> extends ReplaySubject<any> {
     });
   }
 
-  sendOutput(node: { id: string; type: string }, output: Output) {
+  sendOutput(
+    node: { id: string; type: string; version: string },
+    output: Output
+  ) {
     const { run } = this.#config;
     this.next({
-      type: "output",
+      type: AgentEvent.Type.Output,
       run: {
         id: run.id,
       },
@@ -30,6 +75,25 @@ class EventStream<Output> extends ReplaySubject<any> {
       output,
     });
   }
+
+  sendRenderUpdate(
+    node: { id: string; type: string; version: string },
+    update: { step: string; state: any }
+  ) {
+    const { run } = this.#config;
+    this.next({
+      type: AgentEvent.Type.Render,
+      run: {
+        id: run.id,
+      },
+      node,
+      render: {
+        step: update.step,
+        state: update.state,
+      },
+    });
+  }
 }
 
 export { EventStream };
+export type { AgentEvent };

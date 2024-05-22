@@ -27,7 +27,7 @@ type RunResult<T> = AsyncGeneratorWithField<T, T | void>;
 
 export const IS_AGENT_NODE = Symbol("_AGENT_NODE_");
 
-export abstract class AgentNode<
+export abstract class AbstractAgentNode<
   Config extends ZodObjectSchema,
   Input extends ZodObjectSchema,
   Output extends ZodObjectSchema,
@@ -61,11 +61,38 @@ export abstract class AgentNode<
 
   async *render(context: RenderContext): any {}
 
+  // TODO: this method can be used to build agent workflow graph in code
+  // if low-code UI is not preferred.
+  //
+  // potential idea:
+  // const node1 = chatCompletion(config);
+  // const node2 = user(config);
+  // const graph = creatGraph({
+  //   edges: [
+  //     node1.graph.output.markdown: node2.graph.input.markdown
+  //   ]
+  // });
+  // executeGraph(graph);
+  graph() {}
+
   // TODO: in the future, to resolve only the output fields used by dependent nodes,
   // the interface can be updated such that AgentNode must implement `async resolve{OutputKey}`
   // That allows the dependencies to be pull based verses push-based and much more efficient
   // since the output field that isn't used doens't need to be resolved
 }
 
+type AgentNode<
+  Config extends ZodObjectSchema,
+  Input extends ZodObjectSchema,
+  Output extends ZodObjectSchema,
+  State extends ZodObjectSchema = typeof emptyAgentState
+> = AbstractAgentNode<Config, Input, Output, State> & {
+  new (): AbstractAgentNode<Config, Input, Output, State>;
+  run(
+    context: Context<z.infer<Config>, z.infer<Output>>,
+    input: z.infer<Input>
+  ): RunResult<AtLeastOne<z.infer<Output>>>;
+};
+
 export { emptyAgentState };
-export type { EmptyAgentState };
+export type { AgentNode, EmptyAgentState };
