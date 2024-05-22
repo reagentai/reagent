@@ -7,6 +7,7 @@
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "node",
+    "jsx": "react-jsx",
     "experimentalDecorators": true
   }
 }
