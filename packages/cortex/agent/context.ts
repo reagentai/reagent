@@ -1,5 +1,5 @@
 export type Context<
-  Config extends Record<string, unknown>,
+  Config extends Record<string, unknown> | void,
   Output extends Record<string, unknown>,
 > = {
   node: {
@@ -9,7 +9,6 @@ export type Context<
     id: string;
   };
   config: Config;
-  requiredOutputFields: (keyof Output)[];
   sendOutput(output: Output): void;
   render<Data>(
     Component: (props: { data: Data }) => JSX.Element,

@@ -1,11 +1,5 @@
 import { ReplaySubject } from "rxjs";
 
-type EventStreamConfig = {
-  run: {
-    id: string;
-  };
-};
-
 namespace AgentEvent {
   export enum Type {
     Output = "output",
@@ -49,51 +43,47 @@ type AgentEvent<Output, State> =
 class EventStream<Output, State = any> extends ReplaySubject<
   AgentEvent<Output, State>
 > {
-  #config: EventStreamConfig;
-  #inner: ReplaySubject<any>;
-  constructor(config: EventStreamConfig) {
+  constructor() {
     super();
-    this.#config = config;
-    this.#inner = new ReplaySubject();
-    this.#inner.next({
-      type: "init",
-      ...config,
-    });
   }
 
-  sendOutput(
-    node: { id: string; type: string; version: string },
-    output: Output
-  ) {
-    const { run } = this.#config;
+  sendOutput(options: {
+    run: {
+      id: string;
+    };
+    node: { id: string; type: string; version: string };
+    output: Output;
+  }) {
     this.next({
       type: AgentEvent.Type.Output,
       run: {
-        id: run.id,
+        id: options.run.id,
       },
-      node,
-      output,
+      node: options.node,
+      output: options.output,
     });
   }
 
-  sendRenderUpdate(
-    node: { id: string; type: string; version: string },
-    update: { step: string; data: any }
-  ) {
-    const { run } = this.#config;
+  sendRenderUpdate(options: {
+    run: {
+      id: string;
+    };
+    node: { id: string; type: string; version: string };
+    update: { step: string; data: any };
+  }) {
     this.next({
       type: AgentEvent.Type.Render,
       run: {
-        id: run.id,
+        id: options.run.id,
       },
-      node,
+      node: options.node,
       render: {
-        step: update.step,
-        data: update.data,
+        step: options.update.step,
+        data: options.update.data,
       },
     });
   }
 }
 
 export { EventStream };
-export type { AgentEvent };
+export { AgentEvent };

@@ -1,7 +1,7 @@
 export { z } from "./zod";
 export { EventStream } from "./stream";
-export { AbstractAgentNode, IS_AGENT_NODE } from "./node";
-export { createAgentNode } from "./tools";
+export { AbstractAgentNode, IS_AGENT_NODE, createAgentNode } from "./node";
+export { AgentExecutor } from "./AgentExecutor";
 
 export type { Context, RenderContext } from "./context";
 export type { AgentNode, EmptyAgentState } from "./node";

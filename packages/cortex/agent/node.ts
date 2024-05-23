@@ -4,7 +4,7 @@ import { Context, RenderContext } from "./context";
 import { AsyncGeneratorWithField, AtLeastOne, ZodObjectSchema } from "./types";
 
 export type Metadata<
-  Config extends ZodObjectSchema,
+  Config extends ZodObjectSchema | z.ZodVoid,
   Input extends ZodObjectSchema,
   Output extends ZodObjectSchema,
   State extends ZodObjectSchema,
@@ -28,7 +28,7 @@ type RunResult<T> = AsyncGeneratorWithField<T, T | void>;
 export const IS_AGENT_NODE = Symbol("_AGENT_NODE_");
 
 export abstract class AbstractAgentNode<
-  Config extends ZodObjectSchema,
+  Config extends ZodObjectSchema | z.ZodVoid,
   Input extends ZodObjectSchema,
   Output extends ZodObjectSchema,
   State extends ZodObjectSchema = typeof emptyAgentState,
@@ -40,6 +40,7 @@ export abstract class AbstractAgentNode<
   // Sub classes can override this if needed
   // For example, if a node needs to emits output without any input,
   // it can be done during init
+  // Note: init `context.run` could be different than node runs
   init(context: Context<z.infer<Config>, z.infer<Output>>) {}
 
   // Returns the state of the agent node
@@ -82,7 +83,7 @@ export abstract class AbstractAgentNode<
 }
 
 type AgentNode<
-  Config extends ZodObjectSchema,
+  Config extends ZodObjectSchema | z.ZodVoid,
   Input extends ZodObjectSchema,
   Output extends ZodObjectSchema,
   State extends ZodObjectSchema = typeof emptyAgentState,
@@ -92,6 +93,60 @@ type AgentNode<
     context: Context<z.infer<Config>, z.infer<Output>>,
     input: z.infer<Input>
   ): RunResult<AtLeastOne<z.infer<Output>>>;
+};
+
+const emptyZodObject = z.object({});
+type WithDefaultZodObjectSchema<T> = T extends ZodObjectSchema
+  ? T
+  : typeof emptyZodObject;
+
+type WithDefaultVoid<T> = T extends ZodObjectSchema ? T : z.ZodVoid;
+
+export const createAgentNode = <
+  Config extends ZodObjectSchema | z.ZodVoid,
+  Input extends ZodObjectSchema | undefined,
+  Output extends ZodObjectSchema,
+>(options: {
+  id: string;
+  version: string;
+  name: string;
+  type?: "tool";
+  icon?: string;
+  config?: Config;
+  input?: Input;
+  output: Output;
+  run: AgentNode<
+    WithDefaultVoid<Config>,
+    WithDefaultZodObjectSchema<Input>,
+    Output
+  >["run"];
+}) => {
+  const config = options.config || z.object({});
+  const inputSchema = options.input || z.object({});
+  // @ts-expect-error
+  const clazz = class AgentTool extends AbstractAgentNode<
+    typeof config,
+    typeof inputSchema,
+    Output
+  > {
+    get metadata() {
+      return {
+        id: options.id,
+        version: options.version,
+        name: options.name,
+        type: options.type,
+        config,
+        input: inputSchema,
+        output: options.output,
+      };
+    }
+  };
+  clazz.prototype.run = options.run;
+  return clazz as unknown as AgentNode<
+    WithDefaultVoid<Config>,
+    WithDefaultZodObjectSchema<Input>,
+    Output
+  >;
 };
 
 export { emptyAgentState };

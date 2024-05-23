@@ -6,11 +6,11 @@ import { AtLeastOne } from "../types";
 const config = z.object({});
 
 const inputSchema = z.object({
-  markdownStream: z.instanceof(Observable).label("Markdown stream"),
+  markdownStream: z.instanceof(Observable<any>).label("Markdown stream"),
 });
 
 const output = z.object({
-  markdownStream: z.instanceof(Observable).label("Markdown stream"),
+  markdownStream: z.instanceof(Observable<any>).label("Markdown stream"),
 });
 
 class User extends AbstractAgentNode<
