@@ -26,7 +26,6 @@ const Chat = (props: { agentId: string }) => {
             yield json;
           }
         }
-
         return asyncGenerator();
       },
     },
