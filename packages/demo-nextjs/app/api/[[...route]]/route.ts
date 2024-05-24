@@ -2,8 +2,6 @@ import { Hono } from "hono";
 import { handle } from "hono/vercel";
 import { router as chatRouter } from "@portal/cortex-react/server/chat";
 
-export const runtime = "edge";
-
 const app = new Hono().basePath("/api");
 
 app.route("/chat", chatRouter);
