@@ -43,6 +43,9 @@ const transformCreateAgentNodeRunMethod = {
         const context = callee.get("object");
         if (this.context.scope == context.scope) {
           expression.node.arguments = [
+            // TODO: maybe use content hash of the render function as
+            // render id instead of counter to guarantee component + state
+            // consistency
             t.stringLiteral(`render-${this.renderCallCount++}`),
             ...([expression.node.arguments[1]] || []),
           ];

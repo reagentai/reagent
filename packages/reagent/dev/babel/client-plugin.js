@@ -55,6 +55,9 @@ const transformCreateAgentNodeRunMethod = {
           return t.yieldExpression(
             t.arrayExpression([
               // add render id as the first argument
+              // TODO: maybe use content hash of the render function as
+              // render id instead of counter to guarantee component + state
+              // consistency
               t.stringLiteral(`render-${this.renderCallCount++}`),
               declarations[0].init.arguments[0],
             ])
