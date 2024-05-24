@@ -1,3 +1,5 @@
+import assert from "assert";
+
 import { InitContext } from "../../core";
 import { BaseModelProvider, ModelOptions } from "../../models/base";
 import { Metadata } from "../../models/schema";
@@ -52,6 +54,10 @@ export class Groq extends BaseModelProvider {
     if (!model) {
       throw new Error("Invalid model: ", model);
     }
+    assert(
+      this.#options.apiKey || process.env.GROQ_API_KEY,
+      "Missing API key for Groq. Set GROQ_API_KEY env variable"
+    );
     ctxt.setState<Metadata>("metadata", {
       provider: "groq",
       family: model.family,

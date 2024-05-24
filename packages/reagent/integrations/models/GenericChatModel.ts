@@ -1,3 +1,5 @@
+import assert from "assert";
+
 import { InitContext } from "../../core";
 import { BaseModelProvider, ModelOptions } from "../../models/base";
 import { Metadata } from "../../models/schema";
@@ -17,6 +19,7 @@ export class GenericChatModel extends BaseModelProvider {
   }
 
   setup(ctxt: InitContext) {
+    assert(this.#options.apiKey, `Missing API key for ${this.#options.url}`);
     ctxt.setState<Metadata>("metadata", {
       provider: "generic",
       family: "unknown",

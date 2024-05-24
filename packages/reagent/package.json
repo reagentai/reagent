@@ -10,6 +10,7 @@
     "@babel/preset-react": "^7.24.1",
     "@babel/preset-typescript": "^7.24.1",
     "@babel/types": "^7.23.6",
+    "assert": "^2.1.0",
     "clean-set": "^1.1.2",
     "clsx": "^2.1.1",
     "dedent": "^1.5.1",

@@ -1,13 +1,15 @@
 import ky from "ky";
 // @ts-expect-error
 import delve from "dlv";
+import { get } from "lodash-es";
+import assert from "assert";
+
 import { Context, InitContext } from "../../core";
 import { BaseModelProvider, ModelOptions } from "../../models";
 import { Metadata } from "../../models/schema";
 import { ModelInvokeOptions } from "../../core/executor";
 import { FormattedChatMessage } from "../../prompt";
 import { jsonStreamToAsyncIterator } from "../../stream/stream";
-import { get } from "lodash-es";
 
 type Options = Pick<ModelOptions, "model"> & {
   url?: string;
@@ -66,6 +68,11 @@ export class AnthropicChat extends BaseModelProvider<ModelInvokeOptions> {
       temperature: options?.temperature || 0.8,
     };
     context.setGlobalState("core.llm.request.body", payload);
+
+    assert(
+      this.#options.apiKey || process.env.ANTHROPIC_API_KEY,
+      "Missing API key for Anthropic. Set ANTHROPIC_API_KEY env variable"
+    );
     const request = await ky.post(
       this.#options.url || "https://api.anthropic.com/v1/messages",
       {
@@ -79,7 +86,7 @@ export class AnthropicChat extends BaseModelProvider<ModelInvokeOptions> {
         },
         timeout: 10 * 60_1000,
         headers: {
-          "x-api-key": this.#options.apiKey,
+          "x-api-key": this.#options.apiKey || process.env.ANTHROPIC_API_KEY,
           "anthropic-version": this.#options.version,
         },
         json: payload,
