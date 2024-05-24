@@ -2,11 +2,16 @@ import { Hono } from "hono";
 import { ReplaySubject } from "rxjs";
 import { uniqueId } from "@portal/cortex/utils/uniqueId";
 import { z } from "@portal/cortex/agent";
+import { User } from "@portal/cortex/agent/nodes";
+
+import { agent as chatAgent } from "../demo-agents/chat";
 
 import { Chat } from "../chat/types";
 const router = new Hono();
 
 router.get("/_healthy", (c) => c.text("OK"));
+
+const agentsById = new Map([["chat", chatAgent]]);
 
 const sendMessageBodySchema = z.object({
   id: z.string(),
@@ -33,8 +38,34 @@ router.post("/sendMessage", async (ctx) => {
     },
   });
 
-  //   const agent = await loadAgentGraph(body.agentId);
-  //   await executeGraph(responseMessageId, replayStream, body.message, agent);
+  const agent = agentsById.get(body.agentId);
+  if (!agent) {
+    return ctx.text("Agent not found", 400);
+  }
+
+  const input = agent.getNode("input")!;
+  const user = agent.getNode<void, {}, User["_output"]>("user")!;
+
+  const res = input.invoke({
+    query: body.message.content,
+  });
+
+  user.output.markdownStream.select({ runId: res.run.id }).then((stream) => {
+    stream.subscribe((data: any) => {
+      replayStream.next({
+        type: "message/content/delta" as const,
+        data: {
+          id: responseMessageId,
+          message: {
+            content: {
+              delta: data.delta,
+            },
+          },
+        },
+      });
+    });
+  });
+
   const responseStream = new ReadableStream({
     async start(controller) {
       replayStream.subscribe({
@@ -45,26 +76,7 @@ router.post("/sendMessage", async (ctx) => {
             console.error("Error sending message to stream:", e);
           }
         },
-        complete() {
-          try {
-            controller.close();
-          } catch (e) {
-            console.error("Error closing stream:", e);
-          }
-        },
       });
-    },
-  });
-
-  replayStream.next({
-    type: "message/content/delta" as const,
-    data: {
-      id: responseMessageId,
-      message: {
-        content: {
-          delta: "Who are you?",
-        },
-      },
     },
   });
 
