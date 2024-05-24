@@ -1,0 +1,17 @@
+{
+  "name": "@portal/cortex-packages",
+  "version": "0.1.0",
+  "description": "Portal Cortex packages",
+  "type": "module",
+  "scripts": {
+    "format": "pnpm prettier -w ."
+  },
+  "keywords": [],
+  "workspaces": [
+    "packages/*"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "prettier": "^3.2.5"
+  }
+}

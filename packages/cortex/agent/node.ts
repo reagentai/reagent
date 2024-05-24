@@ -3,78 +3,72 @@ import z from "zod";
 import { Context, RenderContext } from "./context";
 import { AsyncGeneratorWithField, AtLeastOne, ZodObjectSchema } from "./types";
 
+type WithDefaultEmpty<T> =
+  T extends Record<string, unknown> ? T : Record<string, unknown>;
+
 export type Metadata<
-  Config extends ZodObjectSchema | z.ZodVoid,
-  Input extends ZodObjectSchema,
-  Output extends ZodObjectSchema,
-  State extends ZodObjectSchema,
+  Config extends Record<string, unknown>,
+  Input extends Record<string, unknown>,
+  Output extends Record<string, unknown>,
+  State = Record<string, unknown>,
 > = {
   id: string;
   name: string;
   version: string;
   icon?: string;
   type?: "tool";
-  config: Config;
-  input: Input;
-  output: Output;
-  state?: State;
+  config: ZodObjectSchema<Config>;
+  input: ZodObjectSchema<Input>;
+  output: ZodObjectSchema<Output>;
+  state?: ZodObjectSchema<State>;
 };
-
-const emptyAgentState = z.object({});
-type EmptyAgentState = typeof emptyAgentState;
 
 type RunResult<T> = AsyncGeneratorWithField<T, T | void>;
 
 export const IS_AGENT_NODE = Symbol("_AGENT_NODE_");
 
 export abstract class AbstractAgentNode<
-  Config extends ZodObjectSchema | z.ZodVoid,
-  Input extends ZodObjectSchema,
-  Output extends ZodObjectSchema,
-  State extends ZodObjectSchema = typeof emptyAgentState,
+  Config extends Record<string, unknown> | void,
+  Input extends Record<string, unknown>,
+  Output extends Record<string, unknown>,
+  State extends Record<string, unknown> = Record<string, unknown>,
 > {
+  // "phantom" field to infer output type
+  _output: Output;
+  constructor() {
+    this._output = undefined as any;
+  }
+
   static [IS_AGENT_NODE]: boolean = true;
 
-  abstract get metadata(): Metadata<Config, Input, Output, State>;
+  abstract get metadata(): Metadata<
+    WithDefaultEmpty<Config>,
+    Input,
+    Output,
+    State
+  >;
 
   // Sub classes can override this if needed
   // For example, if a node needs to emits output without any input,
   // it can be done during init
   // Note: init `context.run` could be different than node runs
-  init(context: Context<z.infer<Config>, z.infer<Output>>) {}
+  init(context: Context<Config, Output>) {}
 
   // Returns the state of the agent node
   // This is called right before the dependency of this state is called
-  getState(context: Context<z.infer<Config>, z.infer<Output>>) {
+  getState(context: Context<Config, Output>) {
     return {};
   }
 
   // If a node needs to run on partial output, the node should implement this
-  onInputEvent(
-    context: Context<z.infer<Config>, z.infer<Output>>,
-    data: AtLeastOne<z.infer<Input>>
-  ) {}
+  onInputEvent(context: Context<Config, Output>, data: AtLeastOne<Input>) {}
 
   abstract run(
-    context: Context<z.infer<Config>, z.infer<Output>>,
-    input: z.infer<Input>
-  ): RunResult<AtLeastOne<z.infer<Output>>>;
+    context: Context<Config, Output>,
+    input: Input
+  ): RunResult<AtLeastOne<Output>>;
 
   async *render(context: RenderContext): any {}
-
-  // TODO: this method can be used to build agent workflow graph in code
-  // if low-code UI is not preferred.
-  //
-  // potential idea:
-  // const node1 = chatCompletion(config);
-  // const node2 = user(config);
-  // const graph = creatGraph({
-  //   edges: [
-  //     node1.graph.output.markdown: node2.graph.input.markdown
-  //   ]
-  // });
-  // executeGraph(graph);
-  graph() {}
 
   // TODO: in the future, to resolve only the output fields used by dependent nodes,
   // the interface can be updated such that AgentNode must implement `async resolve{OutputKey}`
@@ -83,50 +77,43 @@ export abstract class AbstractAgentNode<
 }
 
 type AgentNode<
-  Config extends ZodObjectSchema | z.ZodVoid,
-  Input extends ZodObjectSchema,
-  Output extends ZodObjectSchema,
-  State extends ZodObjectSchema = typeof emptyAgentState,
+  Config extends Record<string, unknown> | void,
+  Input extends Record<string, unknown>,
+  Output extends Record<string, unknown>,
+  State extends Record<string, unknown> = Record<string, unknown>,
 > = AbstractAgentNode<Config, Input, Output, State> & {
   new (): AbstractAgentNode<Config, Input, Output, State>;
   run(
-    context: Context<z.infer<Config>, z.infer<Output>>,
-    input: z.infer<Input>
-  ): RunResult<AtLeastOne<z.infer<Output>>>;
+    context: Context<Config, Output>,
+    input: Input
+  ): RunResult<AtLeastOne<Output>>;
 };
 
-const emptyZodObject = z.object({});
-type WithDefaultZodObjectSchema<T> = T extends ZodObjectSchema
-  ? T
-  : typeof emptyZodObject;
-
-type WithDefaultVoid<T> = T extends ZodObjectSchema ? T : z.ZodVoid;
-
 export const createAgentNode = <
-  Config extends ZodObjectSchema | z.ZodVoid,
-  Input extends ZodObjectSchema | undefined,
-  Output extends ZodObjectSchema,
+  Config extends Record<string, unknown> | void,
+  Input extends Record<string, unknown> | void,
+  Output extends Record<string, unknown>,
 >(options: {
   id: string;
   version: string;
   name: string;
   type?: "tool";
   icon?: string;
-  config?: Config;
-  input?: Input;
-  output: Output;
-  run: AgentNode<
-    WithDefaultVoid<Config>,
-    WithDefaultZodObjectSchema<Input>,
-    Output
-  >["run"];
+  config?: ZodObjectSchema<Config>;
+  input?: ZodObjectSchema<Input>;
+  output: ZodObjectSchema<Output>;
+  run: AgentNode<Config, WithDefaultEmpty<Input>, Output>["run"];
 }) => {
-  const config = options.config || z.object({});
-  const inputSchema = options.input || z.object({});
+  const config = (options.config || z.object({})) as ZodObjectSchema<
+    WithDefaultEmpty<Config>
+  >;
+  const inputSchema = (options.input || z.object({})) as ZodObjectSchema<
+    WithDefaultEmpty<Input>
+  >;
   // @ts-expect-error
   const clazz = class AgentTool extends AbstractAgentNode<
-    typeof config,
-    typeof inputSchema,
+    Config,
+    WithDefaultEmpty<Input>,
     Output
   > {
     get metadata() {
@@ -142,12 +129,7 @@ export const createAgentNode = <
     }
   };
   clazz.prototype.run = options.run;
-  return clazz as unknown as AgentNode<
-    WithDefaultVoid<Config>,
-    WithDefaultZodObjectSchema<Input>,
-    Output
-  >;
+  return clazz as unknown as AgentNode<Config, WithDefaultEmpty<Input>, Output>;
 };
 
-export { emptyAgentState };
-export type { AgentNode, EmptyAgentState };
+export type { AgentNode };

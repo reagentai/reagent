@@ -103,7 +103,7 @@ const ChatCompletion = createAgentNode({
           stream.next({
             runId: context.run.id,
             nodeId: context.node.id,
-            type: "content/delta",
+            type: "message/content/delta",
             delta: chunk,
           });
         }),

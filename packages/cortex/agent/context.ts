@@ -9,7 +9,7 @@ export type Context<
     id: string;
   };
   config: Config;
-  sendOutput(output: Output): void;
+  sendOutput(output: Partial<Output>): void;
   render<Data>(
     Component: (props: { data: Data }) => JSX.Element,
     // additional props that's passed directly to component

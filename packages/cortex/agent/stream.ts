@@ -43,8 +43,11 @@ type AgentEvent<Output, State> =
 class EventStream<Output, State = any> extends ReplaySubject<
   AgentEvent<Output, State>
 > {
-  constructor() {
-    super();
+  constructor(config: { buffer?: number } = {}) {
+    // TODO: pass in custom _timestampProvider such that the timestamp is
+    // same for all events of a given run. This way it can guaranteed that
+    // either all events of a run is bufferred or none at all
+    super(config.buffer);
   }
 
   sendOutput(options: {

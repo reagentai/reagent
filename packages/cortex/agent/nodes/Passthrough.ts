@@ -1,30 +1,28 @@
-import { z, Context, AbstractAgentNode, ZodObjectSchema } from "../";
+import { z, Context, AbstractAgentNode } from "../";
+import { ZodObjectSchema } from "../types";
 
 export default class Passthrough<
-  Output extends ZodObjectSchema,
-> extends AbstractAgentNode<z.ZodVoid, Output, Output> {
-  #schema: Output;
-  constructor(schema: Output) {
+  Output extends Record<string, unknown>,
+> extends AbstractAgentNode<void, Output, Output> {
+  #schema: ZodObjectSchema<Output>;
+  constructor(schema: ZodObjectSchema<Output>) {
     super();
     this.#schema = schema;
   }
 
   get metadata() {
     return {
-      id: "@core/input",
+      id: "@core/passthrough",
       version: "0.0.1",
-      name: "Input",
-      config: z.void(),
+      name: "Passthrough",
+      config: z.object({}),
       input: this.#schema,
       output: this.#schema,
     };
   }
 
   // @ts-expect-error
-  async *run(
-    _context: Context<z.infer<z.ZodVoid>, z.infer<Output>>,
-    input: z.infer<Output>
-  ) {
+  async *run(_context: Context<void, Output>, input: Output) {
     yield input;
   }
 }

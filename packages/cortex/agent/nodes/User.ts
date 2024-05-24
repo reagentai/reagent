@@ -3,20 +3,22 @@ import { Observable, ReplaySubject, Subject, concatMap } from "rxjs";
 import { z, AbstractAgentNode, Context } from "../";
 import { AtLeastOne } from "../types";
 
-const config = z.object({});
+const config = z.void();
 
 const inputSchema = z.object({
+  markdown: z.string(),
   markdownStream: z.instanceof(Observable<any>).label("Markdown stream"),
 });
 
 const output = z.object({
+  markdown: z.string(),
   markdownStream: z.instanceof(Observable<any>).label("Markdown stream"),
 });
 
 class User extends AbstractAgentNode<
-  typeof config,
-  typeof inputSchema,
-  typeof output
+  z.infer<typeof config>,
+  z.infer<typeof inputSchema>,
+  z.infer<typeof output>
 > {
   #stream: Subject<any>;
   #subjectStreams: Observable<any>[];
@@ -31,7 +33,7 @@ class User extends AbstractAgentNode<
       id: "@core/user",
       version: "0.0.1",
       name: "User",
-      config,
+      config: z.object({}),
       input: inputSchema,
       output,
     };
