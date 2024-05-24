@@ -1,8 +1,8 @@
 "use client";
 import { ErrorBoundary } from "react-error-boundary";
-import { jsonStreamToAsyncIterator } from "@portal/cortex/stream/stream";
-import { AIChat, createChatStore } from "@portal/cortex-react/chat";
-import { AgentContextProvider } from "@portal/cortex-react/agent";
+import { jsonStreamToAsyncIterator } from "@portal/reagent/stream/stream";
+import { AIChat, createChatStore } from "@portal/reagent-react/chat";
+import { AgentContextProvider } from "@portal/reagent-react/agent";
 
 const Chat = (props: { agentId: string }) => {
   "use client";
@@ -30,7 +30,7 @@ const Chat = (props: { agentId: string }) => {
       },
     },
     {
-      persistKey: "portal-cortex-demo-chat",
+      persistKey: "portal-reagent-demo-chat",
     }
   );
 

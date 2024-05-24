@@ -1,12 +1,12 @@
 {
-  "name": "@portal/cortex-react",
+  "name": "@portal/reagent-react",
   "version": "0.1.0",
-  "description": "React UI for Portal cortex",
+  "description": "React UI for Portal reagent",
   "type": "module",
   "scripts": {},
   "license": "MIT",
   "dependencies": {
-    "@portal/cortex": "workspace:^",
+    "@portal/reagent": "workspace:^",
     "clsx": "^2.1.1",
     "hono": "^4.3.9",
     "immer": "^10.0.3",

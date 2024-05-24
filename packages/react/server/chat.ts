@@ -1,8 +1,8 @@
 import { Hono } from "hono";
 import { ReplaySubject } from "rxjs";
-import { uniqueId } from "@portal/cortex/utils/uniqueId";
-import { z } from "@portal/cortex/agent";
-import { User } from "@portal/cortex/agent/nodes";
+import { uniqueId } from "@portal/reagent/utils/uniqueId";
+import { z } from "@portal/reagent/agent";
+import { User } from "@portal/reagent/agent/nodes";
 
 import { agent as chatAgent } from "../demo-agents/chat";
 

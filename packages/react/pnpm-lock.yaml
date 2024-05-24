@@ -5,9 +5,9 @@ settings:
   excludeLinksFromLockfile: false
 
 dependencies:
-  '@portal/cortex':
+  '@portal/reagent':
     specifier: workspace:^
-    version: link:../cortex
+    version: link:../reagent
   clsx:
     specifier: ^2.1.1
     version: 2.1.1

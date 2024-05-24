@@ -1,5 +1,5 @@
 {
-  "name": "@portal/cortex-packages",
+  "name": "@portal/reagent-workspace",
   "version": "0.1.0",
   "description": "Portal Cortex packages",
   "type": "module",

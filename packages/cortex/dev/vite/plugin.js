@@ -35,7 +35,7 @@ const createPlugin = (options = {}) => {
     throw new Error(`missing "tools" option`);
   }
   return {
-    name: "vite-plugin-portal-cortex",
+    name: "vite-plugin-portal-reagent",
     transform(code, id, transformOptions) {
       if (!transformOptions) {
         throw new Error(

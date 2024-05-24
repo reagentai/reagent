@@ -12,7 +12,7 @@ importers:
         specifier: ^3.2.5
         version: 3.2.5
 
-  packages/cortex:
+  packages/reagent:
     dependencies:
       '@babel/core':
         specifier: ^7.24.5
@@ -99,10 +99,10 @@ importers:
       '@babel/generator':
         specifier: ^7.24.5
         version: 7.24.5
-      '@portal/cortex':
+      '@portal/reagent':
         specifier: workspace:^
-        version: link:../cortex
-      '@portal/cortex-react':
+        version: link:../reagent
+      '@portal/reagent-react':
         specifier: workspace:^
         version: link:../react
       hono:
@@ -139,9 +139,9 @@ importers:
 
   packages/react:
     dependencies:
-      '@portal/cortex':
+      '@portal/reagent':
         specifier: workspace:^
-        version: link:../cortex
+        version: link:../reagent
       clsx:
         specifier: ^2.1.1
         version: 2.1.1

@@ -1,5 +1,5 @@
-import { GraphAgent, z } from "@portal/cortex/agent";
-import { Passthrough, ChatCompletion, User } from "@portal/cortex/agent/nodes";
+import { GraphAgent, z } from "@portal/reagent/agent";
+import { Passthrough, ChatCompletion, User } from "@portal/reagent/agent/nodes";
 
 const agent = new GraphAgent();
 

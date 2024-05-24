@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import { HiOutlinePaperAirplane } from "react-icons/hi";
-import { uniqueId } from "@portal/cortex/utils/uniqueId";
+import { uniqueId } from "@portal/reagent/utils/uniqueId";
 
 import { adjustTextareaHeight } from "../utils/textarea";
 

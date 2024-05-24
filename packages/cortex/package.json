@@ -1,5 +1,5 @@
 {
-  "name": "@portal/cortex",
+  "name": "@portal/reagent",
   "version": "0.1.0",
   "description": "A framework to build AI agents",
   "type": "module",

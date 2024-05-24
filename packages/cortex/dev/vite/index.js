@@ -1,1 +1,1 @@
-export { default as cortex } from "./plugin.js";
+export { default as reagent } from "./plugin.js";

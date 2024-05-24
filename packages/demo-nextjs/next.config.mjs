@@ -6,10 +6,10 @@ export default {
       test: /\.+(js|jsx|mjs|cjs|ts|tsx)$/,
       use: [
         {
-          loader: "@portal/cortex/dev/webpack/index.js",
+          loader: "@portal/reagent/dev/webpack/index.js",
           options: {
             ssr: isServer,
-            tools: [path.resolve("../cortex/agent/nodes")],
+            tools: [path.resolve("../reagent/agent/nodes")],
           },
         },
       ],

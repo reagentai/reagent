@@ -1,7 +1,7 @@
 {
-  "name": "@portal/nextjs-cortex",
+  "name": "@portal/nextjs-reagent",
   "version": "0.1.0",
-  "description": "Next.js demo of @portal/cortex",
+  "description": "Next.js demo of @portal/reagent",
   "type": "module",
   "scripts": {
     "dev": "next dev",
@@ -13,8 +13,8 @@
   "license": "MIT",
   "dependencies": {
     "@babel/generator": "^7.24.5",
-    "@portal/cortex": "workspace:^",
-    "@portal/cortex-react": "workspace:^",
+    "@portal/reagent": "workspace:^",
+    "@portal/reagent-react": "workspace:^",
     "hono": "^4.3.9",
     "next": "^14.2.3",
     "react": "^18.3.1",
