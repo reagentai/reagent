@@ -62,7 +62,6 @@ const ChatCompletion = createAgentNode({
     >,
     input: z.infer<typeof inputSchema>
   ) {
-    await new Promise((resolve) => setTimeout(resolve, 3_000));
     const config = configSchema.parse(context.config);
     const prompt = ChatPromptTemplate.fromMessages([
       [

@@ -10,7 +10,6 @@ export default createAgentNode({
   id: "@core/input",
   name: "Chat Input",
   version: "0.0.1",
-  config: z.void(),
   input: inputSchema,
   output: outputSchema,
   async *run(
