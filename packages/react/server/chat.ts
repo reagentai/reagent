@@ -51,18 +51,23 @@ router.post("/sendMessage", async (ctx) => {
   });
 
   user.output.markdownStream.select({ runId: res.run.id }).then((stream) => {
-    stream.subscribe((data: any) => {
-      replayStream.next({
-        type: "message/content/delta" as const,
-        data: {
-          id: responseMessageId,
-          message: {
-            content: {
-              delta: data.delta,
+    stream.subscribe({
+      next(data: any) {
+        replayStream.next({
+          type: "message/content/delta" as const,
+          data: {
+            id: responseMessageId,
+            message: {
+              content: {
+                delta: data.delta,
+              },
             },
           },
-        },
-      });
+        });
+      },
+      complete() {
+        replayStream.complete();
+      },
     });
   });
 
@@ -74,6 +79,13 @@ router.post("/sendMessage", async (ctx) => {
             controller.enqueue("data: " + JSON.stringify(data) + "\n\n");
           } catch (e) {
             console.error("Error sending message to stream:", e);
+          }
+        },
+        complete() {
+          try {
+            controller.close();
+          } catch (e) {
+            console.error("Error closing stream:", e);
           }
         },
       });

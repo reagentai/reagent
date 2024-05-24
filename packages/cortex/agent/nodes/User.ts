@@ -1,4 +1,4 @@
-import { Observable, ReplaySubject, Subject, concatMap } from "rxjs";
+import { Observable, ReplaySubject, Subject } from "rxjs";
 
 import { z, AbstractAgentNode, Context } from "../";
 import { AtLeastOne } from "../types";
@@ -39,14 +39,6 @@ class User extends AbstractAgentNode<
     };
   }
 
-  init(context: Context<z.infer<typeof config>, z.infer<typeof output>>) {
-    context.sendOutput({
-      markdownStream: this.#stream.pipe(
-        concatMap(() => this.#subjectStreams.pop()!)
-      ),
-    });
-  }
-
   onInputEvent(
     context: Context<z.infer<typeof config>, z.infer<typeof output>>,
     data: AtLeastOne<z.infer<typeof inputSchema>>
@@ -58,13 +50,10 @@ class User extends AbstractAgentNode<
   }
 
   async *run(
-    context: Context<z.infer<typeof config>, z.infer<typeof output>>,
+    _context: Context<z.infer<typeof config>, z.infer<typeof output>>,
     input: z.infer<typeof inputSchema>
   ) {
-    if (input.markdownStream) {
-      this.#subjectStreams.push(input.markdownStream);
-      this.#stream.next(0);
-    }
+    yield input;
   }
 }
 

@@ -12,15 +12,6 @@ const input = agent.addNode(
   )
 );
 
-const context = agent.addNode(
-  "context",
-  new Passthrough(
-    z.object({
-      context: z.string(),
-    })
-  )
-);
-
 const chat1 = agent.addNode("chat-1", new ChatCompletion(), {
   systemPrompt: "You are an amazing AI assistant called Jarvis",
   temperature: 0.9,
