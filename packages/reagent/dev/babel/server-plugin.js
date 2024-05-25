@@ -1,4 +1,6 @@
 import * as t from "@babel/types";
+// import generator from "@babel/generator";
+// const { default: generate } = generator;
 
 const tranformCreateAgentNode = {
   ObjectMethod(path) {
@@ -17,6 +19,8 @@ const tranformCreateAgentNode = {
 
 const transformCreateAgentNodeRunMethod = {
   BlockStatement(path) {
+    // only check for the top level block statements of execute methods
+    path.skip();
     if (path.parent !== this.method) {
       return;
     }
@@ -32,6 +36,11 @@ const transformCreateAgentNodeRunMethod = {
       // if it's a var declaration, check the init expression
       if (declarations.length > 0 && !expression.node) {
         expression = declarations[0].get("init");
+      }
+
+      // skip the expression if node is undefined
+      if (!expression.node) {
+        return expr;
       }
 
       const callee = expression.get("callee");

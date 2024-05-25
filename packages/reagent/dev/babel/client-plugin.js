@@ -9,7 +9,7 @@ const tranformCreateAgentNode = {
     path.node.generator = true;
     path.node.async = false;
     const context = path.get("params")[0];
-    path.traverse(transformCreateAgentNodeRunMethod, {
+    path.traverse(transformCreateAgentNodeExecuteMethod, {
       method: path.node,
       contextName: context.node.name,
       context,
@@ -18,8 +18,10 @@ const tranformCreateAgentNode = {
   },
 };
 
-const transformCreateAgentNodeRunMethod = {
+const transformCreateAgentNodeExecuteMethod = {
   BlockStatement(path) {
+    // only check for the top level block statements of execute methods
+    path.skip();
     if (path.parent !== this.method) {
       return;
     }
@@ -36,6 +38,11 @@ const transformCreateAgentNodeRunMethod = {
         // if it's a var declaration, check the init expression
         if (declarations.length > 0 && !expression.node) {
           expression = declarations[0].get("init");
+        }
+
+        // skip the expression if node is undefined
+        if (!expression.node) {
+          return false;
         }
 
         const callee = expression.get("callee");
@@ -81,11 +88,6 @@ function createPlugin() {
         CallExpression(path) {
           const { node, parent } = path;
           if (path.node.callee.name == "createAgentNode") {
-            if (parent.type != "VariableDeclarator") {
-              throw new Error(
-                "expected use of createAgentNode: const x = createAgentNode(...)"
-              );
-            }
             parent.init = t.objectExpression(
               node.arguments[0].properties.filter((prop, index) => {
                 if (prop.key.name == "execute") {
