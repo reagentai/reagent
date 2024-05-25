@@ -1,5 +1,4 @@
-import z from "zod";
-
+import { z } from "./zod";
 import { Context, RenderContext } from "./context";
 import { AsyncGeneratorWithField, AtLeastOne, ZodObjectSchema } from "./types";
 
@@ -14,6 +13,7 @@ export type Metadata<
 > = {
   id: string;
   name: string;
+  description?: string;
   version: string;
   icon?: string;
   type?: "tool";
@@ -63,7 +63,7 @@ export abstract class AbstractAgentNode<
   // If a node needs to run on partial output, the node should implement this
   onInputEvent(context: Context<Config, Output>, data: AtLeastOne<Input>) {}
 
-  abstract run(
+  abstract execute(
     context: Context<Config, Output>,
     input: Input
   ): RunResult<AtLeastOne<Output>>;
@@ -97,12 +97,13 @@ export const createAgentNode = <
   id: string;
   version: string;
   name: string;
+  description?: string;
   type?: "tool";
   icon?: string;
   config?: ZodObjectSchema<Config>;
   input?: ZodObjectSchema<Input>;
   output: ZodObjectSchema<Output>;
-  run: AgentNode<Config, WithDefaultEmpty<Input>, Output>["run"];
+  execute: AgentNode<Config, WithDefaultEmpty<Input>, Output>["run"];
 }) => {
   const config = (options.config || z.object({})) as ZodObjectSchema<
     WithDefaultEmpty<Config>
@@ -121,6 +122,7 @@ export const createAgentNode = <
         id: options.id,
         version: options.version,
         name: options.name,
+        description: options.description,
         type: options.type,
         config,
         input: inputSchema,
@@ -128,7 +130,7 @@ export const createAgentNode = <
       };
     }
   };
-  clazz.prototype.run = options.run;
+  clazz.prototype.execute = options.execute;
   return clazz as unknown as AgentNode<Config, WithDefaultEmpty<Input>, Output>;
 };
 

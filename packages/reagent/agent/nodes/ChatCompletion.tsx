@@ -31,7 +31,15 @@ const inputSchema = z.object({
   query: z.string().label("Query"),
   context: z.string().optional().label("Context"),
   chatHistory: z.array(z.any()).optional().label("Chat History"),
-  tools: z.object({ test: z.string() }).array().optional().label("Tools"),
+  tools: z
+    .object({
+      name: z.string(),
+      description: z.string(),
+      parameters: z.record(z.string(), z.any()),
+    })
+    .array()
+    .optional()
+    .label("Tools"),
 });
 
 type ChatResponseStream = {
@@ -55,7 +63,7 @@ const ChatCompletion = createAgentNode({
   config: configSchema,
   input: inputSchema,
   output: outputSchema,
-  async *run(
+  async *execute(
     context: Context<
       z.infer<typeof configSchema>,
       z.infer<typeof outputSchema>

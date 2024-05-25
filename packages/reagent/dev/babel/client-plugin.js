@@ -2,7 +2,7 @@ import * as t from "@babel/types";
 
 const tranformCreateAgentNode = {
   ObjectMethod(path) {
-    if (path.node.key.name != "run") {
+    if (path.node.key.name != "execute") {
       path.skip();
     }
     // make sure run is non-async generator
@@ -88,10 +88,12 @@ function createPlugin() {
             }
             parent.init = t.objectExpression(
               node.arguments[0].properties.filter((prop, index) => {
-                if (prop.key.name == "run") {
-                  path.traverse(tranformCreateAgentNode, { run: prop });
+                if (prop.key.name == "execute") {
+                  path.traverse(tranformCreateAgentNode);
                 }
-                return ["id", "version", "name", "run"].includes(prop.key.name);
+                return ["id", "version", "name", "execute"].includes(
+                  prop.key.name
+                );
               })
             );
           }

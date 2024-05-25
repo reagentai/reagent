@@ -12,7 +12,7 @@ export default createAgentNode({
   version: "0.0.1",
   input: inputSchema,
   output: outputSchema,
-  async *run(
+  async *execute(
     _context: Context<void, z.infer<typeof outputSchema>>,
     input: z.infer<typeof outputSchema>
   ) {

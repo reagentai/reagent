@@ -49,7 +49,7 @@ class User extends AbstractAgentNode<
     }
   }
 
-  async *run(
+  async *execute(
     _context: Context<z.infer<typeof config>, z.infer<typeof output>>,
     input: z.infer<typeof inputSchema>
   ) {

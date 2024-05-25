@@ -1,11 +1,16 @@
 import {
+  BehaviorSubject,
   Observable,
+  concat,
   filter,
   groupBy,
   map,
   mergeMap,
+  mergeWith,
   of,
+  partition,
   reduce,
+  switchMap,
   take,
 } from "rxjs";
 
@@ -15,11 +20,14 @@ import { EventStream } from "./stream";
 import { uniqueId } from "../utils/uniqueId";
 
 type OutputValueStream<Output> = Observable<{
-  run: { id: string };
+  // run is null for run independent global values
+  run: {
+    id: string;
+  } | null;
   value: Output;
 }>;
 
-type OutputValueProvider<Output> = Pick<
+type OutputValueProviderInterface<Output> = Pick<
   OutputValueStream<Output>,
   "subscribe" | "pipe"
 > & {
@@ -30,6 +38,8 @@ type OutputValueProvider<Output> = Pick<
    */
   select(options: { runId: string }): Promise<Output>;
 };
+
+const OUTPUT_VALUE_PROVIDER = Symbol("__OUTPUT_VALUE_PROVIDER__");
 
 class GraphNode<
   Config extends Record<string, unknown> | void,
@@ -61,50 +71,107 @@ class GraphNode<
   }
 
   bind(edges: {
-    [K in keyof Input]: OutputValueProvider<Required<Input>[K]>;
+    [K in keyof Input]: Required<Input>[K] extends any[]
+      ? OutputValueProviderInterface<Required<Input>[K][number]>[]
+      : OutputValueProviderInterface<Required<Input>[K]> | Required<Input>[K];
   }) {
-    const self = this;
     const edgeEntries = Object.entries(edges);
-    of(...edgeEntries)
-      .pipe(
-        mergeMap(([inputField, value]) => {
-          const provider = value as OutputValueProvider<Output>;
-          return provider.pipe(
-            map((e: any) => {
-              return {
-                run: e.run,
+    const totalInputEdges = edgeEntries
+      .map(([_, provider]) => {
+        return Array.isArray(provider) ? provider.length : 1;
+      })
+      .reduce((agg, cur) => agg + cur, 0);
+
+    const providers = of(...edgeEntries).pipe(
+      mergeMap(([inputField, providers]) => {
+        const isArray = Array.isArray(providers);
+        const provider = isArray
+          ? concat(providers.map((p) => p))
+          : of(providers);
+
+        return provider.pipe(
+          switchMap((provider: any) => {
+            if (!provider[OUTPUT_VALUE_PROVIDER]) {
+              // Note: if it's not a output provider, treat it as a value
+              return new BehaviorSubject({
+                run: null,
                 key: inputField,
-                value: e.value,
-              };
-            })
-          );
-        })
-      )
-      .pipe(groupBy((e) => e.run.id))
-      .subscribe((group) => {
-        group
-          // take until total number of the mapped input fields are received
-          .pipe(take(edgeEntries.length))
-          .pipe(
-            reduce(
-              (acc, cur) => {
-                if (acc.run && acc.run.id != cur.run.id) {
-                  throw new Error(`unexpected error: run is must match`);
-                } else {
-                  acc["run"] = cur.run;
-                }
-                acc.input[cur.key] = cur.value;
-                return acc;
-              },
-              {
-                input: {},
-              } as any
-            )
-          )
-          .subscribe((e) => {
-            self.#invoke(e.run, e.input);
-          });
+                isArray,
+                value: provider,
+              });
+            }
+            return provider.pipe(
+              map((e: any) => {
+                return {
+                  run: e.run,
+                  key: inputField,
+                  isArray,
+                  value: e.value,
+                };
+              })
+            ) as unknown as Observable<any>;
+          })
+        );
+      })
+    );
+
+    const [globalEvents, runEvents] = partition(
+      providers,
+      (e) => e.run == null
+    );
+
+    const reducer = () =>
+      reduce<{ run: any; key: string; isArray: boolean; value: any }, any>(
+        (acc, cur) => {
+          if (acc.run?.id) {
+            // run is null for global events
+            // so only throw error if run id doesn't match for run events
+            if (cur.run != null && acc.run.id != cur.run.id) {
+              throw new Error(`unexpected error: run is must match`);
+            }
+          } else if (cur.run != null) {
+            acc["run"] = cur.run;
+          }
+
+          if (acc.input[cur.key] == undefined) {
+            // if there's more than one value for a given key,
+            // reduce them to an array
+            acc.input[cur.key] = cur.isArray ? [cur.value] : cur.value;
+          } else {
+            if (!cur.isArray) {
+              throw new Error(
+                `Unexpected error: got more than 1 value when only 1 is expected`
+              );
+            }
+            acc.input[cur.key].push(cur.value);
+          }
+          return acc;
+        },
+        {
+          input: {},
+          run: null,
+        } as any
+      );
+
+    const self = this;
+    // If all bound values are global value provider, invoke the execution immediately
+    globalEvents
+      .pipe(take(totalInputEdges))
+      .pipe(reducer())
+      .subscribe((e) => {
+        self.#invoke(e.run, e.input);
       });
+
+    runEvents.pipe(groupBy((e) => e.run.id)).subscribe((group) => {
+      group
+        .pipe(mergeWith(globalEvents))
+        // take until total number of the mapped input fields are received
+        .pipe(take(totalInputEdges))
+        .pipe(reducer())
+        .subscribe((e) => {
+          self.#invoke(e.run, e.input);
+        });
+    });
   }
 
   invoke(input: Input) {
@@ -115,8 +182,36 @@ class GraphNode<
     return { run };
   }
 
+  get schema(): OutputValueProviderInterface<{
+    name: string;
+    description: string;
+    parameters: Record<string, any>;
+  }> {
+    const metadata = this.#node.metadata;
+    const stream = new BehaviorSubject({
+      run: null,
+      value: {
+        name: metadata.name,
+        description: metadata.description!,
+        parameters: {},
+      },
+    });
+
+    // @ts-expect-error
+    return Object.assign(stream, {
+      [OUTPUT_VALUE_PROVIDER]: true,
+      select(_options: { runId: string }) {
+        return new Promise((resolve) => {
+          stream.subscribe((schema) => {
+            resolve(schema.value);
+          });
+        });
+      },
+    });
+  }
+
   get output(): {
-    [K in keyof Output]: OutputValueProvider<Output[K]>;
+    [K in keyof Output]: OutputValueProviderInterface<Output[K]>;
   } {
     const self = this;
     // @ts-expect-error
@@ -131,8 +226,8 @@ class GraphNode<
                 return { run: e.run, value: e.output[field] };
               })
             );
-
-          Object.assign(stream, {
+          return Object.assign(stream, {
+            [OUTPUT_VALUE_PROVIDER]: true,
             select(options: { runId: string }) {
               return new Promise((resolve) => {
                 stream
@@ -143,8 +238,6 @@ class GraphNode<
               });
             },
           });
-
-          return stream;
         },
       }
     );
@@ -152,7 +245,7 @@ class GraphNode<
 
   async #invoke(run: { id: string }, input: Input) {
     const context = this.#buildContext(run);
-    const generator = this.#node.run(context, input);
+    const generator = this.#node.execute(context, input);
     for await (const partialOutput of generator) {
       this.#stream.sendOutput({
         run,

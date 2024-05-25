@@ -2,7 +2,7 @@ import * as t from "@babel/types";
 
 const tranformCreateAgentNode = {
   ObjectMethod(path) {
-    if (path.node.key.name != "run") {
+    if (path.node.key.name != "execute") {
       path.skip();
     }
     const context = path.get("params")[0];
@@ -66,8 +66,8 @@ function createPlugin() {
           // TODO: make sure createAgentNode is the one from "@portal/reagent/agent"
           if (path.node.callee.name == "createAgentNode") {
             node.arguments[0].properties.forEach((prop, index) => {
-              if (prop.key.name == "run") {
-                path.traverse(tranformCreateAgentNode, { run: prop });
+              if (prop.key.name == "execute") {
+                path.traverse(tranformCreateAgentNode);
               }
             });
           }
