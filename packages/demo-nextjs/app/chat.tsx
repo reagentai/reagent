@@ -1,8 +1,9 @@
 "use client";
 import { ErrorBoundary } from "react-error-boundary";
-import { jsonStreamToAsyncIterator } from "@portal/reagent/stream/stream";
+import { jsonStreamToAsyncIterator } from "@portal/reagent/llm/stream";
 import { AIChat, createChatStore } from "@portal/reagent-react/chat";
 import { AgentContextProvider } from "@portal/reagent-react/agent";
+import { GetWeather } from "@portal/reagent-react/demo-agents/tools/Weather";
 
 const Chat = (props: { agentId: string }) => {
   "use client";
@@ -37,7 +38,7 @@ const Chat = (props: { agentId: string }) => {
   return (
     <div className="h-full flex">
       <ErrorBoundary fallback={<div>ERROR!</div>}>
-        <AgentContextProvider nodes={[]}>
+        <AgentContextProvider nodes={[GetWeather]}>
           <AIChat store={store} />
         </AgentContextProvider>
       </ErrorBoundary>

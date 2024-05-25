@@ -9,7 +9,10 @@ export default {
           loader: "@portal/reagent/dev/webpack/index.js",
           options: {
             ssr: isServer,
-            tools: [path.resolve("../reagent/agent/nodes")],
+            tools: [
+              path.resolve("../reagent/agent/nodes"),
+              path.resolve("../react/demo-agents/tools"),
+            ],
           },
         },
       ],

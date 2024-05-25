@@ -2,11 +2,42 @@
 import delve from "dlv";
 import { Context } from "../core";
 
+type ToolCall = {
+  id: string;
+  type: "function";
+  function: {
+    name: string;
+    arguments: Record<string, any>;
+  };
+  index: number;
+};
+
 const parseStringResponse = (context: Context) => {
   return delve(
     context.state,
     "core.llm.response.data.choices.0.message.content"
   );
+};
+
+const parseToolCallsResponse = (context: Context): ToolCall[] | undefined => {
+  const toolCalls = delve(
+    context.state,
+    "core.llm.response.data.choices.0.message.tool_calls"
+  );
+
+  if (!toolCalls) {
+    return toolCalls;
+  }
+
+  return toolCalls.map((tool: any) => {
+    return {
+      ...tool,
+      function: {
+        name: tool.function.name,
+        arguments: JSON.parse(tool.function.arguments),
+      },
+    };
+  });
 };
 
 // Returns the delta string of message stream
@@ -42,4 +73,6 @@ export {
   createStreamDeltaStringSubscriber,
   createStringResponseSubscriber,
   parseStringResponse,
+  parseToolCallsResponse,
 };
+export type { ToolCall };

@@ -13,7 +13,7 @@ const AgentNodeUI = (props: {} & Chat.Message["message"]["ui"]) => {
       return [];
     }
     // @ts-expect-error
-    return [...node.run()].reduce(
+    return [...node.execute()].reduce(
       (agg, curr) => {
         agg[curr[0]] = curr[1];
         return agg;

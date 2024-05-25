@@ -1,17 +1,21 @@
 import { Hono } from "hono";
-import { ReplaySubject } from "rxjs";
+import { ReplaySubject, Subject, count, take } from "rxjs";
 import { uniqueId } from "@portal/reagent/utils/uniqueId";
 import { z } from "@portal/reagent/agent";
 import { User } from "@portal/reagent/agent/nodes";
 
 import { agent as chatAgent } from "../demo-agents/chat";
+import { agent as weatherAgent } from "../demo-agents/weather";
 
 import { Chat } from "../chat/types";
 const router = new Hono();
 
 router.get("/_healthy", (c) => c.text("OK"));
 
-const agentsById = new Map([["chat", chatAgent]]);
+const agentsById = new Map([
+  ["chat", chatAgent],
+  ["weather", weatherAgent],
+]);
 
 const sendMessageBodySchema = z.object({
   id: z.string(),
@@ -50,6 +54,32 @@ router.post("/sendMessage", async (ctx) => {
     query: body.message.content,
   });
 
+  const completionSubject = new Subject();
+  user.output.ui.select({ runId: res.run.id }).then((stream) => {
+    stream.subscribe({
+      next(update) {
+        replayStream.next({
+          type: "message/ui/update" as const,
+          data: {
+            id: responseMessageId,
+            message: {
+              ui: {
+                node: update.node,
+                render: update.render,
+              },
+            },
+          },
+        });
+      },
+      complete() {
+        completionSubject.next(1);
+      },
+      error(err) {
+        console.error(err);
+      },
+    });
+  });
+
   user.output.markdownStream.select({ runId: res.run.id }).then((stream) => {
     stream.subscribe({
       next(data: any) {
@@ -66,10 +96,20 @@ router.post("/sendMessage", async (ctx) => {
         });
       },
       complete() {
-        replayStream.complete();
+        completionSubject.next(1);
+      },
+      error(err) {
+        console.error(err);
       },
     });
   });
+
+  completionSubject
+    .pipe(take(2))
+    .pipe(count())
+    .subscribe(() => {
+      replayStream.complete();
+    });
 
   const responseStream = new ReadableStream({
     async start(controller) {

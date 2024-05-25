@@ -1,14 +1,25 @@
 import dedent from "dedent";
 import { Observable, ReplaySubject } from "rxjs";
+import slugify, { slugifyWithCounter } from "@sindresorhus/slugify";
+import zodToJsonSchema from "zod-to-json-schema";
+import { get, pick } from "lodash-es";
 
-import { ChatCompletionExecutor } from "../../executors";
-import { ChatPromptTemplate, MessagesPlaceholder } from "../../prompt";
+import { ChatCompletionExecutor } from "../../llm/executors";
 import {
+  ChatMessages,
+  ChatPromptTemplate,
+  MessagesPlaceholder,
+} from "../../llm/prompt";
+import {
+  ToolCall,
   createStreamDeltaStringSubscriber,
   parseStringResponse,
-} from "../../plugins/response";
-import { Groq } from "../../integrations/models";
+  parseToolCallsResponse,
+} from "../../llm/plugins/response";
+import { Groq } from "../../llm/integrations/models";
 import { z, Context, createAgentNode } from "../";
+import { Runnable } from "../../llm/core";
+import { agentToolSchema } from "../tool";
 
 const ICON = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
 <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z" />
@@ -31,15 +42,7 @@ const inputSchema = z.object({
   query: z.string().label("Query"),
   context: z.string().optional().label("Context"),
   chatHistory: z.array(z.any()).optional().label("Chat History"),
-  tools: z
-    .object({
-      name: z.string(),
-      description: z.string(),
-      parameters: z.record(z.string(), z.any()),
-    })
-    .array()
-    .optional()
-    .label("Tools"),
+  tools: agentToolSchema.array().optional().label("Tools"),
 });
 
 type ChatResponseStream = {
@@ -85,16 +88,17 @@ const ChatCompletion = createAgentNode({
     ]);
 
     const chainModel = new Groq({
-      model: "llama3-8b-8192",
+      model: "llama3-70b-8192",
     });
 
+    const tools = new ToolsProvider(input.tools);
     const executor = new ChatCompletionExecutor({
-      runnables: [prompt, chainModel],
+      runnables: [prompt, chainModel, tools],
       variables: {},
     });
 
     const stream = new ReplaySubject<any>();
-    const res = executor.invoke({
+    const completionOptions = {
       variables: {
         systemPrompt: config.systemPrompt,
         context: input.context || "",
@@ -115,17 +119,129 @@ const ChatCompletion = createAgentNode({
           });
         }),
       ],
-    });
+    };
+    const res = executor.invoke(completionOptions);
 
     yield { stream };
-    const ctxt = await res;
+    const invokeContext = await res;
 
-    const response = parseStringResponse(ctxt);
+    const response = parseStringResponse(invokeContext);
+    const toolCalls = parseToolCallsResponse(invokeContext);
+
+    if (toolCalls && toolCalls.length > 0) {
+      const toolResults = await tools.invokeTools(toolCalls, {
+        run: context.run,
+      });
+
+      const messages = await executor.resolve(
+        "core.prompt.chat.messages",
+        invokeContext,
+        {}
+      );
+      const aiResponse = get(
+        invokeContext,
+        "state.core.llm.response.data.choices.0.message"
+      );
+      const chatCompletionWithToolCallResult = new ChatCompletionExecutor({
+        runnables: [
+          prompt,
+          chainModel,
+          // TODO: filter only the tools used by the tool call
+          tools,
+          ChatMessages.fromMessages([...messages, aiResponse, ...toolResults]),
+        ],
+        allowRunnableOverride: true,
+      });
+
+      const result2 =
+        await chatCompletionWithToolCallResult.invoke(completionOptions);
+      const response = parseStringResponse(result2);
+      yield {
+        markdown: response,
+      };
+    } else {
+      yield {
+        markdown: response,
+      };
+    }
+
     stream.complete();
-    yield {
-      markdown: response,
-    };
   },
 });
+
+const TOOL_NODE = Symbol("__TOOL_NODE__");
+
+type ToolZodSchema = NonNullable<z.infer<typeof inputSchema>["tools"]>[0];
+type ToolSchema = {
+  type: "function";
+  function: Pick<ToolZodSchema, "name" | "description" | "parameters">;
+  [TOOL_NODE]: any;
+};
+
+class ToolsProvider extends Runnable {
+  toolsJson?: ToolSchema[];
+  constructor(tools?: ToolZodSchema[]) {
+    super();
+    const slugifyCounter = slugifyWithCounter();
+    this.toolsJson = tools?.map((tool) => {
+      return {
+        type: "function",
+        function: {
+          // Note: need to call `slugify` after `slugifyCounter` because
+          // `slugifyCounter` uses `-` as separator instead of `_`
+          name: slugify(slugifyCounter(tool.id), {
+            separator: "_",
+          }),
+          description: tool.description,
+          parameters: pick(
+            // @ts-expect-error
+            zodToJsonSchema(tool.parameters),
+            "type",
+            "properties",
+            "required"
+          ),
+        },
+        [TOOL_NODE]: tool.node,
+      };
+    });
+  }
+
+  get namespace(): string {
+    return "core.prompt.tools.json";
+  }
+
+  async run() {
+    return this.toolsJson;
+  }
+
+  async invokeTools(toolCalls: ToolCall[], options: { run: { id: string } }) {
+    const tools = (await this.run())!;
+    const result = await Promise.all(
+      toolCalls.map(async (toolCall) => {
+        const tool = tools.find((tool: any) => {
+          return tool.function.name == toolCall.function.name;
+        });
+        if (!tool) {
+          throw new Error(`unexpected error: tool in tool call not found`);
+        }
+        const toolResult = await tool[TOOL_NODE].invoke(
+          toolCall.function.arguments,
+          {
+            run: options.run,
+          }
+        );
+        const output = await toolResult.output;
+
+        return {
+          tool_call_id: toolCall.id,
+          role: "tool",
+          name: toolCall.function.name,
+          content: typeof output == "object" ? JSON.stringify(output) : output,
+        };
+      })
+    );
+    return result;
+  }
+}
 
 export default ChatCompletion;
