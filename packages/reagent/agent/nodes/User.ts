@@ -1,4 +1,4 @@
-import { Observable, ReplaySubject, Subject } from "rxjs";
+import { Observable } from "rxjs";
 
 import { z, AbstractAgentNode, Context } from "../";
 import { AtLeastOne } from "../types";
@@ -26,14 +26,6 @@ class User extends AbstractAgentNode<
   z.infer<typeof inputSchema>,
   z.infer<typeof output>
 > {
-  #stream: Subject<any>;
-  #subjectStreams: Observable<any>[];
-  constructor() {
-    super();
-    this.#subjectStreams = [];
-    this.#stream = new ReplaySubject();
-  }
-
   get metadata() {
     return {
       id: "@core/user",
@@ -49,10 +41,11 @@ class User extends AbstractAgentNode<
     context: Context<z.infer<typeof config>, z.infer<typeof output>>,
     data: AtLeastOne<z.infer<typeof inputSchema>>
   ) {
-    if (data.markdownStream) {
-      this.#subjectStreams.push(data.markdownStream);
-      this.#stream.next(0);
-    }
+    // send input data as output here because the user doesn't need
+    // all inputs bound to it; for example, a ui node might be bound
+    // but user should be able to use markdown stream even when ui
+    // input isn't received
+    context.sendOutput(data);
   }
 
   async *execute(

@@ -14,6 +14,7 @@ import {
   switchMap,
   take,
   takeWhile,
+  tap,
 } from "rxjs";
 import { fromError } from "zod-validation-error";
 
@@ -176,6 +177,16 @@ class GraphNode<
     // If all bound values are global value provider, invoke the execution immediately
     globalEvents
       .pipe(take(totalInputEdges))
+      .pipe(
+        tap((e) => {
+          const context = this.#buildContext(e.run);
+          self.#node.onInputEvent(
+            context,
+            // @ts-expect-error
+            { [e.key]: e.value }
+          );
+        })
+      )
       .pipe(reducer())
       .subscribe((e) => {
         self.#invoke(e.input, e.run);
@@ -183,6 +194,16 @@ class GraphNode<
 
     runEvents.pipe(groupBy((e) => e.run.id)).subscribe((group) => {
       group
+        .pipe(
+          tap((e) => {
+            const context = this.#buildContext(e.run);
+            self.#node.onInputEvent(
+              context,
+              // @ts-expect-error
+              { [e.key]: e.value }
+            );
+          })
+        )
         .pipe(mergeWith(globalEvents))
         // take until total number of the mapped input fields are received
         .pipe(take(totalInputEdges))
