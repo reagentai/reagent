@@ -1,4 +1,5 @@
 import { klona } from "klona";
+
 import { Context } from "../core";
 import {
   AbstractExecutor,
@@ -8,7 +9,7 @@ import {
 } from "../core/executor";
 import type { Metadata as ModelMetadata } from "../models/schema";
 import { FormattedChatMessage } from "../prompt";
-import { uniqueId } from "../utils/uniqueId";
+import { uniqueId } from "../../utils/uniqueId";
 
 export class ChatCompletionExecutor extends AbstractExecutor {
   constructor(options: AbstractExecutorOptions) {
