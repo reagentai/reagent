@@ -23,7 +23,7 @@ export type Metadata<
   state?: ZodObjectSchema<State>;
 };
 
-type RunResult<T> = AsyncGeneratorWithField<T, T | void>;
+type RunResult<T> = AsyncGeneratorWithField<T>;
 
 export const IS_AGENT_NODE = Symbol("_AGENT_NODE_");
 

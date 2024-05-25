@@ -1,6 +1,7 @@
 import {
   BehaviorSubject,
   Observable,
+  ReplaySubject,
   concat,
   filter,
   groupBy,
@@ -12,11 +13,13 @@ import {
   reduce,
   switchMap,
   take,
+  takeWhile,
 } from "rxjs";
+import { fromError } from "zod-validation-error";
 
 import { Context } from "./context";
 import { AbstractAgentNode } from "./node";
-import { EventStream } from "./stream";
+import { AgentEvent, EventStream } from "./stream";
 import { uniqueId } from "../utils/uniqueId";
 
 type OutputValueStream<Output> = Observable<{
@@ -39,7 +42,25 @@ type OutputValueProviderInterface<Output> = Pick<
   select(options: { runId: string }): Promise<Output>;
 };
 
-const OUTPUT_VALUE_PROVIDER = Symbol("__OUTPUT_VALUE_PROVIDER__");
+const VALUE_PROVIDER = Symbol("___VALUE_PROVIDER__");
+
+type RenderUpdateStream = Observable<{
+  run: { id: string };
+  node: { id: string; type: string; version: string };
+  render: {
+    step: string;
+    data: any;
+  };
+}> & {
+  /**
+   * Select the output result by run id
+   *
+   * @param runId
+   */
+  select(options: {
+    runId: string;
+  }): Pick<RenderUpdateStream, "pipe" | "subscribe">;
+};
 
 class GraphNode<
   Config extends Record<string, unknown> | void,
@@ -85,13 +106,11 @@ class GraphNode<
     const providers = of(...edgeEntries).pipe(
       mergeMap(([inputField, providers]) => {
         const isArray = Array.isArray(providers);
-        const provider = isArray
-          ? concat(providers.map((p) => p))
-          : of(providers);
+        const provider = isArray ? concat(providers) : of(providers);
 
         return provider.pipe(
           switchMap((provider: any) => {
-            if (!provider[OUTPUT_VALUE_PROVIDER]) {
+            if (!provider[VALUE_PROVIDER]) {
               // Note: if it's not a output provider, treat it as a value
               return new BehaviorSubject({
                 run: null,
@@ -159,7 +178,7 @@ class GraphNode<
       .pipe(take(totalInputEdges))
       .pipe(reducer())
       .subscribe((e) => {
-        self.#invoke(e.run, e.input);
+        self.#invoke(e.input, e.run);
       });
 
     runEvents.pipe(groupBy((e) => e.run.id)).subscribe((group) => {
@@ -169,44 +188,53 @@ class GraphNode<
         .pipe(take(totalInputEdges))
         .pipe(reducer())
         .subscribe((e) => {
-          self.#invoke(e.run, e.input);
+          self.#invoke(e.input, e.run);
         });
     });
   }
 
-  invoke(input: Input) {
+  invoke(input: Input, options: { run?: { id: string } } = {}) {
     const run = {
-      id: uniqueId(),
+      id: options.run?.id || uniqueId(),
     };
-    this.#invoke(run, input);
-    return { run };
+    const output = this.#invoke(input, run);
+    return { run, output };
   }
 
+  /**
+   * Returns schema to use this node as a tool in LLM call
+   *
+   * Note: This should only be used to bind to a node input
+   * and shouldn't be used directly
+   */
   get schema(): OutputValueProviderInterface<{
+    id: string;
     name: string;
     description: string;
     parameters: Record<string, any>;
+    node: GraphNode<Config, Input, Output>;
   }> {
+    const self = this;
     const metadata = this.#node.metadata;
     const stream = new BehaviorSubject({
       run: null,
       value: {
+        id: metadata.id,
         name: metadata.name,
         description: metadata.description!,
-        parameters: {},
+        get parameters() {
+          return metadata.input;
+        },
+        node: self,
       },
     });
 
     // @ts-expect-error
-    return Object.assign(stream, {
-      [OUTPUT_VALUE_PROVIDER]: true,
-      select(_options: { runId: string }) {
-        return new Promise((resolve) => {
-          stream.subscribe((schema) => {
-            resolve(schema.value);
-          });
-        });
-      },
+    return Object.defineProperty(stream, VALUE_PROVIDER, {
+      value: true,
+      enumerable: false,
+      writable: false,
+      configurable: false,
     });
   }
 
@@ -220,22 +248,36 @@ class GraphNode<
       {
         get(_, field) {
           const stream = self.#stream
-            .pipe(filter((e: any) => e.output[field] != undefined))
+            .pipe(
+              filter(
+                (e: any) =>
+                  e.type == AgentEvent.Type.Output &&
+                  e.output[field] != undefined
+              )
+            )
             .pipe(
               map((e) => {
                 return { run: e.run, value: e.output[field] };
               })
             );
-          return Object.assign(stream, {
-            [OUTPUT_VALUE_PROVIDER]: true,
-            select(options: { runId: string }) {
-              return new Promise((resolve) => {
-                stream
-                  .pipe(filter((e: any) => e.run.id == options.runId))
-                  .subscribe((e) => {
-                    resolve(e.value);
-                  });
-              });
+          return Object.defineProperties(stream, {
+            [VALUE_PROVIDER]: {
+              value: true,
+              configurable: false,
+              enumerable: false,
+              writable: false,
+            },
+            select: {
+              value: (options: { runId: string }) => {
+                return new Promise((resolve) => {
+                  stream
+                    .pipe(filter((e: any) => e.run.id == options.runId))
+                    .subscribe((e) => {
+                      resolve(e.value);
+                    });
+                });
+              },
+              enumerable: false,
             },
           });
         },
@@ -243,20 +285,76 @@ class GraphNode<
     );
   }
 
-  async #invoke(run: { id: string }, input: Input) {
+  /**
+   * Note: This should only be used to bind to a node input
+   * and shouldn't be used directly
+   */
+  get render(): RenderUpdateStream {
+    // TODO: figure out how to close render stream for run
+    const stream = this.#stream
+      .pipe(
+        filter(
+          (e: any) =>
+            e.type == AgentEvent.Type.Render ||
+            e.type == AgentEvent.Type.RunComplete
+        )
+      )
+      .pipe(
+        groupBy((e) => e.run.id, {
+          // Note: it is important to use ReplaySubject here
+          // otherwise, the group events are lost somehow :shrug:
+          connector() {
+            return new ReplaySubject();
+          },
+        })
+      )
+      .pipe(
+        map((group) => {
+          return {
+            run: {
+              id: group.key,
+            },
+            value: group.pipe(
+              takeWhile((e) => e.type != AgentEvent.Type.RunComplete)
+            ),
+          };
+        })
+      );
+
+    return Object.defineProperty(stream, VALUE_PROVIDER, {
+      value: true,
+    }) as unknown as RenderUpdateStream;
+  }
+
+  async #invoke(input: Input, run: { id: string }): Promise<Output> {
     const context = this.#buildContext(run);
+    // const validation = this.#node.metadata.input.safeParse(input);
+    // if (!validation.success) {
+    //   throw new Error(
+    //     `[node=${this.#node.metadata.id}]: ${fromError(validation.error)}`
+    //   );
+    // }
+    const node = {
+      id: this.#nodeId,
+      type: this.#node.metadata.id,
+      version: this.#node.metadata.version,
+    };
     const generator = this.#node.execute(context, input);
+    const output = {};
     for await (const partialOutput of generator) {
       this.#stream.sendOutput({
         run,
-        node: {
-          id: this.#nodeId,
-          type: this.#node.metadata.id,
-          version: this.#node.metadata.version,
-        },
+        node,
         output: partialOutput,
       });
+      Object.assign(output, partialOutput);
     }
+    this.#stream.next({
+      type: AgentEvent.Type.RunComplete,
+      run,
+      node,
+    });
+    return output as Output;
   }
 
   #buildContext(run: Context<any, any>["run"]): Context<any, any> {

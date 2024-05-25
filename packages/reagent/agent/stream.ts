@@ -4,6 +4,7 @@ namespace AgentEvent {
   export enum Type {
     Output = "output",
     Render = "render",
+    RunComplete = "run-complete",
   }
 
   export type Output<O> = {
@@ -34,11 +35,24 @@ namespace AgentEvent {
       data: State;
     };
   };
+
+  export type RunComplete = {
+    run: {
+      id: string;
+    };
+    node: {
+      id: string;
+      type: string;
+      version: string;
+    };
+    type: Type.RunComplete;
+  };
 }
 
 type AgentEvent<Output, State> =
   | AgentEvent.Output<Output>
-  | AgentEvent.RenderUpdate<State>;
+  | AgentEvent.RenderUpdate<State>
+  | AgentEvent.RunComplete;
 
 class EventStream<Output, State = any> extends ReplaySubject<
   AgentEvent<Output, State>

@@ -8,12 +8,18 @@ const config = z.void();
 const inputSchema = z.object({
   markdown: z.string(),
   markdownStream: z.instanceof(Observable<any>).label("Markdown stream"),
+  ui: z
+    .instanceof(
+      Observable<{
+        node: { id: string; type: string; version: string };
+        render: { step: string; data: any };
+      }>
+    )
+    .optional()
+    .label("UI"),
 });
 
-const output = z.object({
-  markdown: z.string(),
-  markdownStream: z.instanceof(Observable<any>).label("Markdown stream"),
-});
+const output = inputSchema.required();
 
 class User extends AbstractAgentNode<
   z.infer<typeof config>,
