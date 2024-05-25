@@ -2,7 +2,7 @@ import ky from "ky";
 // @ts-expect-error
 import delve from "dlv";
 import { get } from "lodash-es";
-import assert from "assert";
+import invariant from "tiny-invariant";
 
 import { Context, InitContext } from "../../core";
 import { BaseModelProvider, ModelOptions } from "../../models";
@@ -69,7 +69,7 @@ export class AnthropicChat extends BaseModelProvider<ModelInvokeOptions> {
     };
     context.setGlobalState("core.llm.request.body", payload);
 
-    assert(
+    invariant(
       this.#options.apiKey || process.env.ANTHROPIC_API_KEY,
       "Missing API key for Anthropic. Set ANTHROPIC_API_KEY env variable"
     );

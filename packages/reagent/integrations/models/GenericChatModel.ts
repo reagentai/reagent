@@ -1,4 +1,4 @@
-import assert from "assert";
+import invariant from "tiny-invariant";
 
 import { InitContext } from "../../core";
 import { BaseModelProvider, ModelOptions } from "../../models/base";
@@ -19,7 +19,7 @@ export class GenericChatModel extends BaseModelProvider {
   }
 
   setup(ctxt: InitContext) {
-    assert(this.#options.apiKey, `Missing API key for ${this.#options.url}`);
+    invariant(this.#options.apiKey, `Missing API key for ${this.#options.url}`);
     ctxt.setState<Metadata>("metadata", {
       provider: "generic",
       family: "unknown",

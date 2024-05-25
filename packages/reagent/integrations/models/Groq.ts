@@ -1,4 +1,4 @@
-import assert from "assert";
+import invariant from "tiny-invariant";
 
 import { InitContext } from "../../core";
 import { BaseModelProvider, ModelOptions } from "../../models/base";
@@ -54,7 +54,7 @@ export class Groq extends BaseModelProvider {
     if (!model) {
       throw new Error("Invalid model: ", model);
     }
-    assert(
+    invariant(
       this.#options.apiKey || process.env.GROQ_API_KEY,
       "Missing API key for Groq. Set GROQ_API_KEY env variable"
     );
