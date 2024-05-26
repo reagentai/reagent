@@ -1,17 +1,12 @@
-import { GraphAgent, z } from "@portal/reagent/agent";
-import { Passthrough, ChatCompletion, User } from "@portal/reagent/agent/nodes";
+import { GraphAgent } from "@portal/reagent/agent";
+import { ChatCompletion, User } from "@portal/reagent/agent/nodes";
+
 import { GetWeather } from "./tools/Weather";
+import { createInputNode } from "./input";
 
 const agent = new GraphAgent();
 
-const input = agent.addNode(
-  "input",
-  new Passthrough(
-    z.object({
-      query: z.string(),
-    })
-  )
-);
+const input = agent.addNode("input", createInputNode());
 
 const chat1 = agent.addNode("chat-1", new ChatCompletion(), {
   systemPrompt: "You are an amazing AI assistant called Jarvis",
@@ -24,6 +19,7 @@ const user = agent.addNode("user", new User());
 const getWeather = agent.addNode("weather", new GetWeather());
 
 chat1.bind({
+  model: input.output.model,
   query: input.output.query,
   tools: [getWeather.schema],
 });

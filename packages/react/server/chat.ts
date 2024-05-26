@@ -4,10 +4,12 @@ import { uniqueId } from "@portal/reagent/utils/uniqueId";
 import { z } from "@portal/reagent/agent";
 import { User } from "@portal/reagent/agent/nodes";
 
+import { Chat } from "../chat/types";
+import { Input } from "../demo-agents/input";
 import { agent as chatAgent } from "../demo-agents/chat";
 import { agent as weatherAgent } from "../demo-agents/weather";
+import { Groq } from "@portal/reagent/llm/integrations/models";
 
-import { Chat } from "../chat/types";
 const router = new Hono();
 
 router.get("/_healthy", (c) => c.text("OK"));
@@ -47,11 +49,14 @@ router.post("/sendMessage", async (ctx) => {
     return ctx.text("Agent not found", 400);
   }
 
-  const input = agent.getNode("input")!;
-  const user = agent.getNode<void, {}, User["_output"]>("user")!;
+  const input = agent.getNode<void, Input, Input>("input")!;
+  const user = agent.getNode<void, {}, User["_types"]["output"]>("user")!;
 
   const res = input.invoke({
     query: body.message.content,
+    model: new Groq({
+      model: "llama3-70b-8192",
+    }),
   });
 
   const completionSubject = new Subject();

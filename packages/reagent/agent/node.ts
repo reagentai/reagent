@@ -34,9 +34,9 @@ export abstract class AbstractAgentNode<
   State extends Record<string, unknown> = Record<string, unknown>,
 > {
   // "phantom" field to infer output type
-  _output: Output;
+  _types: { output: Output };
   constructor() {
-    this._output = undefined as any;
+    this._types = undefined as any;
   }
 
   static [IS_AGENT_NODE]: boolean = true;

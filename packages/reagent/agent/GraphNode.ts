@@ -73,6 +73,8 @@ class GraphNode<
   #node: AbstractAgentNode<Config, Input, Output, State>;
   #config: Config;
   #stream: EventStream<Output>;
+  // This is "phantom" field only used for type inference
+  _types: { output: Output };
 
   constructor(
     nodeId: string,
@@ -90,6 +92,8 @@ class GraphNode<
         id: "__NODE_INIT__",
       })
     );
+    // @ts-expect-error
+    this._types = undefined;
   }
 
   bind(edges: {
