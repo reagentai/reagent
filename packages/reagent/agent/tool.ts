@@ -19,4 +19,5 @@ type AgentTool = {
   node: GraphNode<any, any, any>;
 };
 
-export { agentToolSchema, AgentTool };
+export { agentToolSchema };
+export type { AgentTool };

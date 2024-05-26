@@ -4,6 +4,7 @@ import { jsonStreamToAsyncIterator } from "@portal/reagent/llm/stream";
 import { AIChat, createChatStore } from "@portal/reagent-react/chat";
 import { AgentContextProvider } from "@portal/reagent-react/agent";
 import { GetWeather } from "@portal/reagent-react/demo-agents/tools/Weather";
+import { AgentError } from "@portal/reagent-react/demo-agents/tools/AgentError";
 
 const Chat = (props: { agentId: string }) => {
   "use client";
@@ -38,7 +39,7 @@ const Chat = (props: { agentId: string }) => {
   return (
     <div className="h-full flex">
       <ErrorBoundary fallback={<div>ERROR!</div>}>
-        <AgentContextProvider nodes={[GetWeather]}>
+        <AgentContextProvider nodes={[GetWeather, AgentError]}>
           <AIChat store={store} />
         </AgentContextProvider>
       </ErrorBoundary>

@@ -13,6 +13,7 @@ import {
 import {
   ToolCall,
   createStreamDeltaStringSubscriber,
+  parseStringErrorMessage,
   parseStringResponse,
   parseToolCallsResponse,
 } from "../../llm/plugins/response";
@@ -56,6 +57,7 @@ type ChatResponseStream = {
 const outputSchema = z.object({
   stream: z.instanceof(Observable<ChatResponseStream>).label("Markdown stream"),
   markdown: z.string().label("Markdown"),
+  error: z.string().label("Error"),
   tools: z.any().array().label("Tool calls"),
 });
 
@@ -120,7 +122,7 @@ const ChatCompletion = createAgentNode({
     const res = executor.invoke(completionOptions);
 
     yield { stream };
-    const invokeContext = await res;
+    const invokeContext = await res.catch((e) => e.context);
 
     const response = parseStringResponse(invokeContext);
     const toolCalls = parseToolCallsResponse(invokeContext);
@@ -150,18 +152,22 @@ const ChatCompletion = createAgentNode({
         allowRunnableOverride: true,
       });
 
-      const result2 =
-        await chatCompletionWithToolCallResult.invoke(completionOptions);
+      const result2 = await chatCompletionWithToolCallResult
+        .invoke(completionOptions)
+        .catch((e) => e.context);
       const response = parseStringResponse(result2);
+      const error = parseStringErrorMessage(result2);
       yield {
+        error,
         markdown: response,
       };
     } else {
+      const error = parseStringErrorMessage(invokeContext);
       yield {
+        error,
         markdown: response,
       };
     }
-
     stream.complete();
   },
 });

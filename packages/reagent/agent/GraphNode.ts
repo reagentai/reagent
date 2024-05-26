@@ -23,16 +23,14 @@ import { AbstractAgentNode } from "./node";
 import { AgentEvent, EventStream } from "./stream";
 import { uniqueId } from "../utils/uniqueId";
 
-type OutputValueStream<Output> = Observable<{
-  // run is null for run independent global values
-  run: {
-    id: string;
-  } | null;
-  value: Output;
-}>;
-
-type OutputValueProviderInterface<Output> = Pick<
-  OutputValueStream<Output>,
+type OutputValueProvider<Output> = Pick<
+  Observable<{
+    // run is null for run independent global values
+    run: {
+      id: string;
+    } | null;
+    value: Output;
+  }>,
   "subscribe" | "pipe"
 > & {
   /**
@@ -45,22 +43,12 @@ type OutputValueProviderInterface<Output> = Pick<
 
 const VALUE_PROVIDER = Symbol("___VALUE_PROVIDER__");
 
-type RenderUpdateStream = Observable<{
-  run: { id: string };
+type RenderUpdate = {
   node: { id: string; type: string; version: string };
   render: {
     step: string;
     data: any;
   };
-}> & {
-  /**
-   * Select the output result by run id
-   *
-   * @param runId
-   */
-  select(options: {
-    runId: string;
-  }): Pick<RenderUpdateStream, "pipe" | "subscribe">;
 };
 
 class GraphNode<
@@ -97,9 +85,11 @@ class GraphNode<
   }
 
   bind(edges: {
-    [K in keyof Input]: Required<Input>[K] extends any[]
-      ? OutputValueProviderInterface<Required<Input>[K][number]>[]
-      : OutputValueProviderInterface<Required<Input>[K]> | Required<Input>[K];
+    [K in keyof Input]: Input[K] extends OutputValueProvider<Input[K]>
+      ? OutputValueProvider<Input[K]>
+      : Required<Input>[K] extends any[]
+        ? OutputValueProvider<Required<Input>[K][number]>[]
+        : OutputValueProvider<Required<Input>[K]> | Required<Input>[K];
   }) {
     const edgeEntries = Object.entries(edges);
     const totalInputEdges = edgeEntries
@@ -232,7 +222,7 @@ class GraphNode<
    * Note: This should only be used to bind to a node input
    * and shouldn't be used directly
    */
-  get schema(): OutputValueProviderInterface<{
+  get schema(): OutputValueProvider<{
     id: string;
     name: string;
     description: string;
@@ -264,7 +254,7 @@ class GraphNode<
   }
 
   get output(): {
-    [K in keyof Output]: OutputValueProviderInterface<Output[K]>;
+    [K in keyof Output]: OutputValueProvider<Output[K]>;
   } {
     const self = this;
     // @ts-expect-error
@@ -311,10 +301,35 @@ class GraphNode<
   }
 
   /**
+   * Merges two streams into one
+   *
+   * If a node has a stream input but need to take in stream
+   * from more than one output/render, then this can be used to combine the
+   * streams;
+   *
+   * For example:
+   * ```
+   * user.mergeStream(error.render, getWeather.render),
+   * ```
+   *
+   * @param renders
+   * @returns
+   */
+  mergeStream<O>(...renders: OutputValueProvider<O>[]): OutputValueProvider<O> {
+    const stream = concat(
+      // @ts-expect-error
+      ...renders
+    );
+    return Object.defineProperty(stream, VALUE_PROVIDER, {
+      value: true,
+    }) as unknown as OutputValueProvider<O>;
+  }
+
+  /**
    * Note: This should only be used to bind to a node input
    * and shouldn't be used directly
    */
-  get render(): RenderUpdateStream {
+  get render(): OutputValueProvider<Observable<RenderUpdate>> {
     // TODO: figure out how to close render stream for run
     const stream = this.#stream
       .pipe(
@@ -348,7 +363,7 @@ class GraphNode<
 
     return Object.defineProperty(stream, VALUE_PROVIDER, {
       value: true,
-    }) as unknown as RenderUpdateStream;
+    }) as unknown as OutputValueProvider<Observable<RenderUpdate>>;
   }
 
   async #invoke(input: Input, run: { id: string }): Promise<Output> {
@@ -435,3 +450,4 @@ class GraphNode<
 }
 
 export { GraphNode };
+export type { OutputValueProvider };

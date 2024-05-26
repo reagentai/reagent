@@ -3,10 +3,12 @@ import { ChatCompletion, User } from "@portal/reagent/agent/nodes";
 
 import { GetWeather } from "./tools/Weather";
 import { createInputNode } from "./input";
+import { AgentError } from "./tools/AgentError";
 
 const agent = new GraphAgent();
 
 const input = agent.addNode("input", createInputNode());
+const error = agent.addNode("error", new AgentError());
 
 const chat1 = agent.addNode("chat-1", new ChatCompletion(), {
   systemPrompt: "You are an amazing AI assistant called Jarvis",
@@ -24,10 +26,14 @@ chat1.bind({
   tools: [getWeather.schema],
 });
 
+error.bind({
+  error: chat1.output.error,
+});
+
 user.bind({
   markdown: chat1.output.markdown,
   markdownStream: chat1.output.stream,
-  ui: getWeather.render,
+  ui: user.mergeStream(error.render, getWeather.render),
 });
 
 export { agent };
