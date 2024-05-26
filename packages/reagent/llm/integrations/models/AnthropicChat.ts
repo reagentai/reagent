@@ -8,7 +8,7 @@ import { Context, InitContext } from "../../core";
 import { BaseModelProvider, ModelOptions } from "../../models";
 import { Metadata } from "../../models/schema";
 import { ModelInvokeOptions } from "../../core/executor";
-import { FormattedChatMessage } from "../../../prompt";
+import { FormattedChatMessage } from "../../prompt";
 import { jsonStreamToAsyncIterator } from "../../stream/stream";
 
 type Options = Pick<ModelOptions, "model"> & {

@@ -21,7 +21,6 @@ const parseStringResponse = (context: Context) => {
 
 const parseStringErrorMessage = (context: Context) => {
   const error = delve(context.state, "core.llm.response.error");
-  console.log("error =", error);
   return error?.message;
 };
 
