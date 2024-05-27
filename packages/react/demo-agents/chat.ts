@@ -2,6 +2,7 @@ import { GraphAgent } from "@portal/reagent/agent";
 import { ChatCompletion, User } from "@portal/reagent/agent/nodes";
 
 import { createInputNode } from "./input";
+import { DummyModel } from "@portal/reagent/llm/models/dummy";
 
 const agent = new GraphAgent();
 
@@ -24,5 +25,19 @@ user.bind({
   markdown: chat1.output.markdown,
   markdownStream: chat1.output.stream,
 });
+
+// const now = performance.now();
+// const time = new Date().getTime()
+// const run = input.invoke({
+//   model: new DummyModel({ response: "YO" }),
+//   query: "hello",
+// });
+
+// console.log("time taken =", performance.now() - now);
+// user.output.markdown.select({ runId: run.run.id }).then((data) => {
+//   console.log("time taken =", performance.now() - now);
+//   console.log("time taken =", new Date().getTime() - time);
+//   console.log("DATA =", data);
+// });
 
 export { agent };

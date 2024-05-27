@@ -9,6 +9,7 @@ import { Input } from "../demo-agents/input";
 import { agent as chatAgent } from "../demo-agents/chat";
 import { agent as weatherAgent } from "../demo-agents/weather";
 import { Groq } from "@portal/reagent/llm/integrations/models";
+import { DummyModel } from "@portal/reagent/llm/models/dummy";
 
 const router = new Hono();
 
@@ -21,7 +22,7 @@ const agentsById = new Map([
 
 const sendMessageBodySchema = z.object({
   id: z.string(),
-  agentId: z.string(),
+  agentId: z.string().default("weather"),
   message: z.object({
     content: z.string(),
   }),
@@ -54,8 +55,11 @@ router.post("/sendMessage", async (ctx) => {
 
   const res = input.invoke({
     query: body.message.content,
-    model: new Groq({
-      model: "llama3-70b-8192",
+    // model: new Groq({
+    //   model: "llama3-70b-8192",
+    // }),
+    model: new DummyModel({
+      response: "Hello there, how you doing?",
     }),
   });
 

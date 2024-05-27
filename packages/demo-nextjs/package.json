@@ -1,5 +1,5 @@
 {
-  "name": "@portal/nextjs-reagent",
+  "name": "@portal/reagent-nextjs",
   "version": "0.1.0",
   "description": "Next.js demo of @portal/reagent",
   "type": "module",

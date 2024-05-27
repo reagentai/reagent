@@ -7,7 +7,6 @@ namespace AgentEvent {
     // but the nodes that provide the input values are already executed
     RunSkipped = "run/skipped",
     RunCompleted = "run/complete",
-    NodeSchema = "node/schema",
     Output = "output",
     Render = "render",
   }
@@ -40,13 +39,6 @@ namespace AgentEvent {
     node: EventNode;
   };
 
-  export type NodeSchema = {
-    type: Type.NodeSchema;
-    run: Run;
-    node: EventNode;
-    schema: any;
-  };
-
   export type Output<O> = {
     type: Type.Output;
     run: Run;
@@ -69,7 +61,6 @@ type AgentEvent<Output, State> =
   | AgentEvent.RunInvoked
   | AgentEvent.RunSkipped
   | AgentEvent.RunCompleted
-  | AgentEvent.NodeSchema
   | AgentEvent.Output<Output>
   | AgentEvent.RenderUpdate<State>;
 

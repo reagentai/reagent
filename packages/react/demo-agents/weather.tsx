@@ -33,7 +33,7 @@ error.bind({
 user.bind({
   markdown: chat1.output.markdown,
   markdownStream: chat1.output.stream,
-  ui: user.mergeStream(error.render, getWeather.render),
+  ui: user.mergeRenderStreams(getWeather.render, error.render),
 });
 
 export { agent };

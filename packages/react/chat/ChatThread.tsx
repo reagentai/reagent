@@ -22,11 +22,6 @@ const ChatThread = (props: {
     isStreaming: false,
   };
 
-  const aiMessageIdsByParentId: Record<string, any> = {};
-  const selectedMessageVersionByParentId: Record<string, any> = {};
-  const selectMessageVersion = () => {};
-  const regenerateMessage = () => {};
-
   const [lastMessage, setLastMessage] = useState(null);
   useEffect(() => {
     // Note(sagar): scroll to the bottom. Need to do it after

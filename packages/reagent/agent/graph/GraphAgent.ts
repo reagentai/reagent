@@ -1,4 +1,4 @@
-import { Observer, ReplaySubject, Subscription, mergeMap } from "rxjs";
+import { Observer, Subscription } from "rxjs";
 
 import { GraphNode } from "./GraphNode";
 import { AbstractAgentNode } from "../node";
@@ -11,11 +11,9 @@ type AgentConfig = {
 class GraphAgent {
   #config: AgentConfig;
   #nodesById: Map<string, GraphNode<any, any, any, any>>;
-  #nodeStream: ReplaySubject<any>;
   #stream: EventStream<any>;
   constructor(config: AgentConfig = {}) {
     this.#config = config;
-    this.#nodeStream = new ReplaySubject();
     this.#stream = new EventStream();
     this.#nodesById = new Map();
   }
@@ -23,9 +21,7 @@ class GraphAgent {
   subscribe(
     callback: Partial<Observer<any>> | ((value: any) => void)
   ): Subscription {
-    return this.#nodeStream
-      .pipe(mergeMap((stream) => stream))
-      .subscribe(callback);
+    return this.#stream.subscribe(callback);
   }
 
   getNode<

@@ -1,6 +1,5 @@
 import {
   Observable,
-  concat,
   filter,
   groupBy,
   map,
@@ -9,6 +8,7 @@ import {
   of,
   reduce,
   share,
+  switchMap,
   take,
   takeUntil,
   zip,
@@ -71,6 +71,7 @@ class GraphNode<
   // duplicate filtering/computation when same output field
   // is used more than once
   #_outputStreams: Record<string, any>;
+  #_renderStream: any;
   // This is "phantom" field only used for type inference
   _types: { output: Output };
 
@@ -123,19 +124,21 @@ class GraphNode<
       ];
     });
 
-    const outputSourceFields = providers.filter((p) => p.type == "output");
+    const outputSourceProviders = providers.filter((p) => p.type == "output");
     const uniqueOutputProviderNodes = new Set(
-      outputSourceFields.map((p) => p.nodeId)
+      outputSourceProviders.map((p) => p.node.id)
     );
 
     const schemaSources = providers.filter((p) => p.type == "schema");
+    const renderSources = providers.filter((p) => p.type == "render");
 
     self.#stream.pipe(groupBy((e) => e.run.id)).subscribe((group) => {
       const outputProvidersCompleted = group
         .pipe(
           filter((e) => {
             return (
-              e.type == AgentEvent.Type.RunCompleted &&
+              (e.type == AgentEvent.Type.RunCompleted ||
+                e.type == AgentEvent.Type.RunSkipped) &&
               uniqueOutputProviderNodes.has(e.node.id)
             );
           })
@@ -155,8 +158,10 @@ class GraphNode<
         .pipe(
           mergeMap((e: any) => {
             const fieldMappings = Object.fromEntries(
-              providers
-                .filter((n) => n.nodeId == e.node.id)
+              outputSourceProviders
+                .filter((n) => {
+                  return n.node.id == e.node.id;
+                })
                 .map((n) => {
                   return [n.sourceField, n.targetField];
                 })
@@ -181,7 +186,7 @@ class GraphNode<
           })
         )
         .pipe(takeUntil(outputProvidersCompleted))
-        .pipe(take(outputSourceFields.length))
+        .pipe(take(outputSourceProviders.length))
         .pipe(share());
 
       const schemaProviderStream = group
@@ -189,12 +194,12 @@ class GraphNode<
         .pipe(take(1))
         .pipe(
           mergeMap((e) => {
-            return concat<MappedInputEvent[]>(
+            return merge<MappedInputEvent[]>(
               ...schemaSources.map(({ targetField, provider }) => {
                 return provider.pipe(take(1)).pipe(
                   map((schema) => {
                     return {
-                      type: AgentEvent.Type.NodeSchema,
+                      type: "node/schema",
                       run: e.run,
                       sourceField: "schema",
                       targetField,
@@ -210,8 +215,85 @@ class GraphNode<
         .pipe(take(schemaSources.length))
         .pipe(share());
 
+      const renderStream = group
+        .pipe(filter((e) => e.type == AgentEvent.Type.RunInvoked))
+        .pipe(take(1))
+        .pipe(
+          mergeMap((e) => {
+            return merge<MappedInputEvent[]>(
+              ...renderSources.map(({ targetField, provider }) =>
+                provider.pipe(
+                  filter((pe: any) => {
+                    return pe.run.id == e.run.id;
+                  }),
+                  map((pe: any) => {
+                    return {
+                      type: "node/render",
+                      run: e.run,
+                      sourceField: "__render__",
+                      targetField,
+                      isArray: Array.isArray(edges[targetField]),
+                      value: pe.value,
+                    };
+                  })
+                )
+              )
+            );
+          })
+        )
+        .pipe(take(renderSources.length))
+        .pipe(share());
+
+      const schemaSourceNodeIds = new Set(schemaSources.map((s) => s.node.id));
+      // trigger when this current node is completed/skipped
+      const nodeCompleted = group
+        .pipe(
+          filter(
+            (e) =>
+              e.node.id == self.#nodeId &&
+              (e.type == AgentEvent.Type.RunCompleted ||
+                e.type == AgentEvent.Type.RunSkipped)
+          )
+        )
+        .pipe(take(1));
+
+      const schemaNodesRunStream = group
+        .pipe(takeUntil(nodeCompleted))
+        .pipe(
+          filter(
+            (e) =>
+              (e.type == AgentEvent.Type.RunCompleted ||
+                e.type == AgentEvent.Type.RunSkipped) &&
+              schemaSourceNodeIds.has(e.node.id)
+          )
+        )
+        .pipe(
+          reduce((agg, cur) => {
+            agg.add(cur.node.id);
+            return agg;
+          }, new Set())
+        );
+
+      // trigger run skipped for nodes whose schema is bound
+      zip(nodeCompleted, schemaNodesRunStream).subscribe(
+        ([runComplete, schemaNodesThatWasRun]) => {
+          [...schemaSourceNodeIds].forEach((nodeId) => {
+            if (!schemaNodesThatWasRun.has(nodeId)) {
+              const schemaSource = schemaSources.find(
+                (s) => s.node.id == nodeId
+              );
+              self.#stream.next({
+                type: AgentEvent.Type.RunSkipped,
+                run: runComplete.run,
+                node: schemaSource.node,
+              });
+            }
+          });
+        }
+      );
+
       // group events by target field and emit input events
-      merge(outputProviderStream, schemaProviderStream)
+      merge(outputProviderStream, schemaProviderStream, renderStream)
         .pipe(groupBy((e) => e.targetField))
         .subscribe({
           next(group) {
@@ -229,12 +311,16 @@ class GraphNode<
       // merge all inputs and invoke the step
       zip(
         outputProvidersCompleted,
-        merge(outputProviderStream, schemaProviderStream).pipe(inputReducer())
+        merge(outputProviderStream, schemaProviderStream, renderStream).pipe(
+          inputReducer()
+        )
       ).subscribe({
         next([runCompleteEvent, inputEvent]) {
           if (
             inputEvent.count ==
-            outputSourceFields.length + schemaSources.length
+            outputSourceProviders.length +
+              schemaSources.length +
+              renderSources.length
           ) {
             self.#invoke(inputEvent.input, inputEvent.run);
           } else {
@@ -306,7 +392,11 @@ class GraphNode<
     return Object.defineProperty(stream, VALUE_PROVIDER, {
       value: {
         type: "schema",
-        nodeId: self.#nodeId,
+        node: {
+          id: self.#nodeId,
+          type: self.#node.metadata.id,
+          version: self.#node.metadata.version,
+        },
       },
       enumerable: false,
       writable: false,
@@ -347,7 +437,11 @@ class GraphNode<
             [VALUE_PROVIDER]: {
               value: {
                 type: "output",
-                nodeId: self.#nodeId,
+                node: {
+                  id: self.#nodeId,
+                  type: self.#node.metadata.id,
+                  version: self.#node.metadata.version,
+                },
                 sourceField: field,
               },
               configurable: false,
@@ -383,19 +477,46 @@ class GraphNode<
    *
    * For example:
    * ```
-   * user.mergeStream(error.render, getWeather.render),
+   * user.mergeRenderStreams(error.render, getWeather.render),
    * ```
    *
    * @param renders
    * @returns
    */
-  mergeStream<O>(...renders: OutputValueProvider<O>[]): OutputValueProvider<O> {
-    const stream = concat(
-      // @ts-expect-error
-      ...renders
-    );
-    return Object.defineProperty(stream, VALUE_PROVIDER, {
-      value: true,
+  mergeRenderStreams<O>(
+    ...renders: OutputValueProvider<O>[]
+  ): OutputValueProvider<O> {
+    // @ts-expect-error
+    const stream = merge(...renders)
+      .pipe(groupBy((e: any) => e.run.id))
+      .pipe(
+        map((group) => {
+          const value = group
+            .pipe(take(renders.length))
+            .pipe(switchMap((g) => g.value))
+            .pipe(share());
+
+          // TODO: removing this doesn't stream render events; BUT WHY?
+          value.subscribe();
+          return {
+            run: {
+              id: group.key,
+            },
+            value,
+          };
+        })
+      )
+      .pipe(share());
+
+    return Object.defineProperties(stream, {
+      [VALUE_PROVIDER]: {
+        value: {
+          type: "render",
+        },
+        configurable: false,
+        enumerable: false,
+        writable: false,
+      },
     }) as unknown as OutputValueProvider<O>;
   }
 
@@ -403,41 +524,71 @@ class GraphNode<
    * Note: This should only be used to bind to a node input
    * and shouldn't be used directly
    */
+  // TODO: if render stream is used, make sure the node's schema
+  // is also bound; otherwise, the render stream won't close
   get render(): OutputValueProvider<Observable<RenderUpdate>> {
-    return {} as any;
-    // // TODO: figure out how to close render stream for run
-    // const stream = this.#stream
-    //   .pipe(
-    //     filter(
-    //       (e: any) =>
-    //         e.type == AgentEvent.Type.Render ||
-    //         e.type == AgentEvent.Type.RunCompleted
-    //     )
-    //   )
-    //   .pipe(
-    //     groupBy((e) => e.run.id, {
-    //       // Note: it is important to use ReplaySubject here
-    //       // otherwise, the group events are lost somehow :shrug:
-    //       connector() {
-    //         return new ReplaySubject();
-    //       },
-    //     })
-    //   )
-    //   .pipe(
-    //     map((group) => {
-    //       return {
-    //         run: {
-    //           id: group.key,
-    //         },
-    //         value: group.pipe(
-    //           takeWhile((e) => e.type != AgentEvent.Type.RunCompleted)
-    //         ),
-    //       };
-    //     })
-    //   );
-    // return Object.defineProperty(stream, VALUE_PROVIDER, {
-    //   value: true,
-    // }) as unknown as OutputValueProvider<Observable<RenderUpdate>>;
+    const self = this;
+    if (self.#_renderStream) {
+      return self.#_renderStream;
+    }
+    const stream = self.#stream
+      .pipe(
+        filter(
+          (e: any) =>
+            // filter either any run invoked events or events for this node
+            e.node.id == self.#nodeId || e.type == AgentEvent.Type.RunInvoked
+        )
+      )
+      .pipe(groupBy((e) => e.run.id))
+      .pipe(
+        map((group) => {
+          const runCompleted = group.pipe(
+            filter(
+              (e) =>
+                e.type == AgentEvent.Type.RunCompleted ||
+                e.type == AgentEvent.Type.RunSkipped
+            )
+          );
+
+          // TODO: removing this doesn't stream render events; BUT WHY?
+          group.subscribe((x) => {});
+          return {
+            run: {
+              id: group.key,
+            },
+            value: group
+              .pipe(takeUntil(runCompleted))
+              .pipe(filter((e) => e.type == AgentEvent.Type.Render)),
+          };
+        })
+      )
+      .pipe(share());
+
+    Object.defineProperties(stream, {
+      [VALUE_PROVIDER]: {
+        value: {
+          type: "render",
+        },
+        configurable: false,
+        enumerable: false,
+        writable: false,
+      },
+      select: {
+        value: (options: { runId: string }) => {
+          return new Promise((resolve) => {
+            stream
+              .pipe(filter((e: any) => e.run.id == options.runId))
+              .subscribe((e: any) => {
+                resolve(e.value);
+              });
+          });
+        },
+        enumerable: false,
+      },
+    });
+
+    self.#_renderStream = stream;
+    return stream as unknown as OutputValueProvider<Observable<RenderUpdate>>;
   }
 
   async #invoke(input: Input, run: { id: string }): Promise<Output> {
@@ -526,6 +677,10 @@ class GraphNode<
 const inputReducer = () =>
   reduce<{ run: any; targetField: string; isArray: boolean; value: any }, any>(
     (acc, cur) => {
+      // Note: ignore undefined values
+      if (cur.value == undefined) {
+        return acc;
+      }
       if (acc.run?.id) {
         // run is null for global events
         // so only throw error if run id doesn't match for run events
