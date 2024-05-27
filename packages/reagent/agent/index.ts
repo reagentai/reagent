@@ -1,7 +1,7 @@
 export { z } from "./zod";
 export { EventStream } from "./stream";
 export { AbstractAgentNode, IS_AGENT_NODE, createAgentNode } from "./node";
-export { GraphAgent } from "./GraphAgent";
+export { GraphAgent } from "./graph/GraphAgent";
 
 export type { Context, RenderContext } from "./context";
 export type { AgentNode } from "./node";

@@ -2,57 +2,76 @@ import { ReplaySubject } from "rxjs";
 
 namespace AgentEvent {
   export enum Type {
+    RunInvoked = "run/invoked",
+    // This is trigged when all the node inputs aren't received
+    // but the nodes that provide the input values are already executed
+    RunSkipped = "run/skipped",
+    RunCompleted = "run/complete",
+    NodeSchema = "node/schema",
     Output = "output",
     Render = "render",
-    RunComplete = "run-complete",
   }
+
+  type Run = {
+    id: string;
+  };
+  type EventNode = {
+    id: string;
+    type: string;
+    version: string;
+  };
+
+  export type RunInvoked = {
+    type: Type.RunInvoked;
+    run: Run;
+    // node invoked
+    node: EventNode;
+  };
+
+  export type RunCompleted = {
+    type: Type.RunCompleted;
+    run: Run;
+    node: EventNode;
+  };
+
+  export type RunSkipped = {
+    type: Type.RunSkipped;
+    run: Run;
+    node: EventNode;
+  };
+
+  export type NodeSchema = {
+    type: Type.NodeSchema;
+    run: Run;
+    node: EventNode;
+    schema: any;
+  };
 
   export type Output<O> = {
     type: Type.Output;
-    run: {
-      id: string;
-    };
-    node: {
-      id: string;
-      type: string;
-      version: string;
-    };
+    run: Run;
+    node: EventNode;
     output: O;
   };
 
   export type RenderUpdate<State> = {
     type: Type.Render;
-    run: {
-      id: string;
-    };
-    node: {
-      id: string;
-      type: string;
-      version: string;
-    };
+    run: Run;
+    node: EventNode;
     render: {
       step: string;
       data: State;
     };
   };
-
-  export type RunComplete = {
-    run: {
-      id: string;
-    };
-    node: {
-      id: string;
-      type: string;
-      version: string;
-    };
-    type: Type.RunComplete;
-  };
 }
 
 type AgentEvent<Output, State> =
+  | AgentEvent.RunInvoked
+  | AgentEvent.RunSkipped
+  | AgentEvent.RunCompleted
+  | AgentEvent.NodeSchema
   | AgentEvent.Output<Output>
-  | AgentEvent.RenderUpdate<State>
-  | AgentEvent.RunComplete;
+  | AgentEvent.RenderUpdate<State>;
 
 class EventStream<Output, State = any> extends ReplaySubject<
   AgentEvent<Output, State>

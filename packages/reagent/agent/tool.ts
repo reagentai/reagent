@@ -1,4 +1,4 @@
-import { GraphNode } from "./GraphNode";
+import { GraphNode } from "./graph/GraphNode";
 import { ZodObjectSchema } from "./types";
 import { z } from "./zod";
 

@@ -1,8 +1,8 @@
 import { Observer, ReplaySubject, Subscription, mergeMap } from "rxjs";
 
 import { GraphNode } from "./GraphNode";
-import { AbstractAgentNode } from "./node";
-import { EventStream } from "./stream";
+import { AbstractAgentNode } from "../node";
+import { EventStream } from "../stream";
 
 type AgentConfig = {
   replayBuffer?: number;
@@ -12,9 +12,11 @@ class GraphAgent {
   #config: AgentConfig;
   #nodesById: Map<string, GraphNode<any, any, any, any>>;
   #nodeStream: ReplaySubject<any>;
+  #stream: EventStream<any>;
   constructor(config: AgentConfig = {}) {
     this.#config = config;
     this.#nodeStream = new ReplaySubject();
+    this.#stream = new EventStream();
     this.#nodesById = new Map();
   }
 
@@ -69,9 +71,9 @@ class GraphAgent {
     if (this.#nodesById.has(nodeId)) {
       throw new Error(`node with id [${nodeId}] already exists`);
     }
-    const stream = new EventStream();
-    this.#nodeStream.next(stream);
-    const graphNode = new GraphNode(nodeId, node, config, stream as any);
+    // const stream = new EventStream();
+    // this.#nodeStream.next(stream);
+    const graphNode = new GraphNode(nodeId, node, config, this.#stream);
     this.#nodesById.set(nodeId, graphNode);
     return graphNode;
   }

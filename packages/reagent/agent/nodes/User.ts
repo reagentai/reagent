@@ -2,7 +2,7 @@ import { Observable } from "rxjs";
 
 import { z, AbstractAgentNode, Context } from "../";
 import { AtLeastOne } from "../types";
-import { OutputValueProvider } from "../GraphNode";
+import { OutputValueProvider } from "../graph/GraphNode";
 
 const config = z.void();
 
@@ -51,9 +51,10 @@ class User extends AbstractAgentNode<
 
   async *execute(
     _context: Context<z.infer<typeof config>, z.infer<typeof output>>,
-    input: z.infer<typeof inputSchema>
+    _input: z.infer<typeof inputSchema>
   ) {
-    yield input;
+    // since output events are sent during onInputEvent,
+    // don't need to send here
   }
 }
 

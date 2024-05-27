@@ -1,4 +1,5 @@
 import { Context, InitContext } from "../core";
+import { ModelInvokeOptions } from "../core/executor";
 import { BaseModelProvider } from "./base";
 import { ChatCompletionResponse, Metadata } from "./schema";
 
@@ -9,7 +10,7 @@ export class DummyModel extends BaseModelProvider {
     this.#response = options.response;
   }
 
-  init(ctxt: InitContext) {
+  setup(ctxt: InitContext) {
     ctxt.setState<Metadata>("metadata", {
       provider: "dummy",
       family: "unknown",
@@ -18,40 +19,54 @@ export class DummyModel extends BaseModelProvider {
       request: "custom",
     });
 
-    ctxt.addFunctionRunnable("executor", async (ctxt) => {
-      return await this.run(ctxt);
-    });
+    ctxt.addFunctionRunnable(
+      "executor",
+      async (ctxt, options: ModelInvokeOptions) => {
+        return await this.run(ctxt, options);
+      },
+      {
+        override: true,
+      }
+    );
   }
 
-  async run(ctxt: Context) {
-    let count = 2;
+  async run(ctxt: Context, options: ModelInvokeOptions) {
     return await new Promise<ChatCompletionResponse>((resolve) => {
-      let count = 0;
+      let counter = 0;
+      let counterStep = 3;
       const interval = setInterval(() => {
-        // TODO: set `core.llm.response.messages` if streaming is on
-        // ctxt.setGlobalState("core.llm.response.messages", [
-        //   {
-        // message: {
-        //   role: "assistant",
-        //   content: this.#response.substring(0, count),
-        // },
-        //   },
-        // ]);
-        if (count > this.#response.length) {
+        // set `core.llm.response.stream` if streaming is on
+        if (options.stream) {
+          ctxt.setGlobalState("core.llm.response.stream", [
+            {
+              choices: [
+                {
+                  delta: {
+                    content: this.#response.substring(
+                      counter,
+                      counter + counterStep
+                    ),
+                  },
+                },
+              ],
+            },
+          ]);
+        }
+        if (counter > this.#response.length) {
           clearInterval(interval);
           resolve({
             choices: [
               {
                 message: {
                   role: "assistant",
-                  content: this.#response.substring(0, count),
+                  content: this.#response,
                 },
                 finish_reason: "stop",
               },
             ],
           });
         }
-        count += 2;
+        counter += counterStep;
       }, 20);
     });
   }
