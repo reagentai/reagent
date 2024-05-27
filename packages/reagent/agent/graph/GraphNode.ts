@@ -8,6 +8,7 @@ import {
   mergeMap,
   of,
   reduce,
+  share,
   take,
   takeUntil,
   zip,
@@ -66,6 +67,10 @@ class GraphNode<
   #node: AbstractAgentNode<Config, Input, Output, State>;
   #config: Config;
   #stream: EventStream<Output>;
+  // this is used to cache the output stream by field to void
+  // duplicate filtering/computation when same output field
+  // is used more than once
+  #_outputStreams: Record<string, any>;
   // This is "phantom" field only used for type inference
   _types: { output: Output };
 
@@ -85,6 +90,7 @@ class GraphNode<
         id: "__NODE_INIT__",
       })
     );
+    this.#_outputStreams = {};
     // @ts-expect-error
     this._types = undefined;
   }
@@ -134,7 +140,8 @@ class GraphNode<
             );
           })
         )
-        .pipe(take(uniqueOutputProviderNodes.size));
+        .pipe(take(uniqueOutputProviderNodes.size))
+        .pipe(share());
 
       const outputProviderStream = group
         .pipe(
@@ -174,7 +181,8 @@ class GraphNode<
           })
         )
         .pipe(takeUntil(outputProvidersCompleted))
-        .pipe(take(outputSourceFields.length));
+        .pipe(take(outputSourceFields.length))
+        .pipe(share());
 
       const schemaProviderStream = group
         .pipe(filter((e) => e.type == AgentEvent.Type.RunInvoked))
@@ -199,7 +207,8 @@ class GraphNode<
             );
           })
         )
-        .pipe(take(schemaSources.length));
+        .pipe(take(schemaSources.length))
+        .pipe(share());
 
       // group events by target field and emit input events
       merge(outputProviderStream, schemaProviderStream)
@@ -313,8 +322,12 @@ class GraphNode<
     return new Proxy(
       {},
       {
-        get(_, field) {
-          const stream = self.#stream
+        get(_, field: string) {
+          let stream = self.#_outputStreams[field];
+          if (stream) {
+            return stream;
+          }
+          stream = self.#stream
             .pipe(
               filter(
                 (e: any) =>
@@ -327,9 +340,10 @@ class GraphNode<
               map((e) => {
                 return { run: e.run, field, value: e.output[field] };
               })
-            );
+            )
+            .pipe(share());
 
-          return Object.defineProperties(stream, {
+          Object.defineProperties(stream, {
             [VALUE_PROVIDER]: {
               value: {
                 type: "output",
@@ -345,7 +359,7 @@ class GraphNode<
                 return new Promise((resolve) => {
                   stream
                     .pipe(filter((e: any) => e.run.id == options.runId))
-                    .subscribe((e) => {
+                    .subscribe((e: any) => {
                       resolve(e.value);
                     });
                 });
@@ -353,6 +367,8 @@ class GraphNode<
               enumerable: false,
             },
           });
+          self.#_outputStreams[field] = stream;
+          return stream;
         },
       }
     );
