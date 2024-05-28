@@ -55,11 +55,8 @@ router.post("/sendMessage", async (ctx) => {
 
   const res = input.invoke({
     query: body.message.content,
-    // model: new Groq({
-    //   model: "llama3-70b-8192",
-    // }),
-    model: new DummyModel({
-      response: "Hello there, how you doing?",
+    model: new Groq({
+      model: "llama3-70b-8192",
     }),
   });
 

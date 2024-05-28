@@ -296,12 +296,25 @@ class GraphNode<
         .pipe(groupBy((e) => e.targetField))
         .subscribe({
           next(group) {
-            group.pipe(inputReducer()).subscribe((e) => {
-              const context = self.#buildContext(e.run);
-              if (e.count > 0) {
-                self.#node.onInputEvent(context, e.input);
-              }
-            });
+            group
+              // idk why this is needed even though I assume group
+              // will be completed when input streams are completed
+              // but maybe mergeing completed stream doesn't close
+              // down stream observable :shrug:
+              .pipe(
+                take(
+                  Array.isArray(edges[group.key])
+                    ? (edges[group.key] as any).length
+                    : 1
+                )
+              )
+              .pipe(inputReducer())
+              .subscribe((e) => {
+                const context = self.#buildContext(e.run);
+                if (e.count > 0) {
+                  self.#node.onInputEvent(context, e.input);
+                }
+              });
           },
           complete() {},
           error(_err) {},
@@ -429,8 +442,7 @@ class GraphNode<
               map((e) => {
                 return { run: e.run, field, value: e.output[field] };
               })
-            )
-            .pipe(share());
+            );
 
           Object.defineProperties(stream, {
             [VALUE_PROVIDER]: {
