@@ -4,7 +4,9 @@
   "description": "Portal Cortex packages",
   "type": "module",
   "scripts": {
-    "format": "pnpm prettier -w ."
+    "format": "pnpm prettier -w .",
+    "demo-remix": "pnpm -r --filter @portal/reagent-remix run dev",
+    "demo-nextjs": "pnpm -r --filter @portal/reagent-nextjs run dev"
   },
   "keywords": [],
   "workspaces": [
