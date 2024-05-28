@@ -8,7 +8,11 @@ import { Chat } from "../chat/types";
 import { Input } from "../demo-agents/input";
 import { agent as chatAgent } from "../demo-agents/chat";
 import { agent as weatherAgent } from "../demo-agents/weather";
-import { Groq } from "@portal/reagent/llm/integrations/models";
+import {
+  AnthropicChat,
+  GenericChatModel,
+  Groq,
+} from "@portal/reagent/llm/integrations/models";
 import { DummyModel } from "@portal/reagent/llm/models/dummy";
 
 const router = new Hono();
@@ -26,6 +30,12 @@ const sendMessageBodySchema = z.object({
   message: z.object({
     content: z.string(),
   }),
+  model: z
+    .object({
+      provider: z.enum(["openai", "anthropic", "groq"]),
+      name: z.string(),
+    })
+    .optional(),
 });
 
 router.post("/sendMessage", async (ctx) => {
@@ -53,11 +63,31 @@ router.post("/sendMessage", async (ctx) => {
   const input = agent.getNode<void, Input, Input>("input")!;
   const user = agent.getNode<void, {}, User["_types"]["output"]>("user")!;
 
+  let model: any = new DummyModel({
+    response: "Please set the AI model provider.",
+  });
+  if (body.model?.provider == "openai") {
+    model = new GenericChatModel({
+      url: "https://api.openai.com/v1/chat/completions",
+      apiKey: process.env.OPENAI_API_KEY,
+      model: body.model.name,
+      contextLength: 8000,
+    });
+  } else if (body.model?.provider == "anthropic") {
+    model = new AnthropicChat({
+      model: body.model.name,
+      version: "2023-06-01",
+      contextLength: 8000,
+    });
+  } else if (body.model?.provider == "groq") {
+    model = new Groq({
+      model: body.model.name || "mixtral-8x7b-32768",
+    });
+  }
+
   const res = input.invoke({
     query: body.message.content,
-    model: new Groq({
-      model: "llama3-70b-8192",
-    }),
+    model,
   });
 
   const completionSubject = new Subject();
