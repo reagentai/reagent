@@ -1,0 +1,33 @@
+{
+  "name": "@portal/reagent-remix",
+  "version": "1.0.0",
+  "description": "Remix demo for @portal/reagent",
+  "type": "module",
+  "scripts": {
+    "dev": "node ./server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@remix-run/dev": "^2.9.2",
+    "@tailwindcss/typography": "^0.5.13",
+    "@types/react": "^18.3.2",
+    "autoprefixer": "^10.4.19",
+    "vite": "^5.2.11"
+  },
+  "dependencies": {
+    "@portal/reagent": "workspace:^",
+    "@portal/reagent-react": "workspace:^",
+    "@remix-run/express": "^2.9.2",
+    "@remix-run/node": "^2.9.2",
+    "@remix-run/react": "^2.9.2",
+    "cross-env": "^7.0.3",
+    "express": "^4.19.2",
+    "hono": "^4.3.9",
+    "isbot": "4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-error-boundary": "^4.0.13"
+  }
+}
