@@ -8,7 +8,6 @@ import {
   of,
   reduce,
   share,
-  switchMap,
   take,
   takeUntil,
   zip,
@@ -493,7 +492,7 @@ class GraphNode<
         map((group) => {
           const value = group
             .pipe(take(renders.length))
-            .pipe(switchMap((g) => g.value))
+            .pipe(mergeMap((g) => g.value))
             .pipe(share());
 
           // TODO: removing this doesn't stream render events; BUT WHY?
