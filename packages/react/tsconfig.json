@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "noEmit": true,
+    "outDir": "dist",
     "strict": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,

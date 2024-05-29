@@ -19,7 +19,7 @@ importers:
         version: 7.24.5
       '@useportal/reagent':
         specifier: workspace:^
-        version: link:../reagent/dist
+        version: link:../reagent
       '@useportal/reagent-react':
         specifier: workspace:^
         version: link:../react
@@ -68,7 +68,7 @@ importers:
         version: 2.9.2(react-dom@18.3.1)(react@18.3.1)
       '@useportal/reagent':
         specifier: workspace:^
-        version: link:../reagent/dist
+        version: link:../reagent
       '@useportal/reagent-react':
         specifier: workspace:^
         version: link:../react
@@ -123,7 +123,7 @@ importers:
         version: 2.0.6(@types/react@18.3.2)(react-dom@18.3.1)(react@18.3.1)
       '@useportal/reagent':
         specifier: workspace:^
-        version: link:../reagent/dist
+        version: link:../reagent
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
@@ -161,6 +161,9 @@ importers:
       '@types/react':
         specifier: ^18.3.2
         version: 18.3.2
+      typescript:
+        specifier: 5.4.5
+        version: 5.4.5
 
   packages/reagent:
     dependencies:

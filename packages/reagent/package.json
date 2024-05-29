@@ -3,7 +3,9 @@
   "version": "0.1.1",
   "description": "A framework to build AI agents",
   "type": "module",
-  "scripts": {},
+  "scripts": {
+    "prepublish": "pnpm tsc"
+  },
   "dependencies": {
     "@babel/core": "^7.24.5",
     "@babel/generator": "^7.24.5",
@@ -41,7 +43,8 @@
   },
   "keywords": [],
   "publishConfig": {
-    "directory": "dist"
+    "directory": "dist",
+    "linkDirectory": false
   },
   "license": "MIT"
 }
