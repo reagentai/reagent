@@ -1,4 +1,4 @@
 "use client";
-import ReagentDemo from "@portal/reagent-react/demo";
+import ReagentDemo from "@useportal/reagent-react/demo";
 
 export default ReagentDemo;

@@ -1,8 +1,8 @@
 import { Hono } from "hono";
 import { ReplaySubject, Subject, count, take } from "rxjs";
-import { uniqueId } from "@portal/reagent/utils/uniqueId";
-import { z } from "@portal/reagent/agent";
-import { User } from "@portal/reagent/agent/nodes";
+import { uniqueId } from "@useportal/reagent/utils/uniqueId";
+import { z } from "@useportal/reagent/agent";
+import { User } from "@useportal/reagent/agent/nodes";
 
 import { Chat } from "../chat/types";
 import { Input } from "../demo-agents/input";
@@ -12,8 +12,8 @@ import {
   AnthropicChat,
   GenericChatModel,
   Groq,
-} from "@portal/reagent/llm/integrations/models";
-import { DummyModel } from "@portal/reagent/llm/models/dummy";
+} from "@useportal/reagent/llm/integrations/models";
+import { DummyModel } from "@useportal/reagent/llm/models/dummy";
 
 const router = new Hono();
 

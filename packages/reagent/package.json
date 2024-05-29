@@ -1,6 +1,6 @@
 {
-  "name": "@portal/reagent",
-  "version": "0.1.0",
+  "name": "@useportal/reagent",
+  "version": "0.1.1",
   "description": "A framework to build AI agents",
   "type": "module",
   "scripts": {},
@@ -36,8 +36,12 @@
     "@types/lodash-es": "^4.17.12",
     "@types/node": "^20.12.7",
     "@types/react": "^18.3.2",
-    "@types/react-dom": "^18.3.0"
+    "@types/react-dom": "^18.3.0",
+    "typescript": "5.4.5"
   },
   "keywords": [],
+  "publishConfig": {
+    "directory": "dist"
+  },
   "license": "MIT"
 }

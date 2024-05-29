@@ -1,7 +1,7 @@
 {
-  "name": "@portal/reagent-remix",
+  "name": "@useportal/reagent-remix",
   "version": "1.0.0",
-  "description": "Remix demo for @portal/reagent",
+  "description": "Remix demo for @useportal/reagent",
   "type": "module",
   "scripts": {
     "dev": "node ./server.js"
@@ -18,8 +18,8 @@
     "vite": "^5.2.11"
   },
   "dependencies": {
-    "@portal/reagent": "workspace:^",
-    "@portal/reagent-react": "workspace:^",
+    "@useportal/reagent": "workspace:^",
+    "@useportal/reagent-react": "workspace:^",
     "@remix-run/express": "^2.9.2",
     "@remix-run/node": "^2.9.2",
     "@remix-run/react": "^2.9.2",

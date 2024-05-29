@@ -15,7 +15,7 @@ export class LMStudio extends BaseModelProvider {
     this.#options = options;
   }
 
-  init(ctxt: InitContext) {
+  setup(ctxt: InitContext) {
     ctxt.setState<Metadata>("metadata", {
       provider: "lmstudio",
       family: this.#options.family,

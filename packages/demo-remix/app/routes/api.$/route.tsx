@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
-import { router as chatRouter } from "@portal/reagent-react/server/chat";
+import { router as chatRouter } from "@useportal/reagent-react/server/chat";
 
 const app = new Hono().basePath("/api");
 

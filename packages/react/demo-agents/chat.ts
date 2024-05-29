@@ -1,8 +1,8 @@
-import { GraphAgent } from "@portal/reagent/agent";
-import { ChatCompletion, User } from "@portal/reagent/agent/nodes";
+import { GraphAgent } from "@useportal/reagent/agent";
+import { ChatCompletion, User } from "@useportal/reagent/agent/nodes";
 
 import { createInputNode } from "./input";
-import { DummyModel } from "@portal/reagent/llm/models/dummy";
+import { DummyModel } from "@useportal/reagent/llm/models/dummy";
 
 const agent = new GraphAgent();
 

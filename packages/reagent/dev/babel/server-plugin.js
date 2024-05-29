@@ -72,7 +72,7 @@ function createPlugin() {
       visitor: {
         CallExpression(path) {
           const { node } = path;
-          // TODO: make sure createAgentNode is the one from "@portal/reagent/agent"
+          // TODO: make sure createAgentNode is the one from "@useportal/reagent/agent"
           if (path.node.callee.name == "createAgentNode") {
             node.arguments[0].properties.forEach((prop, index) => {
               if (prop.key.name == "execute") {

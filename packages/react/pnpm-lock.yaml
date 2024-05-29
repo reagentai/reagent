@@ -5,7 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 dependencies:
-  '@portal/reagent':
+  '@useportal/reagent':
     specifier: workspace:^
     version: link:../reagent
   clsx:

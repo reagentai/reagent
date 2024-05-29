@@ -1,8 +1,8 @@
 import React from "react";
-import { createAgentNode, z } from "@portal/reagent/agent";
+import { createAgentNode, z } from "@useportal/reagent/agent";
 
 const AgentError = createAgentNode({
-  id: "@portal/demo-agents/agent-error",
+  id: "@useportal/demo-agents/agent-error",
   name: "Show Agent Error",
   version: "0.0.1",
   input: z.object({

@@ -1,5 +1,5 @@
-import { GraphAgent } from "@portal/reagent/agent";
-import { ChatCompletionWithTools, User } from "@portal/reagent/agent/nodes";
+import { GraphAgent } from "@useportal/reagent/agent";
+import { ChatCompletionWithTools, User } from "@useportal/reagent/agent/nodes";
 
 import { GetWeather } from "./tools/Weather";
 import { createInputNode } from "./input";

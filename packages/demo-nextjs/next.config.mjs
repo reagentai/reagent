@@ -6,7 +6,7 @@ export default {
       test: /\.+(js|jsx|mjs|cjs|ts|tsx)$/,
       use: [
         {
-          loader: "@portal/reagent/dev/webpack/index.js",
+          loader: "@useportal/reagent/dev/webpack/index.js",
           options: {
             ssr: isServer,
             tools: [
