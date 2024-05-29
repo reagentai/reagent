@@ -1,6 +1,6 @@
 {
   "name": "@useportal/reagent-react",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "React UI for Portal reagent",
   "type": "module",
   "scripts": {},
