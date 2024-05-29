@@ -99,7 +99,10 @@ class GraphNode<
     [K in keyof Input]: Input[K] extends OutputValueProvider<Input[K]>
       ? OutputValueProvider<Input[K]>
       : Required<Input>[K] extends any[]
-        ? OutputValueProvider<Required<Input>[K][number]>[]
+        ? (
+            | OutputValueProvider<Required<Input>[K][number]>
+            | Required<Input>[K][number]
+          )[]
         : OutputValueProvider<Required<Input>[K]> | Required<Input>[K];
   }) {
     const self = this;
@@ -193,20 +196,16 @@ class GraphNode<
         .pipe(take(1))
         .pipe(
           mergeMap((e) => {
-            return merge<MappedInputEvent[]>(
+            return merge(
               ...schemaSources.map(({ targetField, provider }) => {
-                return provider.pipe(take(1)).pipe(
-                  map((schema) => {
-                    return {
-                      type: "node/schema",
-                      run: e.run,
-                      sourceField: "schema",
-                      targetField,
-                      isArray: Array.isArray(edges[targetField]),
-                      value: schema,
-                    };
-                  })
-                );
+                return of({
+                  type: "node/schema",
+                  run: e.run,
+                  sourceField: "schema",
+                  targetField,
+                  isArray: Array.isArray(edges[targetField]),
+                  value: provider,
+                });
               })
             );
           })
@@ -381,16 +380,16 @@ class GraphNode<
    * Note: This should only be used to bind to a node input
    * and shouldn't be used directly
    */
-  get schema(): OutputValueProvider<{
+  get schema(): {
     id: string;
     name: string;
     description: string;
     parameters: Record<string, any>;
     node: GraphNode<Config, Input, Output>;
-  }> {
+  } {
     const self = this;
     const metadata = this.#node.metadata;
-    const stream = of({
+    const stream = {
       id: metadata.id,
       name: metadata.name,
       description: metadata.description!,
@@ -398,9 +397,8 @@ class GraphNode<
         return metadata.input;
       },
       node: self,
-    });
+    };
 
-    // @ts-expect-error
     return Object.defineProperty(stream, VALUE_PROVIDER, {
       value: {
         type: "schema",

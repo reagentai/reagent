@@ -6,43 +6,27 @@ import { Metadata } from "../../models/schema";
 
 const models = [
   {
-    id: "llama3-8b-8192",
-    family: "meta:llama-3",
-    contextLength: 8192,
+    id: "gpt-3.5-turbo",
+    family: "openai:gpt-3.5",
+    contextLength: 16_385,
   },
   {
-    id: "llama3-70b-8192",
-    family: "meta:llama-3",
-    contextLength: 8192,
+    id: "gpt-4-turbo",
+    family: "openai:gpt-4",
+    contextLength: 128_000,
   },
   {
-    id: "llama2-70b-4096",
-    family: "meta:llama-2",
-    contextLength: 4096,
-  },
-  {
-    id: "mixtral-8x7b-32768",
-    family: "mistral:mixtral",
-    contextLength: 32768,
-  },
-  {
-    id: "gemma-7b-it",
-    family: "google:gemma",
-    contextLength: 8192,
+    id: "gpt-4-turbo-preview",
+    family: "openai:gpt-4",
+    contextLength: 128_000,
   },
 ] as const;
-
-type GroqModel = {
-  id: string;
-  family: Metadata["family"];
-  contextLength: Metadata["contextLength"];
-};
 
 type Options = Pick<ModelOptions, "apiKey"> & {
   model: (typeof models)[number]["id"];
 };
 
-export class Groq extends BaseModelProvider {
+export class OpenAI extends BaseModelProvider {
   #options: Options;
   constructor(options: Options) {
     super();
@@ -55,19 +39,25 @@ export class Groq extends BaseModelProvider {
       throw new Error("Invalid model: ", model);
     }
     invariant(
-      this.#options.apiKey || process.env.GROQ_API_KEY,
-      "Missing API key for Groq. Set GROQ_API_KEY env variable"
+      this.#options.apiKey || process.env.OPENAI_API_KEY,
+      "Missing API key for OpenAI. Set OPENAI_API_KEY env variable"
     );
     ctxt.setState<Metadata>("metadata", {
-      provider: "groq",
+      provider: "openai",
       family: model.family,
       contextLength: model.contextLength,
-      supportedFeatures: ["chat-completion"],
+      supportedFeatures: [
+        "chat-completion",
+        "image-url",
+        "tool-use",
+        "streaming",
+        "stream-tool-use",
+      ],
       request: {
-        url: "https://api.groq.com/openai/v1/chat/completions",
+        url: "https://api.openai.com/v1/chat/completions",
         headers: {
           Authorization: `Bearer ${
-            this.#options.apiKey || process.env.GROQ_API_KEY
+            this.#options.apiKey || process.env.OPENAI_API_KEY
           }`,
         },
         body: {

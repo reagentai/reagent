@@ -17,7 +17,7 @@ import {
   parseStringResponse,
   parseToolCallsResponse,
 } from "../../llm/plugins/response";
-import { z, Context, createAgentNode } from "..";
+import { z, Context, createAgentNode } from "../";
 import { Runnable } from "../../llm/core";
 import { agentToolSchema } from "../tool";
 import { BaseModelProvider } from "../../llm/models";
@@ -61,7 +61,7 @@ const outputSchema = z.object({
   tools: z.any().array().label("Tool calls"),
 });
 
-const ChatCompletionWithTools = createAgentNode({
+const ChatCompletionWithToolCalling = createAgentNode({
   id: "@core/chat-completion",
   version: "0.0.1",
   name: "Chat completion",
@@ -248,4 +248,4 @@ class ToolsProvider extends Runnable {
   }
 }
 
-export default ChatCompletionWithTools;
+export default ChatCompletionWithToolCalling;
