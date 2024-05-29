@@ -43,8 +43,6 @@ const inputSchema = z.object({
 });
 
 type ChatResponseStream = {
-  runId: string;
-  nodeId: string;
   type: "content/delta";
   delta: string;
 };
@@ -104,8 +102,6 @@ const ChatCompletion = createAgentNode({
       plugins: [
         createStreamDeltaStringSubscriber((chunk) => {
           stream.next({
-            runId: context.run.id,
-            nodeId: context.node.id,
             type: "message/content/delta",
             delta: chunk,
           });
