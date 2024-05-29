@@ -2,7 +2,11 @@ import dedent from "dedent";
 import { Observable, ReplaySubject } from "rxjs";
 
 import { ChatCompletionExecutor } from "../../llm/executors";
-import { ChatPromptTemplate, MessagesPlaceholder } from "../../llm/prompt";
+import {
+  ChatPromptTemplate,
+  FormattedChatMessage,
+  MessagesPlaceholder,
+} from "../../llm/prompt";
 import {
   createStreamDeltaStringSubscriber,
   parseStringErrorMessage,
@@ -32,7 +36,10 @@ const inputSchema = z.object({
   model: z.instanceof(BaseModelProvider),
   query: z.string().label("Query"),
   context: z.string().optional().label("Context"),
-  chatHistory: z.array(z.any()).optional().label("Chat History"),
+  chatHistory: z
+    .array(z.custom<FormattedChatMessage>())
+    .optional()
+    .label("Chat History"),
 });
 
 type ChatResponseStream = {

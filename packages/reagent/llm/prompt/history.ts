@@ -2,6 +2,12 @@ import { Context, InitContext, Runnable } from "../core";
 
 export class MessagesPlaceholder extends Runnable {
   variable: string;
+  /**
+   * Create a messages palceholder that uses value of
+   * `core.variables.{variable}` when the messages template
+   * is formatted
+   * @param variable
+   */
   constructor(variable: string) {
     super();
     this.variable = variable;
