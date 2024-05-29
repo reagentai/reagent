@@ -5,6 +5,10 @@
   "type": "module",
   "scripts": {},
   "license": "MIT",
+  "publishConfig": {
+    "directory": "dist",
+    "linkDirectory": false
+  },
   "dependencies": {
     "@anatine/zod-mock": "^3.13.4",
     "@radix-ui/react-dropdown-menu": "^2.0.6",

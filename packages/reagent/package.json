@@ -6,6 +6,12 @@
   "scripts": {
     "prepublish": "pnpm tsc"
   },
+  "keywords": [],
+  "publishConfig": {
+    "directory": "dist",
+    "linkDirectory": false
+  },
+  "license": "MIT",
   "dependencies": {
     "@babel/core": "^7.24.5",
     "@babel/generator": "^7.24.5",
@@ -40,11 +46,5 @@
     "@types/react": "^18.3.2",
     "@types/react-dom": "^18.3.0",
     "typescript": "5.4.5"
-  },
-  "keywords": [],
-  "publishConfig": {
-    "directory": "dist",
-    "linkDirectory": false
-  },
-  "license": "MIT"
+  }
 }
