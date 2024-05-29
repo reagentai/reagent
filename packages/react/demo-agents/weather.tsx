@@ -1,5 +1,5 @@
 import { GraphAgent } from "@useportal/reagent/agent";
-import { ChatCompletionWithTools, User } from "@useportal/reagent/agent/nodes";
+import { ChatCompletionWithToolCalling, User } from "@useportal/reagent/agent/nodes";
 
 import { GetWeather } from "./tools/Weather";
 import { createInputNode } from "./input";
@@ -10,7 +10,7 @@ const agent = new GraphAgent();
 const input = agent.addNode("input", createInputNode());
 const error = agent.addNode("error", new AgentError());
 
-const chat1 = agent.addNode("chat-1", new ChatCompletionWithTools(), {
+const chat1 = agent.addNode("chat-1", new ChatCompletionWithToolCalling(), {
   systemPrompt: "You are an amazing AI assistant called Jarvis",
   temperature: 0.9,
   stream: true,
