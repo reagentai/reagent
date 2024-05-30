@@ -117,6 +117,7 @@ const TopBar = (props: { chatStore: any }) => {
           onClick={() => {
             props.chatStore.persist.clearStorage();
             useTopBarStore.persist.clearStorage();
+            window.location.reload();
           }}
         >
           Reset

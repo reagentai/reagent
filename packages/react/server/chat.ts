@@ -10,8 +10,8 @@ import { agent as chatAgent } from "../demo-agents/chat";
 import { agent as weatherAgent } from "../demo-agents/weather";
 import {
   AnthropicChat,
-  GenericChatModel,
   Groq,
+  OpenAI,
 } from "@useportal/reagent/llm/integrations/models";
 import { DummyModel } from "@useportal/reagent/llm/models/dummy";
 
@@ -64,12 +64,11 @@ router.post("/sendMessage", async (ctx) => {
   const user = agent.getNode<void, {}, User["_types"]["output"]>("user")!;
 
   let model: any = new DummyModel({
-    response: "Please set the AI model provider.",
+    response: "Please select a AI model provider.",
   });
   if (body.model?.provider == "openai") {
-    model = new GenericChatModel({
-      url: "https://api.openai.com/v1/chat/completions",
-      apiKey: process.env.OPENAI_API_KEY,
+    model = new OpenAI({
+      // @ts-expect-error
       model: body.model.name,
       contextLength: 8000,
     });
@@ -81,6 +80,7 @@ router.post("/sendMessage", async (ctx) => {
     });
   } else if (body.model?.provider == "groq") {
     model = new Groq({
+      // @ts-expect-error
       model: body.model.name || "mixtral-8x7b-32768",
     });
   }
