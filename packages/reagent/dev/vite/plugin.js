@@ -1,4 +1,5 @@
 import { transformSync, DEFAULT_EXTENSIONS } from "@babel/core";
+import { once } from "lodash-es";
 
 import createBabelPlugin from "../babel/index.js";
 
@@ -12,6 +13,9 @@ const filterRegex = new RegExp(
   `\\.(${[...DEFAULT_EXTENSIONS, "tsx", "ts"].join("|").replace(/\./g, "")})$`
 );
 
+const warnToolsConfigMissing = once(() => {
+  console.warn(`"tools" config option missing from Reagent plugin`);
+});
 /**
  * @typedef Options
  * @type {object}
@@ -31,8 +35,9 @@ const filterRegex = new RegExp(
  */
 const createPlugin = (options = {}) => {
   const toolsPath = options.tools;
+  once;
   if (!toolsPath) {
-    console.warn(`"tools" config option missing from Reagent plugin`);
+    warnToolsConfigMissing();
   }
   return {
     name: "vite-plugin-portal-reagent",

@@ -24,7 +24,11 @@ function createPlugin(options) {
           if (path.node.source.value.startsWith("@reagentai/reagent")) {
             const specifiers = path.get("specifiers");
             const createAgentNodeSpecifier = specifiers.find((specifier) => {
-              return specifier.node.imported.name == "createAgentNode";
+              return (
+                // skip default import
+                specifier.node.imported &&
+                specifier.node.imported.name == "createAgentNode"
+              );
             });
 
             if (createAgentNodeSpecifier && createAgentNodeSpecifier) {
@@ -46,7 +50,7 @@ function createPlugin(options) {
             return;
           }
           const { node } = path;
-          if (path.node.callee.name == state._createAgentNode.local.node.name) {
+          if (node.callee.name == state._createAgentNode.local.node.name) {
             const callee = path.get("callee");
             // make sure the scope matches
             if (callee.scope != state._createAgentNode.local.scope) {
