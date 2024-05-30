@@ -52,11 +52,11 @@ const Component = (props: any) => {
   return (
     <div className={`${isDayTime ? "" : "dark"}`}>
       <div
-        className={`p-6 rounded-lg shadow-lg text-white bg-gradient-to-br from-yellow-100 dark:from-gray-800 via-50% via-blue-400 dark:via-gray-800 to-blue-600 dark:to-gray-800 transition-colors duration-500`}
+        className={`p-6 rounded-lg shadow-lg text-white bg-gradient-to-br from-yellow-100 dark:from-slate-400 via-50% via-blue-300 dark:via-slate-500 to-blue-400 dark:to-slate-600 transition-colors duration-500`}
       >
         <div className="flex justify-between items-center mb-4">
           <div>
-            <h2 className="text-3xl font-bold mb-1 text-slate-600 dark:text-slate-300">
+            <h2 className="text-3xl font-bold mb-1 text-slate-600 dark:text-slate-100">
               {props.city}, {props.country}
             </h2>
             <p className="text-xl">{props.condition}</p>
@@ -67,7 +67,7 @@ const Component = (props: any) => {
             </p>
           </div>
         </div>
-        <div className="flex justify-around text-lg text-slate-100 dark:text-slate-300">
+        <div className="flex justify-around text-lg text-white dark:text-slate-300">
           <div className="flex flex-col items-center">
             <span className="font-semibold">Humidity</span>
             <span>{props.humidity}%</span>
