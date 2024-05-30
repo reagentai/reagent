@@ -5,7 +5,14 @@ export default function (source) {
   const vitePlugin = createVitePlugin({
     tools: options.tools,
     plugins: ["@babel/plugin-syntax-jsx"],
-    presets: ["@babel/preset-typescript"],
+    presets: [
+      [
+        "@babel/preset-typescript",
+        {
+          allowDeclareFields: true,
+        },
+      ],
+    ],
   });
 
   const result = vitePlugin.transform(source, this.resourcePath, {
