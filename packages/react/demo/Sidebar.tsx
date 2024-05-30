@@ -1,5 +1,5 @@
 type SidebarProps = {
-  agents: { id: string; name: string }[];
+  agents: { id: string; name: string; description: string }[];
   activeAgentId: string;
   setActiveAgentId: (id: string) => void;
 };

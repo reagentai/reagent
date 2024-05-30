@@ -5,6 +5,8 @@ import { AbstractAgentNode } from "../node";
 import { EventStream } from "../stream";
 
 type AgentConfig = {
+  name: string;
+  description: string;
   replayBuffer?: number;
 };
 
@@ -12,10 +14,18 @@ class GraphAgent {
   #config: AgentConfig;
   #nodesById: Map<string, GraphNode<any, any, any, any>>;
   #stream: EventStream<any>;
-  constructor(config: AgentConfig = {}) {
+  constructor(config: AgentConfig) {
     this.#config = config;
     this.#stream = new EventStream();
     this.#nodesById = new Map();
+  }
+
+  get name() {
+    return this.#config.name;
+  }
+
+  get description() {
+    return this.#config.description;
   }
 
   subscribe(

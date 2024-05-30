@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
@@ -17,26 +18,12 @@ import { AgentContextProvider } from "../agent";
 import { AgentError } from "../demo-agents/tools/AgentError";
 import { GetWeather } from "../demo-agents/tools/Weather";
 import Sidebar, { SidebarProps } from "./Sidebar";
-import { useMemo } from "react";
 
 type AgentInfo = {
   id: string;
   name: string;
   description: string;
 };
-
-const agents: AgentInfo[] = [
-  {
-    id: "default",
-    name: "Simple AI Chat",
-    description: "A simple AI chat",
-  },
-  {
-    id: "weather",
-    name: "Weather app",
-    description: "This agent shows random weather in Weather Widget",
-  },
-];
 
 const llmModels = [
   {
@@ -66,6 +53,13 @@ const llmModels = [
 ];
 
 const ReagentDemo = (props: Omit<SidebarProps, "agents">) => {
+  const [agents, setAgents] = useState<AgentInfo[]>(null!);
+  useEffect(() => {
+    fetch("/api/chat/agents").then(async (res: any) => {
+      setAgents(await res.json());
+    });
+  }, []);
+
   const llmModel = useTopBarStore((s: any) => s.llmModel);
   const store = useMemo(
     () =>
@@ -101,9 +95,16 @@ const ReagentDemo = (props: Omit<SidebarProps, "agents">) => {
   );
 
   const agent = useMemo(() => {
+    if (!agents) {
+      return null;
+    }
     return agents.find((a) => a.id == props.activeAgentId);
-  }, [props.activeAgentId]);
+  }, [props.activeAgentId, agents]);
   const messages = store((s) => s.messages);
+
+  if (!agents) {
+    return <div></div>;
+  }
 
   return (
     <div className="flex">

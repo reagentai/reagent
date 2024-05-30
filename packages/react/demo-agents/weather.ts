@@ -8,7 +8,10 @@ import { GetWeather } from "./tools/Weather";
 import { createInputNode } from "./input";
 import { AgentError } from "./tools/AgentError";
 
-const agent = new GraphAgent();
+const agent = new GraphAgent({
+  name: "Weather app",
+  description: "This agent shows random weather in Weather Widget",
+});
 
 const input = agent.addNode("input", createInputNode());
 const error = agent.addNode("error", new AgentError());
@@ -39,4 +42,4 @@ user.bind({
   ui: user.mergeRenderStreams(getWeather.render, error.render),
 });
 
-export { agent };
+export default agent;

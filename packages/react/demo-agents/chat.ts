@@ -3,7 +3,10 @@ import { ChatCompletion, User } from "@useportal/reagent/agent/nodes";
 
 import { createInputNode } from "./input";
 
-const agent = new GraphAgent();
+const agent = new GraphAgent({
+  name: "Simple AI Chat",
+  description: "A simple AI chat agent.",
+});
 
 const input = agent.addNode("input", createInputNode());
 
@@ -25,4 +28,4 @@ user.bind({
   markdownStream: chat1.output.stream,
 });
 
-export { agent };
+export default agent;
