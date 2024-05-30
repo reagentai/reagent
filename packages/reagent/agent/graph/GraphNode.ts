@@ -18,34 +18,9 @@ import { Context } from "../context";
 import { AbstractAgentNode } from "../node";
 import { AgentEvent, EventStream } from "../stream";
 import { uniqueId } from "../../utils/uniqueId";
-
-type OutputValueProvider<Output> = Pick<
-  Observable<{
-    // run is null for run independent global values
-    run: {
-      id: string;
-    } | null;
-    value: Output;
-  }>,
-  "subscribe" | "pipe"
-> & {
-  /**
-   * Select the output result by run id
-   *
-   * @param runId
-   */
-  select(options: { runId: string }): Promise<Output>;
-};
-
-const VALUE_PROVIDER = Symbol("___VALUE_PROVIDER__");
-
-type RenderUpdate = {
-  node: { id: string; type: string; version: string };
-  render: {
-    step: string;
-    data: any;
-  };
-};
+import type { OutputValueProvider, RenderUpdate } from "./types";
+import { VALUE_PROVIDER } from "./operators";
+import { uniqBy } from "lodash-es";
 
 type MappedInputEvent = {
   type: AgentEvent.Type;
@@ -112,7 +87,7 @@ class GraphNode<
         return provider.map((p) => {
           return {
             targetField,
-            ...p[VALUE_PROVIDER],
+            ...(p[VALUE_PROVIDER] || {}),
             provider: p,
           };
         });
@@ -120,7 +95,7 @@ class GraphNode<
       return [
         {
           targetField,
-          ...provider[VALUE_PROVIDER],
+          ...(provider[VALUE_PROVIDER] || {}),
           provider,
         },
       ];
@@ -128,9 +103,10 @@ class GraphNode<
 
     const outputSourceProviders = providers.filter((p) => p.type == "output");
     const uniqueOutputProviderNodes = new Set(
-      outputSourceProviders.map((p) => p.node.id)
+      outputSourceProviders.flatMap((p) => p.dependencies.map((d: any) => d.id))
     );
 
+    const valueProviders = providers.filter((p) => p.type == undefined);
     const schemaSources = providers.filter((p) => p.type == "schema");
     const renderSources = providers.filter((p) => p.type == "render");
 
@@ -160,13 +136,9 @@ class GraphNode<
         .pipe(
           mergeMap((e: any) => {
             const fieldMappings = Object.fromEntries(
-              outputSourceProviders
-                .filter((n) => {
-                  return n.node.id == e.node.id;
-                })
-                .map((n) => {
-                  return [n.sourceField, n.targetField];
-                })
+              outputSourceProviders.map((n) => {
+                return [n.sourceField, n.targetField];
+              })
             );
             // emit event for each output key used by the node
             return of<MappedInputEvent[]>(
@@ -189,6 +161,28 @@ class GraphNode<
         )
         .pipe(takeUntil(outputProvidersCompleted))
         .pipe(take(outputSourceProviders.length))
+        .pipe(share());
+
+      const valueProviderStreams = group
+        .pipe(filter((e) => e.type == AgentEvent.Type.RunInvoked))
+        .pipe(take(1))
+        .pipe(
+          mergeMap((e) => {
+            return merge(
+              ...valueProviders.map(({ targetField, provider }) => {
+                return of({
+                  type: "raw",
+                  run: e.run,
+                  sourceField: "raw",
+                  targetField,
+                  isArray: Array.isArray(edges[targetField]),
+                  value: provider,
+                });
+              })
+            );
+          })
+        )
+        .pipe(take(valueProviders.length))
         .pipe(share());
 
       const schemaProviderStream = group
@@ -242,7 +236,14 @@ class GraphNode<
         .pipe(take(renderSources.length))
         .pipe(share());
 
-      const schemaSourceNodeIds = new Set(schemaSources.map((s) => s.node.id));
+      const schemaSourceDependencies = uniqBy(
+        schemaSources.flatMap((s) => s.dependencies),
+        (d) => d.id
+      );
+      const schemaSourceDependencyIds = new Set(
+        schemaSourceDependencies.map((d) => d.id)
+      );
+
       // trigger when this current node is completed/skipped
       const nodeCompleted = group
         .pipe(
@@ -262,7 +263,7 @@ class GraphNode<
             (e) =>
               (e.type == AgentEvent.Type.RunCompleted ||
                 e.type == AgentEvent.Type.RunSkipped) &&
-              schemaSourceNodeIds.has(e.node.id)
+              schemaSourceDependencyIds.has(e.node.id)
           )
         )
         .pipe(
@@ -275,15 +276,12 @@ class GraphNode<
       // trigger run skipped for nodes whose schema is bound
       zip(nodeCompleted, schemaNodesRunStream).subscribe(
         ([runComplete, schemaNodesThatWasRun]) => {
-          [...schemaSourceNodeIds].forEach((nodeId) => {
-            if (!schemaNodesThatWasRun.has(nodeId)) {
-              const schemaSource = schemaSources.find(
-                (s) => s.node.id == nodeId
-              );
+          [...schemaSourceDependencies].forEach((schemaSourceNode) => {
+            if (!schemaNodesThatWasRun.has(schemaSourceNode.id)) {
               self.#stream.next({
                 type: AgentEvent.Type.RunSkipped,
                 run: runComplete.run,
-                node: schemaSource.node,
+                node: schemaSourceNode,
               });
             }
           });
@@ -291,7 +289,12 @@ class GraphNode<
       );
 
       // group events by target field and emit input events
-      merge(outputProviderStream, schemaProviderStream, renderStream)
+      merge(
+        outputProviderStream,
+        schemaProviderStream,
+        renderStream,
+        valueProviderStreams
+      )
         .pipe(groupBy((e) => e.targetField))
         .subscribe({
           next(group) {
@@ -322,16 +325,20 @@ class GraphNode<
       // merge all inputs and invoke the step
       zip(
         outputProvidersCompleted,
-        merge(outputProviderStream, schemaProviderStream, renderStream).pipe(
-          inputReducer()
-        )
+        merge(
+          outputProviderStream,
+          schemaProviderStream,
+          renderStream,
+          valueProviderStreams
+        ).pipe(inputReducer())
       ).subscribe({
         next([runCompleteEvent, inputEvent]) {
           if (
             inputEvent.count ==
             outputSourceProviders.length +
               schemaSources.length +
-              renderSources.length
+              renderSources.length +
+              valueProviders.length
           ) {
             self.#invoke(inputEvent.input, inputEvent.run);
           } else {
@@ -402,11 +409,13 @@ class GraphNode<
     return Object.defineProperty(stream, VALUE_PROVIDER, {
       value: {
         type: "schema",
-        node: {
-          id: self.#nodeId,
-          type: self.#node.metadata.id,
-          version: self.#node.metadata.version,
-        },
+        dependencies: [
+          {
+            id: self.#nodeId,
+            type: self.#node.metadata.id,
+            version: self.#node.metadata.version,
+          },
+        ],
       },
       enumerable: false,
       writable: false,
@@ -446,11 +455,13 @@ class GraphNode<
             [VALUE_PROVIDER]: {
               value: {
                 type: "output",
-                node: {
-                  id: self.#nodeId,
-                  type: self.#node.metadata.id,
-                  version: self.#node.metadata.version,
-                },
+                dependencies: [
+                  {
+                    id: self.#nodeId,
+                    type: self.#node.metadata.id,
+                    version: self.#node.metadata.version,
+                  },
+                ],
                 sourceField: field,
               },
               configurable: false,
@@ -475,58 +486,6 @@ class GraphNode<
         },
       }
     );
-  }
-
-  /**
-   * Merges two streams into one
-   *
-   * If a node has a stream input but need to take in stream
-   * from more than one output/render, then this can be used to combine the
-   * streams;
-   *
-   * For example:
-   * ```
-   * user.mergeRenderStreams(error.render, getWeather.render),
-   * ```
-   *
-   * @param renders
-   * @returns
-   */
-  mergeRenderStreams<O>(
-    ...renders: OutputValueProvider<O>[]
-  ): OutputValueProvider<O> {
-    // @ts-expect-error
-    const stream = merge(...renders)
-      .pipe(groupBy((e: any) => e.run.id))
-      .pipe(
-        map((group) => {
-          const value = group
-            .pipe(take(renders.length))
-            .pipe(mergeMap((g) => g.value))
-            .pipe(share());
-
-          // TODO: removing this doesn't stream render events; BUT WHY?
-          value.subscribe();
-          return {
-            run: {
-              id: group.key,
-            },
-            value,
-          };
-        })
-      )
-      .pipe(share());
-
-    return Object.defineProperties(stream, {
-      [VALUE_PROVIDER]: {
-        value: {
-          type: "render",
-        },
-        configurable: false,
-        enumerable: false,
-        writable: false,
-      },
-    }) as unknown as OutputValueProvider<O>;
   }
 
   /**
@@ -577,6 +536,11 @@ class GraphNode<
       [VALUE_PROVIDER]: {
         value: {
           type: "render",
+          dependencies: [
+            {
+              id: self.#nodeId,
+            },
+          ],
         },
         configurable: false,
         enumerable: false,
