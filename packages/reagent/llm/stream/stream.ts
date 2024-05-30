@@ -9,10 +9,15 @@ async function* jsonStreamToAsyncIterator(stream: ReadableStream) {
   try {
     let data = await reader?.read();
     var enc = new TextDecoder("utf-8");
+    let stringBuffer = "";
     while (data && !data.done) {
       const text = enc.decode(data?.value);
-      const lines = text.split(/\r?\n/);
-      for (let line of lines) {
+      stringBuffer += text;
+      let eventEndIndex = stringBuffer.indexOf("\n\n");
+      while (eventEndIndex > 0) {
+        let line = stringBuffer.slice(0, eventEndIndex);
+        stringBuffer = stringBuffer.slice(eventEndIndex + 2);
+        eventEndIndex = stringBuffer.indexOf("\n\n");
         if (line.startsWith("data:")) {
           line = line.substring(5);
           try {
