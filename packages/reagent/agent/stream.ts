@@ -1,16 +1,16 @@
 import { ReplaySubject } from "rxjs";
 
-namespace AgentEvent {
-  export enum Type {
-    RunInvoked = "run/invoked",
-    // This is trigged when all the node inputs aren't received
-    // but the nodes that provide the input values are already executed
-    RunSkipped = "run/skipped",
-    RunCompleted = "run/complete",
-    Output = "output",
-    Render = "render",
-  }
+enum AgentEventType {
+  RunInvoked = "run/invoked",
+  // This is trigged when all the node inputs aren't received
+  // but the nodes that provide the input values are already executed
+  RunSkipped = "run/skipped",
+  RunCompleted = "run/complete",
+  Output = "output",
+  Render = "render",
+}
 
+namespace AgentEvent {
   type Run = {
     id: string;
   };
@@ -21,33 +21,33 @@ namespace AgentEvent {
   };
 
   export type RunInvoked = {
-    type: Type.RunInvoked;
+    type: AgentEventType.RunInvoked;
     run: Run;
     // node invoked
     node: EventNode;
   };
 
   export type RunCompleted = {
-    type: Type.RunCompleted;
+    type: AgentEventType.RunCompleted;
     run: Run;
     node: EventNode;
   };
 
   export type RunSkipped = {
-    type: Type.RunSkipped;
+    type: AgentEventType.RunSkipped;
     run: Run;
     node: EventNode;
   };
 
   export type Output<O> = {
-    type: Type.Output;
+    type: AgentEventType.Output;
     run: Run;
     node: EventNode;
     output: O;
   };
 
   export type RenderUpdate<State> = {
-    type: Type.Render;
+    type: AgentEventType.Render;
     run: Run;
     node: EventNode;
     render: {
@@ -82,7 +82,7 @@ class EventStream<Output, State = any> extends ReplaySubject<
     output: Output;
   }) {
     this.next({
-      type: AgentEvent.Type.Output,
+      type: AgentEventType.Output,
       run: {
         id: options.run.id,
       },
@@ -99,7 +99,7 @@ class EventStream<Output, State = any> extends ReplaySubject<
     update: { step: string; data: any };
   }) {
     this.next({
-      type: AgentEvent.Type.Render,
+      type: AgentEventType.Render,
       run: {
         id: options.run.id,
       },
@@ -112,5 +112,5 @@ class EventStream<Output, State = any> extends ReplaySubject<
   }
 }
 
-export { EventStream };
-export { AgentEvent };
+export { EventStream, AgentEventType };
+export type { AgentEvent };

@@ -13,17 +13,19 @@ import {
   zip,
 } from "rxjs";
 import { fromError } from "zod-validation-error";
+import { uniqBy } from "lodash-es";
 
 import { Context } from "../context";
 import { AbstractAgentNode } from "../node";
-import { AgentEvent, EventStream } from "../stream";
+import { EventStream, AgentEventType } from "../stream";
 import { uniqueId } from "../../utils/uniqueId";
-import type { OutputValueProvider, RenderUpdate } from "./types";
 import { VALUE_PROVIDER } from "./operators";
-import { uniqBy } from "lodash-es";
+
+import type { OutputValueProvider, RenderUpdate } from "./types";
+import type { AgentEvent } from "../stream";
 
 type MappedInputEvent = {
-  type: AgentEvent.Type;
+  type: AgentEventType;
   run: { id: string };
   sourceField: string;
   targetField: string;
@@ -115,8 +117,8 @@ class GraphNode<
         .pipe(
           filter((e) => {
             return (
-              (e.type == AgentEvent.Type.RunCompleted ||
-                e.type == AgentEvent.Type.RunSkipped) &&
+              (e.type == AgentEventType.RunCompleted ||
+                e.type == AgentEventType.RunSkipped) &&
               uniqueOutputProviderNodes.has(e.node.id)
             );
           })
@@ -128,7 +130,7 @@ class GraphNode<
         .pipe(
           filter((e) => {
             return (
-              e.type == AgentEvent.Type.Output &&
+              e.type == AgentEventType.Output &&
               uniqueOutputProviderNodes.has(e.node.id)
             );
           })
@@ -164,7 +166,7 @@ class GraphNode<
         .pipe(share());
 
       const valueProviderStreams = group
-        .pipe(filter((e) => e.type == AgentEvent.Type.RunInvoked))
+        .pipe(filter((e) => e.type == AgentEventType.RunInvoked))
         .pipe(take(1))
         .pipe(
           mergeMap((e) => {
@@ -186,7 +188,7 @@ class GraphNode<
         .pipe(share());
 
       const schemaProviderStream = group
-        .pipe(filter((e) => e.type == AgentEvent.Type.RunInvoked))
+        .pipe(filter((e) => e.type == AgentEventType.RunInvoked))
         .pipe(take(1))
         .pipe(
           mergeMap((e) => {
@@ -208,7 +210,7 @@ class GraphNode<
         .pipe(share());
 
       const renderStream = group
-        .pipe(filter((e) => e.type == AgentEvent.Type.RunInvoked))
+        .pipe(filter((e) => e.type == AgentEventType.RunInvoked))
         .pipe(take(1))
         .pipe(
           mergeMap((e) => {
@@ -250,8 +252,8 @@ class GraphNode<
           filter(
             (e) =>
               e.node.id == self.#nodeId &&
-              (e.type == AgentEvent.Type.RunCompleted ||
-                e.type == AgentEvent.Type.RunSkipped)
+              (e.type == AgentEventType.RunCompleted ||
+                e.type == AgentEventType.RunSkipped)
           )
         )
         .pipe(take(1));
@@ -261,8 +263,8 @@ class GraphNode<
         .pipe(
           filter(
             (e) =>
-              (e.type == AgentEvent.Type.RunCompleted ||
-                e.type == AgentEvent.Type.RunSkipped) &&
+              (e.type == AgentEventType.RunCompleted ||
+                e.type == AgentEventType.RunSkipped) &&
               schemaSourceDependencyIds.has(e.node.id)
           )
         )
@@ -279,7 +281,7 @@ class GraphNode<
           [...schemaSourceDependencies].forEach((schemaSourceNode) => {
             if (!schemaNodesThatWasRun.has(schemaSourceNode.id)) {
               self.#stream.next({
-                type: AgentEvent.Type.RunSkipped,
+                type: AgentEventType.RunSkipped,
                 run: runComplete.run,
                 node: schemaSourceNode,
               });
@@ -345,7 +347,7 @@ class GraphNode<
             // if all output provider nodes are completed but all expected inputs
             // weren't received, emit node skipped event
             self.#stream.next({
-              type: AgentEvent.Type.RunSkipped,
+              type: AgentEventType.RunSkipped,
               run: runCompleteEvent.run,
               node: {
                 id: self.#nodeId,
@@ -368,7 +370,7 @@ class GraphNode<
     const self = this;
     if (!options.run?.id) {
       this.#stream.next({
-        type: AgentEvent.Type.RunInvoked,
+        type: AgentEventType.RunInvoked,
         node: {
           id: self.#nodeId,
           type: self.#node.metadata.id,
@@ -440,7 +442,7 @@ class GraphNode<
             .pipe(
               filter(
                 (e: any) =>
-                  e.type == AgentEvent.Type.Output &&
+                  e.type == AgentEventType.Output &&
                   e.node.id == self.#nodeId &&
                   field in e.output
               )
@@ -504,7 +506,7 @@ class GraphNode<
         filter(
           (e: any) =>
             // filter either any run invoked events or events for this node
-            e.node.id == self.#nodeId || e.type == AgentEvent.Type.RunInvoked
+            e.node.id == self.#nodeId || e.type == AgentEventType.RunInvoked
         )
       )
       .pipe(groupBy((e) => e.run.id))
@@ -513,8 +515,8 @@ class GraphNode<
           const runCompleted = group.pipe(
             filter(
               (e) =>
-                e.type == AgentEvent.Type.RunCompleted ||
-                e.type == AgentEvent.Type.RunSkipped
+                e.type == AgentEventType.RunCompleted ||
+                e.type == AgentEventType.RunSkipped
             )
           );
 
@@ -526,7 +528,7 @@ class GraphNode<
             },
             value: group
               .pipe(takeUntil(runCompleted))
-              .pipe(filter((e) => e.type == AgentEvent.Type.Render)),
+              .pipe(filter((e) => e.type == AgentEventType.Render)),
           };
         })
       )
@@ -588,7 +590,7 @@ class GraphNode<
       Object.assign(output, partialOutput);
     }
     this.#stream.next({
-      type: AgentEvent.Type.RunCompleted,
+      type: AgentEventType.RunCompleted,
       run,
       node,
     });

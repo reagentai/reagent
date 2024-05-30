@@ -1,3 +1,4 @@
+"@reagent-skip-transform";
 import { klona } from "klona";
 import cleanSet from "clean-set";
 // @ts-expect-error
@@ -45,7 +46,7 @@ export type InvokeOptions = {
   run?: RunInfo;
 };
 
-export abstract class AbstractExecutor extends Runnable {
+abstract class AbstractExecutor extends Runnable {
   #runnables: Record<string, Runnable | FunctionRunnable<unknown>>;
   #context: Context;
   constructor(options: AbstractExecutorOptions) {
@@ -117,6 +118,8 @@ export abstract class AbstractExecutor extends Runnable {
     }
   }
 
+  abstract invoke(options: InvokeOptions): Promise<Context>;
+
   get namespace() {
     return "core.executor";
   }
@@ -156,6 +159,6 @@ export abstract class AbstractExecutor extends Runnable {
   }
 
   async run(ctxt: Context, argument: undefined): Promise<void> {}
-
-  abstract invoke(options: InvokeOptions): Promise<Context>;
 }
+
+export { AbstractExecutor };

@@ -16,7 +16,7 @@
   "dependencies": {
     "@babel/core": "^7.24.5",
     "@babel/generator": "^7.24.5",
-    "@babel/preset-react": "^7.24.1",
+    "@babel/plugin-syntax-jsx": "^7.24.6",
     "@babel/preset-typescript": "^7.24.1",
     "@babel/types": "^7.23.6",
     "@sindresorhus/slugify": "^2.2.1",

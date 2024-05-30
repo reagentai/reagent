@@ -10,6 +10,29 @@ const plugin = createBabelPlugin({
   ssr: false,
 });
 
+test("skip transpile if directive '@reagent-skip-transform' is found", () => {
+  const codeToTransform = `
+    "@reagent-skip-transform";
+    import { createAgentNode, z } from "@reagentai/reagent/agent";
+    const GetWeather = createAgentNode({
+      id: "@reagentai/demo-agents/getWeather",
+      name: "Get weather",
+      description: "",
+      version: "0.0.1",
+      input: z.object({
+        msg: z.string()
+      }),
+      output: outputSchema,
+      async *execute(context, input) {
+        yield { msg: "Hello" };
+      },
+    });
+  `;
+
+  const { code: transformedCode } = transform(codeToTransform);
+  expect(transformedCode).to.equal(cleanUpCode(codeToTransform));
+});
+
 test("dont transpile createAgentNode if it's not imported", () => {
   const expected = cleanUpCode(`
     const GetWeather = {

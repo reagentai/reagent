@@ -20,6 +20,15 @@ function createPlugin(options) {
   return ({ types: t }) => {
     return {
       visitor: {
+        Program(path) {
+          if (
+            path.node.directives.find((directive) => {
+              return directive.value.value == "@reagent-skip-transform";
+            })
+          ) {
+            path.stop();
+          }
+        },
         ImportDeclaration(path, state) {
           if (path.node.source.value.startsWith("@reagentai/reagent")) {
             const specifiers = path.get("specifiers");

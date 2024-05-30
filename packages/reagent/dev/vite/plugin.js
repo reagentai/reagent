@@ -14,7 +14,7 @@ const filterRegex = new RegExp(
 );
 
 const warnToolsConfigMissing = once(() => {
-  console.warn(`"tools" config option missing from Reagent plugin`);
+  console.warn(`"tools" option missing from Reagent plugin config`);
 });
 /**
  * @typedef Options

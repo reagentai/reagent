@@ -4,7 +4,8 @@ export default function (source) {
   const options = this.getOptions();
   const vitePlugin = createVitePlugin({
     tools: options.tools,
-    presets: ["@babel/preset-typescript", "@babel/preset-react"],
+    plugins: ["@babel/plugin-syntax-jsx"],
+    presets: ["@babel/preset-typescript"],
   });
 
   const result = vitePlugin.transform(source, this.resourcePath, {
