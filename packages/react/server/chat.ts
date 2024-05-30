@@ -20,7 +20,7 @@ const router = new Hono();
 router.get("/_healthy", (c) => c.text("OK"));
 
 const agentsById = new Map([
-  ["chat", chatAgent],
+  ["default", chatAgent],
   ["weather", weatherAgent],
 ]);
 

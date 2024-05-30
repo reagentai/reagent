@@ -1,11 +1,13 @@
-import { useNavigate } from "@remix-run/react";
+import React from "react";
+import { useNavigate, useParams } from "@remix-run/react";
 import ReagentDemo from "@useportal/reagent-react/demo";
 
-const Home = () => {
+const Chat = () => {
   const navigate = useNavigate();
+  const params = useParams();
   return (
     <ReagentDemo
-      activeAgentId={"default"}
+      activeAgentId={params.agent!}
       setActiveAgentId={(id) => {
         navigate(`/chat/${id}`);
       }}
@@ -13,4 +15,4 @@ const Home = () => {
   );
 };
 
-export default Home;
+export default Chat;

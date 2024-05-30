@@ -1,12 +1,13 @@
 "use client";
-import ReagentDemo from "@useportal/reagent-react/demo";
+import React from "react";
 import { useRouter } from "next/navigation";
+import ReagentDemo from "@useportal/reagent-react/demo";
 
-const Home = () => {
+const Chat = ({ params }: any) => {
   const router = useRouter();
   return (
     <ReagentDemo
-      activeAgentId={"default"}
+      activeAgentId={params.agent!}
       setActiveAgentId={(id) => {
         router.push(`/chat/${id}`);
       }}
@@ -14,4 +15,4 @@ const Home = () => {
   );
 };
 
-export default Home;
+export default Chat;
