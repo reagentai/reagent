@@ -1,14 +1,14 @@
 import { Hono } from "hono";
 import { ReplaySubject, Subject, count, take } from "rxjs";
-import { uniqueId } from "@useportal/reagent/utils/uniqueId";
-import { GraphAgent, z } from "@useportal/reagent/agent";
-import { User } from "@useportal/reagent/agent/nodes";
+import { uniqueId } from "@reagentai/reagent/utils/uniqueId";
+import { GraphAgent, z } from "@reagentai/reagent/agent";
+import { User } from "@reagentai/reagent/agent/nodes";
 import {
   AnthropicChat,
   Groq,
   OpenAI,
-} from "@useportal/reagent/llm/integrations/models";
-import { DummyModel } from "@useportal/reagent/llm/models/dummy";
+} from "@reagentai/reagent/llm/integrations/models";
+import { DummyModel } from "@reagentai/reagent/llm/models/dummy";
 
 import { Chat } from "../chat/types";
 import { Input } from "../demo-agents/input";

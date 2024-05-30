@@ -1,5 +1,5 @@
 "use client";
-import ReagentDemo from "@useportal/reagent-react/demo";
+import ReagentDemo from "@reagentai/reagent-react/demo";
 import { useRouter } from "next/navigation";
 
 const Home = () => {

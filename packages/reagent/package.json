@@ -1,5 +1,5 @@
 {
-  "name": "@useportal/reagent",
+  "name": "@reagentai/reagent",
   "version": "0.1.1",
   "description": "A framework to build AI agents",
   "type": "module",

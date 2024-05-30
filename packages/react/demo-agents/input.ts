@@ -1,6 +1,6 @@
-import { z } from "@useportal/reagent/agent";
-import { Passthrough } from "@useportal/reagent/agent/nodes";
-import { BaseModelProvider } from "@useportal/reagent/llm/models";
+import { z } from "@reagentai/reagent/agent";
+import { Passthrough } from "@reagentai/reagent/agent/nodes";
+import { BaseModelProvider } from "@reagentai/reagent/llm/models";
 
 const createInputNode = () =>
   new Passthrough(

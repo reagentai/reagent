@@ -4,7 +4,7 @@ export default {
   darkMode: "class",
   content: [
     "./app/**/*.{js,jsx,ts,tsx}",
-    "./node_modules/@useportal/reagent-react/**/*.{js,ts,jsx,tsx}",
+    "./node_modules/@reagentai/reagent-react/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
     extend: {},

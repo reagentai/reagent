@@ -1,5 +1,5 @@
 import { createContext, useContext, useMemo } from "react";
-import type { AgentNode } from "@useportal/reagent/agent";
+import type { AgentNode } from "@reagentai/reagent/agent";
 
 type Context = {
   nodesByTypeId: Record<string, AgentNode<any, any, any>>;

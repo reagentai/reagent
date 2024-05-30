@@ -1,5 +1,5 @@
-import { GraphAgent } from "@useportal/reagent/agent";
-import { ChatCompletion, User } from "@useportal/reagent/agent/nodes";
+import { GraphAgent } from "@reagentai/reagent/agent";
+import { ChatCompletion, User } from "@reagentai/reagent/agent/nodes";
 
 import { createInputNode } from "./input";
 

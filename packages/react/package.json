@@ -1,5 +1,5 @@
 {
-  "name": "@useportal/reagent-react",
+  "name": "@reagentai/reagent-react",
   "version": "0.1.2",
   "description": "React UI for Portal reagent",
   "type": "module",
@@ -12,7 +12,7 @@
   "dependencies": {
     "@anatine/zod-mock": "^3.13.4",
     "@radix-ui/react-dropdown-menu": "^2.0.6",
-    "@useportal/reagent": "workspace:^",
+    "@reagentai/reagent": "workspace:^",
     "clsx": "^2.1.1",
     "hono": "^4.3.9",
     "immer": "^10.0.3",

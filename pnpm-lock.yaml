@@ -17,10 +17,10 @@ importers:
       '@babel/generator':
         specifier: ^7.24.5
         version: 7.24.5
-      '@useportal/reagent':
+      '@reagentai/reagent':
         specifier: workspace:^
         version: link:../reagent
-      '@useportal/reagent-react':
+      '@reagentai/reagent-react':
         specifier: workspace:^
         version: link:../react
       hono:
@@ -66,10 +66,10 @@ importers:
       '@remix-run/react':
         specifier: ^2.9.2
         version: 2.9.2(react-dom@18.3.1)(react@18.3.1)
-      '@useportal/reagent':
+      '@reagentai/reagent':
         specifier: workspace:^
         version: link:../reagent
-      '@useportal/reagent-react':
+      '@reagentai/reagent-react':
         specifier: workspace:^
         version: link:../react
       cross-env:
@@ -121,7 +121,7 @@ importers:
       '@radix-ui/react-dropdown-menu':
         specifier: ^2.0.6
         version: 2.0.6(@types/react@18.3.2)(react-dom@18.3.1)(react@18.3.1)
-      '@useportal/reagent':
+      '@reagentai/reagent':
         specifier: workspace:^
         version: link:../reagent
       clsx:

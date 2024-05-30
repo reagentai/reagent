@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import { useRouter } from "next/navigation";
-import ReagentDemo from "@useportal/reagent-react/demo";
+import ReagentDemo from "@reagentai/reagent-react/demo";
 
 const Chat = ({ params }: any) => {
   const router = useRouter();

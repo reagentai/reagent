@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { jsonStreamToAsyncIterator } from "@useportal/reagent/llm/stream";
+import { jsonStreamToAsyncIterator } from "@reagentai/reagent/llm/stream";
 
 import {
   DropdownMenu,
