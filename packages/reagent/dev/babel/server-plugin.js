@@ -1,6 +1,4 @@
 import * as t from "@babel/types";
-// import generator from "@babel/generator";
-// const { default: generate } = generator;
 
 const tranformCreateAgentNode = {
   ObjectMethod(path) {
@@ -66,24 +64,4 @@ const transformCreateAgentNodeRunMethod = {
   },
 };
 
-function createPlugin() {
-  return ({ types: t }) => {
-    return {
-      visitor: {
-        CallExpression(path) {
-          const { node } = path;
-          // TODO: make sure createAgentNode is the one from "@reagentai/reagent/agent"
-          if (path.node.callee.name == "createAgentNode") {
-            node.arguments[0].properties.forEach((prop, index) => {
-              if (prop.key.name == "execute") {
-                path.traverse(tranformCreateAgentNode);
-              }
-            });
-          }
-        },
-      },
-    };
-  };
-}
-
-export default createPlugin;
+export default tranformCreateAgentNode;

@@ -8,6 +8,7 @@
     "module": "ESNext",
     "moduleResolution": "node",
     "jsx": "react-jsx",
-    "experimentalDecorators": true
+    "experimentalDecorators": true,
+    "skipLibCheck": true
   }
 }

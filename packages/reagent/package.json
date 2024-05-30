@@ -4,7 +4,8 @@
   "description": "A framework to build AI agents",
   "type": "module",
   "scripts": {
-    "prepublish": "pnpm tsc"
+    "test": "vitest run",
+    "prepublish": "tsc"
   },
   "keywords": [],
   "publishConfig": {
@@ -41,10 +42,12 @@
     "zustand": "^4.5.2"
   },
   "devDependencies": {
+    "@types/babel__core": "^7.20.5",
     "@types/lodash-es": "^4.17.12",
     "@types/node": "^20.12.7",
     "@types/react": "^18.3.2",
     "@types/react-dom": "^18.3.0",
-    "typescript": "5.4.5"
+    "typescript": "5.4.5",
+    "vitest": "^1.6.0"
   }
 }

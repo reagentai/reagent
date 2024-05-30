@@ -1,5 +1,5 @@
-import createClientBabelPlugin from "./client-plugin.js";
-import createServerBabelPlugin from "./server-plugin.js";
+import tranformCreateAgentNodeClient from "./client-plugin.js";
+import tranformCreateAgentNodeServer from "./server-plugin.js";
 
 /**
  * @typedef Options
@@ -13,13 +13,74 @@ import createServerBabelPlugin from "./server-plugin.js";
  * @param {Options} options
  * @returns
  */
-
 function createPlugin(options) {
-  if (options.ssr) {
-    return createServerBabelPlugin();
-  } else {
-    return createClientBabelPlugin();
-  }
+  const tranformCreateAgentNode = options.ssr
+    ? tranformCreateAgentNodeServer
+    : tranformCreateAgentNodeClient;
+  return ({ types: t }) => {
+    return {
+      visitor: {
+        ImportDeclaration(path, state) {
+          if (path.node.source.value.startsWith("@reagentai/reagent")) {
+            const specifiers = path.get("specifiers");
+            const createAgentNodeSpecifier = specifiers.find((specifier) => {
+              return specifier.node.imported.name == "createAgentNode";
+            });
+
+            if (createAgentNodeSpecifier && createAgentNodeSpecifier) {
+              state._createAgentNode = {
+                local: createAgentNodeSpecifier.get("local"),
+              };
+            }
+          }
+        },
+        ExpressionStatement(path, state) {
+          if (!state._createAgentNode) {
+            path.stop();
+            return;
+          }
+        },
+        CallExpression(path, state) {
+          if (!state._createAgentNode) {
+            path.stop();
+            return;
+          }
+          const { node } = path;
+          if (path.node.callee.name == state._createAgentNode.local.node.name) {
+            const callee = path.get("callee");
+            // make sure the scope matches
+            if (callee.scope != state._createAgentNode.local.scope) {
+              return;
+            }
+            path.skip();
+            if (!options.ssr) {
+              path.replaceWith(
+                t.objectExpression(
+                  node.arguments[0].properties.filter((prop) => {
+                    if (prop.key.name == "execute") {
+                      path.traverse(tranformCreateAgentNode);
+                    }
+                    return (
+                      options.ssr ||
+                      ["id", "version", "name", "execute"].includes(
+                        prop.key.name
+                      )
+                    );
+                  })
+                )
+              );
+            } else {
+              node.arguments[0].properties.forEach((prop) => {
+                if (prop.key.name == "execute") {
+                  path.traverse(tranformCreateAgentNode);
+                }
+              });
+            }
+          }
+        },
+      },
+    };
+  };
 }
 
 export default createPlugin;

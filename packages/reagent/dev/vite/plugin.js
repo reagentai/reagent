@@ -16,12 +16,12 @@ const filterRegex = new RegExp(
  * @typedef Options
  * @type {object}
  *
- * @property {string[]} tools - absolute paths to the Agent tools.
+ * @property {string[]} [tools] - absolute paths to the Agent tools.
  * This can either be path to individual paths or paths to the directory
  * where the tools are located. This must be provided for the tools to be
  * compiled properly. Narrowing this path could speed up build.
- * @property {string[]} presets - babel presets
- * @property {string[]} plugins - babel plugins
+ * @property {string[]} [presets] - babel presets
+ * @property {string[]} [plugins] - babel plugins
  */
 
 /**
@@ -32,7 +32,7 @@ const filterRegex = new RegExp(
 const createPlugin = (options = {}) => {
   const toolsPath = options.tools;
   if (!toolsPath) {
-    throw new Error(`missing "tools" option`);
+    console.warn(`"tools" config option missing from Reagent plugin`);
   }
   return {
     name: "vite-plugin-portal-reagent",
@@ -44,8 +44,8 @@ const createPlugin = (options = {}) => {
       }
       const filepath = cleanUrl(id);
       if (
-        !filterRegex.test(filepath) ||
-        !toolsPath.find((tp) => filepath.startsWith(tp))
+        (toolsPath && !toolsPath.find((tp) => filepath.startsWith(tp))) ||
+        !filterRegex.test(filepath)
       ) {
         return;
       }

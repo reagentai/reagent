@@ -81,28 +81,4 @@ const transformCreateAgentNodeExecuteMethod = {
   },
 };
 
-function createPlugin() {
-  return ({ types: t }) => {
-    return {
-      visitor: {
-        CallExpression(path) {
-          const { node, parent } = path;
-          if (path.node.callee.name == "createAgentNode") {
-            parent.init = t.objectExpression(
-              node.arguments[0].properties.filter((prop, index) => {
-                if (prop.key.name == "execute") {
-                  path.traverse(tranformCreateAgentNode);
-                }
-                return ["id", "version", "name", "execute"].includes(
-                  prop.key.name
-                );
-              })
-            );
-          }
-        },
-      },
-    };
-  };
-}
-
-export default createPlugin;
+export default tranformCreateAgentNode;
