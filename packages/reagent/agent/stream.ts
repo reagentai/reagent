@@ -14,7 +14,7 @@ namespace AgentEvent {
   type Run = {
     id: string;
   };
-  type EventNode = {
+  export type EventNode = {
     id: string;
     type: string;
     version: string;

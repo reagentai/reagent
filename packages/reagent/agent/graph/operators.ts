@@ -1,5 +1,6 @@
-import { groupBy, map, mergeMap, merge, share, take } from "rxjs";
+import { groupBy, map, mergeMap, merge, share, take, filter } from "rxjs";
 import { OutputValueProvider } from "./types";
+import { AgentEvent } from "../stream";
 
 export const VALUE_PROVIDER = Symbol("___RENDER_VALUE_PROVIDER__");
 
@@ -65,4 +66,54 @@ const mergeRenderStreams = <O>(
   }) as unknown as OutputValueProvider<O>;
 };
 
-export { mergeRenderStreams };
+const __tagValueProvider = (
+  stream: any,
+  dependencies: AgentEvent.EventNode[]
+) => {
+  return Object.defineProperties(stream, {
+    _pipe: {
+      value: stream.pipe,
+      configurable: false,
+      enumerable: false,
+      writable: false,
+    },
+    map: {
+      value: <O>(cb: any) => {
+        const res = stream._pipe(
+          map((e: any) => {
+            return {
+              ...e,
+              value: cb(e.value, e.run),
+            };
+          })
+        );
+        return __tagValueProvider(res, dependencies) as OutputValueProvider<O>;
+      },
+    },
+    [VALUE_PROVIDER]: {
+      value: {
+        type: "output",
+        dependencies,
+      },
+      configurable: false,
+      enumerable: false,
+      writable: false,
+    },
+    select: {
+      get value() {
+        return (options: { runId: string }) => {
+          return new Promise((resolve) => {
+            this.pipe(filter((e: any) => e.run.id == options.runId)).subscribe(
+              (e: any) => {
+                resolve(e.value);
+              }
+            );
+          });
+        };
+      },
+      enumerable: false,
+    },
+  });
+};
+
+export { __tagValueProvider, mergeRenderStreams };

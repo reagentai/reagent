@@ -1,5 +1,6 @@
 import {
   Observable,
+  delay,
   filter,
   groupBy,
   map,
@@ -19,7 +20,7 @@ import { Context } from "../context";
 import { AbstractAgentNode } from "../node";
 import { EventStream, AgentEventType } from "../stream";
 import { uniqueId } from "../../utils/uniqueId";
-import { VALUE_PROVIDER } from "./operators";
+import { VALUE_PROVIDER, __tagValueProvider } from "./operators";
 
 import type {
   OutputValueProvider,
@@ -30,7 +31,6 @@ import type {
 type MappedInputEvent = {
   type: AgentEventType;
   run: { id: string };
-  sourceField: string;
   targetField: string;
   isArray: boolean;
   value: any;
@@ -79,10 +79,12 @@ class GraphNode<
     [K in keyof Input]: Input[K] extends OutputValueProvider<Input[K]>
       ? OutputValueProvider<Input[K]>
       : Required<Input>[K] extends any[]
-        ? (
-            | OutputValueProvider<Required<Input>[K][number]>
-            | Required<Input>[K][number]
-          )[]
+        ?
+            | (
+                | Required<Input>[K][number]
+                | OutputValueProvider<Required<Input>[K][number]>
+              )[]
+            | OutputValueProvider<Required<Input>[K]>
         : OutputValueProvider<Required<Input>[K]> | Required<Input>[K];
   }) {
     const self = this;
@@ -143,7 +145,6 @@ class GraphNode<
                       return {
                         type: AgentEventType.Output,
                         run: outputEvent.run,
-                        sourceField: node.sourceField,
                         targetField: node.targetField,
                         isArray: Array.isArray(edges[node.targetField]),
                         value: outputEvent.value,
@@ -154,8 +155,16 @@ class GraphNode<
             );
           })
         )
-        .pipe(takeUntil(outputProvidersCompleted))
-        .pipe(take(outputSourceProviders.length))
+        .pipe(
+          takeUntil(
+            outputProvidersCompleted
+              // add a delay to allow `outputProviderStream` to process the events
+              // if the outputs from all outputSourceProviders are already received,
+              // the delay won't have any effect
+              .pipe(delay(30_000))
+          ),
+          take(outputSourceProviders.length)
+        )
         .pipe(share());
 
       const valueProviderStreams = group
@@ -168,7 +177,6 @@ class GraphNode<
                 return of({
                   type: "raw",
                   run: e.run,
-                  sourceField: "raw",
                   targetField,
                   isArray: Array.isArray(edges[targetField]),
                   value: provider,
@@ -190,7 +198,6 @@ class GraphNode<
                 return of({
                   type: "node/schema",
                   run: e.run,
-                  sourceField: "schema",
                   targetField,
                   isArray: Array.isArray(edges[targetField]),
                   value: provider,
@@ -217,7 +224,6 @@ class GraphNode<
                     return {
                       type: "node/render",
                       run: e.run,
-                      sourceField: "__render__",
                       targetField,
                       isArray: Array.isArray(edges[targetField]),
                       value: pe.value,
@@ -307,6 +313,7 @@ class GraphNode<
               )
               .pipe(inputReducer())
               .subscribe((e) => {
+                // TODO: not sure if this is being closed properly when a node is skipped
                 const context = self.#buildContext(e.run);
                 if (e.count > 0) {
                   self.#node.onInputEvent(context, e.input);
@@ -446,61 +453,13 @@ class GraphNode<
               })
             );
 
-          const tagValueProvider = (obj: any) => {
-            return Object.defineProperties(obj, {
-              _pipe: {
-                value: obj.pipe,
-                configurable: false,
-                enumerable: false,
-                writable: false,
-              },
-              map: {
-                value: <O>(cb: any) => {
-                  const res = obj._pipe(
-                    map((e: any) => {
-                      return {
-                        ...e,
-                        value: cb(e, e.run),
-                      };
-                    })
-                  );
-                  return tagValueProvider(res) as OutputValueProvider<O>;
-                },
-              },
-              [VALUE_PROVIDER]: {
-                value: {
-                  type: "output",
-                  dependencies: [
-                    {
-                      id: self.#nodeId,
-                      type: self.#node.metadata.id,
-                      version: self.#node.metadata.version,
-                    },
-                  ],
-                  sourceField: field,
-                },
-                configurable: false,
-                enumerable: false,
-                writable: false,
-              },
-            });
-          };
-
-          stream = tagValueProvider(stream);
-          Object.defineProperties(stream, {
-            select: {
-              value: (options: { runId: string }) => {
-                return new Promise((resolve) => {
-                  stream
-                    .pipe(filter((e: any) => e.run.id == options.runId))
-                    .subscribe((e: any) => {
-                      resolve(e.value);
-                    });
-                });
-              },
-              enumerable: false,
+          stream = __tagValueProvider(stream, [
+            {
+              id: self.#nodeId,
+              type: self.#node.metadata.id,
+              version: self.#node.metadata.version,
             },
-          });
+          ]);
           self.#_outputStreams[field] = stream;
           return stream as OutputValueProvider<Output>;
         },
