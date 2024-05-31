@@ -32,7 +32,6 @@ type MappedInputEvent = {
   type: AgentEventType;
   run: { id: string };
   targetField: string;
-  isArray: boolean;
   value: any;
 };
 
@@ -78,34 +77,22 @@ class GraphNode<
   bind(edges: {
     [K in keyof Input]: Input[K] extends OutputValueProvider<Input[K]>
       ? OutputValueProvider<Input[K]>
-      : Required<Input>[K] extends any[]
-        ?
-            | (
-                | Required<Input>[K][number]
-                | OutputValueProvider<Required<Input>[K][number]>
-              )[]
-            | OutputValueProvider<Required<Input>[K]>
-        : OutputValueProvider<Required<Input>[K]> | Required<Input>[K];
+      :
+          | Required<Input>[K]
+          | OutputValueProvider<Required<Input>[K]>
+          | Required<Input>[K];
   }) {
     const self = this;
     const allProviders = Object.entries(edges);
-    const providers = allProviders.flatMap(([targetField, provider]: any) => {
+    const providers = allProviders.map(([targetField, provider]: any) => {
       if (Array.isArray(provider)) {
-        return provider.map((p) => {
-          return {
-            targetField,
-            ...(p[VALUE_PROVIDER] || {}),
-            provider: p,
-          };
-        });
+        throw new Error("unexpected");
       }
-      return [
-        {
-          targetField,
-          ...(provider[VALUE_PROVIDER] || {}),
-          provider,
-        },
-      ];
+      return {
+        targetField,
+        ...(provider[VALUE_PROVIDER] || {}),
+        provider,
+      };
     });
 
     const outputSourceProviders = providers.filter((p) => p.type == "output");
@@ -146,7 +133,6 @@ class GraphNode<
                         type: AgentEventType.Output,
                         run: outputEvent.run,
                         targetField: node.targetField,
-                        isArray: Array.isArray(edges[node.targetField]),
                         value: outputEvent.value,
                       };
                     })
@@ -178,7 +164,6 @@ class GraphNode<
                   type: "raw",
                   run: e.run,
                   targetField,
-                  isArray: Array.isArray(edges[targetField]),
                   value: provider,
                 });
               })
@@ -199,7 +184,6 @@ class GraphNode<
                   type: "node/schema",
                   run: e.run,
                   targetField,
-                  isArray: Array.isArray(edges[targetField]),
                   value: provider,
                 });
               })
@@ -225,7 +209,6 @@ class GraphNode<
                       type: "node/render",
                       run: e.run,
                       targetField,
-                      isArray: Array.isArray(edges[targetField]),
                       value: pe.value,
                     };
                   })
@@ -304,13 +287,7 @@ class GraphNode<
               // will be completed when input streams are completed
               // but maybe mergeing completed stream doesn't close
               // down stream observable :shrug:
-              .pipe(
-                take(
-                  Array.isArray(edges[group.key])
-                    ? (edges[group.key] as any).length
-                    : 1
-                )
-              )
+              .pipe(take(1))
               .pipe(inputReducer())
               .subscribe((e) => {
                 // TODO: not sure if this is being closed properly when a node is skipped
@@ -321,7 +298,9 @@ class GraphNode<
               });
           },
           complete() {},
-          error(_err) {},
+          error(err) {
+            throw new Error(err);
+          },
         });
 
       // merge all inputs and invoke the step
@@ -627,7 +606,7 @@ class GraphNode<
 }
 
 const inputReducer = () =>
-  reduce<{ run: any; targetField: string; isArray: boolean; value: any }, any>(
+  reduce<{ run: any; targetField: string; value: any }, any>(
     (acc, cur) => {
       // Note: ignore undefined values
       if (cur.value == undefined) {
@@ -646,14 +625,11 @@ const inputReducer = () =>
       if (acc.input[cur.targetField] == undefined) {
         // if there's more than one value for a given key,
         // reduce them to an array
-        acc.input[cur.targetField] = cur.isArray ? [cur.value] : cur.value;
+        acc.input[cur.targetField] = cur.value;
       } else {
-        if (!cur.isArray) {
-          throw new Error(
-            `Unexpected error: got more than 1 value when only 1 is expected`
-          );
-        }
-        acc.input[cur.targetField].push(cur.value);
+        throw new Error(
+          `Unexpected error: got more than 1 value when only 1 is expected`
+        );
       }
       acc.count += 1;
       return acc;

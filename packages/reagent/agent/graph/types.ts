@@ -15,7 +15,7 @@ export type OutputValueProvider<Output> = Pick<
     } | null;
     value: Output;
   }>,
-  "subscribe"
+  "subscribe" | "pipe"
 > & {
   map<O>(cb: (value: Output, run: { id: string }) => O): OutputValueProvider<O>;
 };
