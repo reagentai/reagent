@@ -21,8 +21,11 @@ import { EventStream, AgentEventType } from "../stream";
 import { uniqueId } from "../../utils/uniqueId";
 import { VALUE_PROVIDER } from "./operators";
 
-import type { OutputValueProvider, RenderUpdate } from "./types";
-import type { AgentEvent } from "../stream";
+import type {
+  OutputValueProvider,
+  OutputValueProviderWithSelect,
+  RenderUpdate,
+} from "./types";
 
 type MappedInputEvent = {
   type: AgentEventType;
@@ -127,37 +130,27 @@ class GraphNode<
         .pipe(share());
 
       const outputProviderStream = group
+        .pipe(take(1))
         .pipe(
-          filter((e) => {
-            return (
-              e.type == AgentEventType.Output &&
-              uniqueOutputProviderNodes.has(e.node.id)
-            );
-          })
-        )
-        .pipe(
-          mergeMap((e: any) => {
-            const fieldMappings = Object.fromEntries(
-              outputSourceProviders.map((n) => {
-                return [n.sourceField, n.targetField];
+          mergeMap((e1: any) => {
+            return merge<MappedInputEvent[]>(
+              ...outputSourceProviders.map((node) => {
+                return node.provider
+                  .pipe(filter((e: any) => e.run.id == e1.run.id))
+                  .pipe(take(1))
+                  .pipe(
+                    map((outputEvent: any) => {
+                      return {
+                        type: AgentEventType.Output,
+                        run: outputEvent.run,
+                        sourceField: node.sourceField,
+                        targetField: node.targetField,
+                        isArray: Array.isArray(edges[node.targetField]),
+                        value: outputEvent.value,
+                      };
+                    })
+                  );
               })
-            );
-            // emit event for each output key used by the node
-            return of<MappedInputEvent[]>(
-              ...Object.entries(e.output)
-                .filter(([sourceField]) => fieldMappings[sourceField])
-                .map(([sourceField, value]) => {
-                  const targetField = fieldMappings[sourceField];
-                  return {
-                    type: e.type,
-                    run: e.run,
-                    node: e.node,
-                    sourceField,
-                    targetField,
-                    isArray: Array.isArray(edges[targetField]),
-                    value,
-                  };
-                })
             );
           })
         )
@@ -426,7 +419,7 @@ class GraphNode<
   }
 
   get output(): {
-    [K in keyof Output]: OutputValueProvider<Output[K]>;
+    [K in keyof Output]: OutputValueProviderWithSelect<Output[K]>;
   } {
     const self = this;
     // @ts-expect-error
@@ -453,23 +446,41 @@ class GraphNode<
               })
             );
 
-          Object.defineProperties(stream, {
-            [VALUE_PROVIDER]: {
-              value: {
-                type: "output",
-                dependencies: [
-                  {
-                    id: self.#nodeId,
-                    type: self.#node.metadata.id,
-                    version: self.#node.metadata.version,
-                  },
-                ],
-                sourceField: field,
+          const tagValueProvider = (obj: any) => {
+            return Object.defineProperties(obj, {
+              _pipe: {
+                value: obj.pipe,
+                configurable: false,
+                enumerable: false,
+                writable: false,
               },
-              configurable: false,
-              enumerable: false,
-              writable: false,
-            },
+              pipe: {
+                value: (operator: any) => {
+                  const res = obj._pipe(operator);
+                  return tagValueProvider(res);
+                },
+              },
+              [VALUE_PROVIDER]: {
+                value: {
+                  type: "output",
+                  dependencies: [
+                    {
+                      id: self.#nodeId,
+                      type: self.#node.metadata.id,
+                      version: self.#node.metadata.version,
+                    },
+                  ],
+                  sourceField: field,
+                },
+                configurable: false,
+                enumerable: false,
+                writable: false,
+              },
+            });
+          };
+
+          stream = tagValueProvider(stream);
+          Object.defineProperties(stream, {
             select: {
               value: (options: { runId: string }) => {
                 return new Promise((resolve) => {

@@ -16,14 +16,17 @@ export type OutputValueProvider<Output> = Pick<
     value: Output;
   }>,
   "subscribe" | "pipe"
-> & {
-  /**
-   * Select the output result by run id
-   *
-   * @param runId
-   */
-  select(options: { runId: string }): Promise<Output>;
-};
+>;
+
+export type OutputValueProviderWithSelect<Output> =
+  OutputValueProvider<Output> & {
+    /**
+     * Select the output result by run id
+     *
+     * @param runId
+     */
+    select(options: { runId: string }): Promise<Output>;
+  };
 
 export type RenderUpdate = {
   node: { id: string; type: string; version: string };
