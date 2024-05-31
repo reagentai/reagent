@@ -11,9 +11,11 @@ const agent = new GraphAgent({
 const input = agent.addNode("input", createInputNode());
 
 const chat1 = agent.addNode("chat-1", new ChatCompletion(), {
-  systemPrompt: "You are an amazing AI assistant called Jarvis",
-  temperature: 0.9,
-  stream: true,
+  config: {
+    systemPrompt: "You are an amazing AI assistant called Jarvis",
+    temperature: 0.9,
+    stream: true,
+  },
 });
 
 const user = agent.addNode("user", new User());

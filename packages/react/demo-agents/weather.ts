@@ -17,9 +17,11 @@ const input = agent.addNode("input", createInputNode());
 const error = agent.addNode("error", new AgentError());
 
 const chat1 = agent.addNode("chat-1", new ChatCompletionWithToolCalling(), {
-  systemPrompt: "You are an amazing AI assistant called Jarvis",
-  temperature: 0.9,
-  stream: true,
+  config: {
+    systemPrompt: "You are an amazing AI assistant called Jarvis",
+    temperature: 0.9,
+    stream: true,
+  },
 });
 
 const user = agent.addNode("user", new User());

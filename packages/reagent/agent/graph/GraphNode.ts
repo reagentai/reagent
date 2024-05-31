@@ -76,10 +76,6 @@ class GraphNode<
     this._types = undefined;
   }
 
-  get node() {
-    return pick(this.#node.metadata, "id", "name", "version");
-  }
-
   get dependencies() {
     return this.#dependencies;
   }

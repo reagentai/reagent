@@ -11,9 +11,21 @@ type AgentConfig = {
   replayBuffer?: number;
 };
 
+type AddNodeOptions<Config> = {
+  config?: Config;
+  label?: string;
+};
+
 class GraphAgent {
   #config: AgentConfig;
-  #nodesById: Map<string, GraphNode<any, any, any, any>>;
+  #nodesById: Map<
+    string,
+    {
+      node: any;
+      options: AddNodeOptions<any>;
+      graphNode: GraphNode<any, any, any, any>;
+    }
+  >;
   #stream: EventStream<any>;
   constructor(config: AgentConfig) {
     this.#config = config;
@@ -53,7 +65,8 @@ class GraphAgent {
     State extends Record<string, unknown> = {},
   >(
     nodeId: string,
-    node: AbstractAgentNode<Config, Input, Output, State>
+    node: AbstractAgentNode<Config, Input, Output, State>,
+    options?: Omit<AddNodeOptions<Config>, "config">
   ): GraphNode<Config, Input, Output, State>;
   addNode<
     Config extends Record<string, unknown>,
@@ -63,7 +76,7 @@ class GraphAgent {
   >(
     nodeId: string,
     node: AbstractAgentNode<Config, Input, Output, State>,
-    config: Config
+    options: AddNodeOptions<Config>
   ): GraphNode<Config, Input, Output, State>;
   addNode<
     Config extends Record<string, unknown> | void,
@@ -73,13 +86,18 @@ class GraphAgent {
   >(
     nodeId: string,
     node: AbstractAgentNode<Config, Input, Output, State>,
-    config?: Config
+    options: AddNodeOptions<Config> = {}
   ) {
     if (this.#nodesById.has(nodeId)) {
       throw new Error(`node with id [${nodeId}] already exists`);
     }
-    const graphNode = new GraphNode(nodeId, node, config, this.#stream);
-    this.#nodesById.set(nodeId, graphNode);
+    const graphNode = new GraphNode(
+      nodeId,
+      node,
+      options?.config,
+      this.#stream
+    );
+    this.#nodesById.set(nodeId, { node, options, graphNode });
     return graphNode;
   }
 
@@ -87,8 +105,9 @@ class GraphAgent {
     return [...this.#nodesById.entries()].map((e) => {
       return {
         id: e[0],
-        node: pick(e[1].node, "id", "name"),
-        dependencies: e[1].dependencies,
+        label: e[1].options.label || e[1].node.metadata.name,
+        node: pick(e[1].node.metadata, "id", "name"),
+        dependencies: e[1].graphNode.dependencies,
       };
     });
   }
