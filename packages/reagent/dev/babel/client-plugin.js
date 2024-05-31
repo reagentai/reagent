@@ -4,6 +4,7 @@ const tranformCreateAgentNode = {
   ObjectMethod(path) {
     if (path.node.key.name != "execute") {
       path.skip();
+      return;
     }
     // make sure run is non-async generator
     path.node.generator = true;
@@ -13,71 +14,49 @@ const tranformCreateAgentNode = {
       method: path.node,
       contextName: context.node.name,
       context,
+      renderCalls: [],
       renderCallCount: 0,
     });
+    path.skip();
   },
 };
 
 const transformCreateAgentNodeExecuteMethod = {
-  BlockStatement(path) {
-    // only check for the top level block statements of execute methods
-    path.skip();
-    if (path.parent !== this.method) {
+  BlockStatement: {
+    enter(_path) {},
+    exit(path) {
+      if (path.parent !== this.method) {
+        return;
+      }
+      path.skip();
+      path.replaceWith(
+        t.blockStatement(
+          this.renderCalls.map((renderCall) => {
+            return t.expressionStatement(renderCall);
+          })
+        )
+      );
+    },
+  },
+  CallExpression(path) {
+    const callee = path.get("callee");
+    const isContextRender =
+      t.isMemberExpression(callee.node) &&
+      t.isIdentifier(callee.node.object, { name: this.contextName }) &&
+      t.isIdentifier(callee.node.property, { name: "render" });
+
+    if (!isContextRender) {
       return;
     }
-    const body = path.get("body");
-    path.node.body = path.node.body
-      .filter((_, index) => {
-        let expression = body[index].get("expression");
-        const declarations = body[index].get("declarations");
-        // Since only `context.render` or `const xyz = context.render`
-        // needs to be preserved, filter out other expressions
-        if (!expression.node && (!declarations || declarations.length == 0)) {
-          return false;
-        }
-        // if it's a var declaration, check the init expression
-        if (declarations.length > 0 && !expression.node) {
-          expression = declarations[0].get("init");
-        }
-
-        // skip the expression if node is undefined
-        if (!expression.node) {
-          return false;
-        }
-
-        const callee = expression.get("callee");
-        const isContextRender =
-          t.isMemberExpression(callee.node) &&
-          t.isIdentifier(callee.node.object, { name: this.contextName }) &&
-          t.isIdentifier(callee.node.property, { name: "render" });
-
-        if (!isContextRender) {
-          return false;
-        }
-        const context = callee.get("object");
-        return this.context.scope == context.scope;
-      })
-      .map(({ expression, declarations }) => {
-        if (declarations && declarations.length > 0) {
-          return t.yieldExpression(
-            t.arrayExpression([
-              // add render id as the first argument
-              // TODO: maybe use content hash of the render function as
-              // render id instead of counter to guarantee component + state
-              // consistency
-              t.stringLiteral(`render-${this.renderCallCount++}`),
-              declarations[0].init.arguments[0],
-            ])
-          );
-        }
-        return t.yieldExpression(
-          t.arrayExpression([
-            // add render id as the first argument
-            t.stringLiteral(`render-${this.renderCallCount++}`),
-            expression.arguments[0],
-          ])
-        );
-      });
+    this.renderCalls.push(
+      t.yieldExpression(
+        t.arrayExpression([
+          // add render id as the first argument
+          t.stringLiteral(`render-${this.renderCallCount++}`),
+          path.node.arguments[0],
+        ])
+      )
+    );
   },
 };
 

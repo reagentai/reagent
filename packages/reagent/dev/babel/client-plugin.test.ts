@@ -112,6 +112,58 @@ test("transpile createAgentNode if import matches", () => {
   expect(transformedCode).toBe(expected);
 });
 
+test("extract only render calls from createAgentNode", () => {
+  const expected = cleanUpCode(`
+    import { createAgentNode, z } from "@reagentai/reagent/agent";
+    const GetWeather = {
+      id: "@reagentai/demo-agents/getWeather",
+      name: "Get weather",
+      version: "0.0.1",
+      *execute(context, input) {
+        yield ["render-0", props => {
+          return <div>FIRST</div>;
+        }];
+        yield ["render-1", props => {
+         return <div>SECOND</div>;
+        }];
+      }
+    };
+  `);
+
+  const { code: transformedCode } = transform(`
+    import { createAgentNode, z } from "@reagentai/reagent/agent";
+    const GetWeather = createAgentNode({
+      id: "@reagentai/demo-agents/getWeather",
+      name: "Get weather",
+      description: "",
+      version: "0.0.1",
+      input: z.object({
+        msg: z.string()
+      }),
+      output: outputSchema,
+      async *execute(context, input) {
+        const gen = context.render(
+          (props) => {
+            return <div>FIRST</div>;
+          },
+          {
+            sql: input.sql,
+          }
+        );
+        if (input.msg.length > 10) {
+          context.render(
+            (props) => {
+              return <div>SECOND</div>;
+            }
+          );
+        }
+        yield { msg: "Hello" };
+      },
+    });
+  `);
+  expect(transformedCode).toBe(expected);
+});
+
 test("transpile createAgentNode if import matches even if it's renamed", () => {
   const expected = cleanUpCode(`
     import { createAgentNode as createNode, z } from "@reagentai/reagent/agent";
@@ -172,7 +224,7 @@ const transform = (code: string): { code: string } => {
   return transformSync(code, {
     configFile: false,
     babelrc: false,
-    plugins: [plugin],
+    plugins: [plugin, "@babel/plugin-syntax-jsx"],
     sourceMaps: false,
   });
 };
@@ -181,6 +233,7 @@ const cleanUpCode = (code: string) => {
   const { code: generated } = generate(
     transformSync(code, {
       ast: true,
+      plugins: ["@babel/plugin-syntax-jsx"],
     })?.ast
   );
   return generated;
