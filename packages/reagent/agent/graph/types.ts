@@ -15,8 +15,10 @@ export type OutputValueProvider<Output> = Pick<
     } | null;
     value: Output;
   }>,
-  "subscribe" | "pipe"
->;
+  "subscribe"
+> & {
+  map<O>(cb: (value: Output, run: { id: string }) => O): OutputValueProvider<O>;
+};
 
 export type OutputValueProviderWithSelect<Output> =
   OutputValueProvider<Output> & {

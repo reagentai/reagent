@@ -454,10 +454,17 @@ class GraphNode<
                 enumerable: false,
                 writable: false,
               },
-              pipe: {
-                value: (operator: any) => {
-                  const res = obj._pipe(operator);
-                  return tagValueProvider(res);
+              map: {
+                value: <O>(cb: any) => {
+                  const res = obj._pipe(
+                    map((e: any) => {
+                      return {
+                        ...e,
+                        value: cb(e, e.run),
+                      };
+                    })
+                  );
+                  return tagValueProvider(res) as OutputValueProvider<O>;
                 },
               },
               [VALUE_PROVIDER]: {
@@ -495,7 +502,7 @@ class GraphNode<
             },
           });
           self.#_outputStreams[field] = stream;
-          return stream;
+          return stream as OutputValueProvider<Output>;
         },
       }
     );
