@@ -3,6 +3,7 @@ import { Observer, Subscription } from "rxjs";
 import { GraphNode } from "./GraphNode";
 import { AbstractAgentNode } from "../node";
 import { EventStream } from "../stream";
+import { pick } from "lodash-es";
 
 type AgentConfig = {
   name: string;
@@ -77,11 +78,19 @@ class GraphAgent {
     if (this.#nodesById.has(nodeId)) {
       throw new Error(`node with id [${nodeId}] already exists`);
     }
-    // const stream = new EventStream();
-    // this.#nodeStream.next(stream);
     const graphNode = new GraphNode(nodeId, node, config, this.#stream);
     this.#nodesById.set(nodeId, graphNode);
     return graphNode;
+  }
+
+  generateGraph() {
+    return [...this.#nodesById.entries()].map((e) => {
+      return {
+        id: e[0],
+        node: pick(e[1].node, "id", "name"),
+        dependencies: e[1].dependencies,
+      };
+    });
   }
 }
 

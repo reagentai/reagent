@@ -182,7 +182,7 @@ function mergeOutputs<Output>(
 
 const __tagValueProvider = (
   stream: any,
-  dependencies: AgentEvent.EventNode[]
+  dependencies: (AgentEvent.EventNode & { field: string })[]
 ) => {
   return Object.defineProperties(stream, {
     _pipe: {

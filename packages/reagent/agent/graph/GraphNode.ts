@@ -14,7 +14,7 @@ import {
   zip,
 } from "rxjs";
 import { fromError } from "zod-validation-error";
-import { uniqBy } from "lodash-es";
+import { pick, uniqBy } from "lodash-es";
 
 import { Context } from "../context";
 import { AbstractAgentNode } from "../node";
@@ -50,6 +50,7 @@ class GraphNode<
   // is used more than once
   #_outputStreams: Record<string, any>;
   #_renderStream: any;
+  #dependencies: { id: string; field: string }[];
   // This is "phantom" field only used for type inference
   _types: { output: Output };
 
@@ -63,6 +64,7 @@ class GraphNode<
     this.#node = node;
     this.#config = config;
     this.#stream = stream;
+    this.#dependencies = [];
     this.#node.init(
       this.#buildContext({
         // runId when initializing will be different than when running
@@ -72,6 +74,14 @@ class GraphNode<
     this.#_outputStreams = {};
     // @ts-expect-error
     this._types = undefined;
+  }
+
+  get node() {
+    return pick(this.#node.metadata, "id", "name", "version");
+  }
+
+  get dependencies() {
+    return this.#dependencies;
   }
 
   bind(edges: {
@@ -94,6 +104,11 @@ class GraphNode<
         provider,
       };
     });
+
+    this.#dependencies = providers
+      .flatMap((p) => p.dependencies)
+      .filter((d) => Boolean(d))
+      .map((dependency) => pick(dependency, "id", "field"));
 
     const outputSourceProviders = providers.filter((p) => p.type == "output");
     const uniqueOutputProviderNodes = new Set(
@@ -395,6 +410,7 @@ class GraphNode<
             id: self.#nodeId,
             type: self.#node.metadata.id,
             version: self.#node.metadata.version,
+            field: "schema",
           },
         ],
       },
@@ -437,6 +453,7 @@ class GraphNode<
               id: self.#nodeId,
               type: self.#node.metadata.id,
               version: self.#node.metadata.version,
+              field,
             },
           ]);
           self.#_outputStreams[field] = stream;
@@ -497,6 +514,7 @@ class GraphNode<
           dependencies: [
             {
               id: self.#nodeId,
+              field: "__render__",
             },
           ],
         },
