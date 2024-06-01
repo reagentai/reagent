@@ -2,7 +2,7 @@ import dedent from "dedent";
 import { Observable, ReplaySubject } from "rxjs";
 import slugify, { slugifyWithCounter } from "@sindresorhus/slugify";
 import zodToJsonSchema from "zod-to-json-schema";
-import { get, pick } from "lodash-es";
+import { get, isEmpty, pick } from "lodash-es";
 
 import { ChatCompletionExecutor } from "../../llm/executors";
 import {
@@ -126,44 +126,55 @@ const ChatCompletionWithToolCalling = createAgentNode({
 
     const response = parseStringResponse(invokeContext);
     const toolCalls = parseToolCallsResponse(invokeContext);
+    const error = parseStringErrorMessage(invokeContext);
 
     if (toolCalls && toolCalls.length > 0) {
       const toolResults = await tools.invokeTools(toolCalls, {
         run: context.run,
       });
 
-      const messages = await executor.resolve(
-        "core.prompt.chat.messages",
-        invokeContext,
-        {}
-      );
-      const aiResponse = get(
-        invokeContext,
-        "state.core.llm.response.data.choices.0.message"
-      );
-      const chatCompletionWithToolCallResult = new ChatCompletionExecutor({
-        runnables: [
-          prompt,
-          input.model,
-          // TODO: filter only the tools used by the tool call
-          tools,
-          ChatMessages.fromMessages([...messages, aiResponse, ...toolResults]),
-        ],
-        allowRunnableOverride: true,
-      });
+      // Only call llm again if the tool call result isn't empty
+      if (toolResults.length > 0) {
+        const messages = await executor.resolve(
+          "core.prompt.chat.messages",
+          invokeContext,
+          {}
+        );
+        const aiResponse = get(
+          invokeContext,
+          "state.core.llm.response.data.choices.0.message"
+        );
+        const chatCompletionWithToolCallResult = new ChatCompletionExecutor({
+          runnables: [
+            prompt,
+            input.model,
+            // TODO: filter only the tools used by the tool call
+            tools,
+            ChatMessages.fromMessages([
+              ...messages,
+              aiResponse,
+              ...toolResults,
+            ]),
+          ],
+          allowRunnableOverride: true,
+        });
 
-      const result2 = await chatCompletionWithToolCallResult
-        .invoke(completionOptions)
-        .catch((e) => e.context);
-      const response = parseStringResponse(result2);
-      const error = parseStringErrorMessage(result2);
+        const result2 = await chatCompletionWithToolCallResult
+          .invoke(completionOptions)
+          .catch((e) => e.context);
+        const response = parseStringResponse(result2);
+        const error = parseStringErrorMessage(result2);
+        yield {
+          error,
+          markdown: response,
+          tools: toolCalls,
+        };
+      }
       yield {
         error,
         markdown: response,
-        tools: toolCalls,
       };
     } else {
-      const error = parseStringErrorMessage(invokeContext);
       yield {
         error,
         markdown: response,
@@ -235,6 +246,9 @@ class ToolsProvider extends Runnable {
           }
         );
         const output = await toolResult.output;
+        if (typeof output == "object" && isEmpty(output)) {
+          return undefined;
+        }
 
         return {
           tool_call_id: toolCall.id,
@@ -244,7 +258,7 @@ class ToolsProvider extends Runnable {
         };
       })
     );
-    return result;
+    return result.filter((r) => r != undefined);
   }
 }
 
