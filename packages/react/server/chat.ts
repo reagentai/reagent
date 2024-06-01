@@ -66,9 +66,6 @@ const createAgentRouter = (agents: Map<string, GraphAgent>) => {
       return ctx.text("Agent not found", 400);
     }
 
-    const input = agent.getNode<void, Input, Input>("input")!;
-    const user = agent.getNode<void, {}, User["_types"]["output"]>("user")!;
-
     let model: any = new DummyModel({
       response: "Please select a AI model provider.",
     });
@@ -91,6 +88,8 @@ const createAgentRouter = (agents: Map<string, GraphAgent>) => {
       });
     }
 
+    const input = agent.getNode<void, Input, Input>("input")!;
+    const user = agent.getNode<void, {}, User["_types"]["output"]>("user")!;
     const res = input.invoke({
       query: body.message.content,
       model,

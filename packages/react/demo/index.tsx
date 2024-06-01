@@ -17,6 +17,7 @@ import { AIChat, createChatStore } from "../chat";
 import { AgentContextProvider } from "../agent";
 import { AgentError } from "../demo-agents/tools/AgentError";
 import { GetWeather } from "../demo-agents/tools/Weather";
+import { GenerateSQLQuery } from "../demo-agents/sql/GenerateSQLQuery";
 import Sidebar, { SidebarProps } from "./Sidebar";
 
 type AgentInfo = {
@@ -115,7 +116,9 @@ const ReagentDemo = (props: Omit<SidebarProps, "agents">) => {
         <div className="h-full flex flex-col">
           <TopBar chatStore={store} />
           <ErrorBoundary fallback={<div>ERROR!</div>}>
-            <AgentContextProvider nodes={[GetWeather, AgentError]}>
+            <AgentContextProvider
+              nodes={[GetWeather, GenerateSQLQuery, AgentError]}
+            >
               {!agent && (
                 <div className="py-20 text-center font-medium text-red-700">
                   Invalid agent id
