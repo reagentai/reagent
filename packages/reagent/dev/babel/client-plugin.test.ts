@@ -164,6 +164,42 @@ test("extract only render calls from createAgentNode", () => {
   expect(transformedCode).toBe(expected);
 });
 
+test.only("extract only render calls from createAgentNode when using variable", () => {
+  const expected = cleanUpCode(`
+    import { createAgentNode, z } from "@reagentai/reagent/agent";
+    const GetWeather = {
+      id: "@reagentai/demo-agents/getWeather",
+      name: "Get weather",
+      version: "0.0.1",
+      *execute(context, input) {
+        yield ["render-0", props => <QueryComponent {...props.data} />];
+      }
+    };
+  `);
+
+  const { code: transformedCode } = transform(`
+    import { createAgentNode, z } from "@reagentai/reagent/agent";
+    const GetWeather = createAgentNode({
+      id: "@reagentai/demo-agents/getWeather",
+      name: "Get weather",
+      description: "",
+      version: "0.0.1",
+      input: z.object({
+        msg: z.string()
+      }),
+      output: outputSchema,
+      async *execute(context, input) {
+        const ui = context.render((props) => <QueryComponent {...props.data} />, {
+          sql: input.sql,
+          result: [] as any[]
+        });
+        yield { msg: "Hello" };
+      },
+    });
+  `);
+  expect(transformedCode).toBe(expected);
+});
+
 test("transpile createAgentNode if import matches even if it's renamed", () => {
   const expected = cleanUpCode(`
     import { createAgentNode as createNode, z } from "@reagentai/reagent/agent";
@@ -224,7 +260,9 @@ const transform = (code: string): { code: string } => {
   return transformSync(code, {
     configFile: false,
     babelrc: false,
+    filename: "test.tsx",
     plugins: [plugin, "@babel/plugin-syntax-jsx"],
+    presets: ["@babel/preset-typescript"],
     sourceMaps: false,
   });
 };
@@ -232,6 +270,7 @@ const transform = (code: string): { code: string } => {
 const cleanUpCode = (code: string) => {
   const { code: generated } = generate(
     transformSync(code, {
+      filename: "test.tsx",
       ast: true,
       plugins: ["@babel/plugin-syntax-jsx"],
     })?.ast

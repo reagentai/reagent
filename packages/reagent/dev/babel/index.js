@@ -49,13 +49,13 @@ function createPlugin(options) {
         },
         ExpressionStatement(path, state) {
           if (!state._createAgentNode) {
-            path.stop();
+            path.skip();
             return;
           }
         },
         CallExpression(path, state) {
           if (!state._createAgentNode) {
-            path.stop();
+            path.skip();
             return;
           }
           const { node } = path;
