@@ -2,7 +2,7 @@ import { z } from "@reagentai/reagent/agent";
 import { Passthrough } from "@reagentai/reagent/agent/nodes";
 import { BaseModelProvider } from "@reagentai/reagent/llm/models";
 
-const createInputNode = () =>
+const createChatInputNode = () =>
   new Passthrough(
     z.object({
       query: z.string(),
@@ -10,7 +10,7 @@ const createInputNode = () =>
     })
   );
 
-export { createInputNode };
-export type Input = z.infer<
-  ReturnType<typeof createInputNode>["metadata"]["output"]
+export { createChatInputNode };
+export type ChatInput = z.infer<
+  ReturnType<typeof createChatInputNode>["metadata"]["output"]
 >;

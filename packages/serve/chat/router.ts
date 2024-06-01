@@ -10,10 +10,10 @@ import {
 } from "@reagentai/reagent/llm/integrations/models";
 import { DummyModel } from "@reagentai/reagent/llm/models/dummy";
 
-import { Chat } from "../chat/types";
-import { Input } from "../demo-agents/input";
+import type { Chat } from "./types";
+import type { ChatInput } from "./input";
 
-const createAgentRouter = (agents: Map<string, GraphAgent>) => {
+const createChatAgentRouter = (agents: Map<string, GraphAgent>) => {
   const router = new Hono();
 
   router.get("/_healthy", (c) => c.text("OK"));
@@ -28,6 +28,15 @@ const createAgentRouter = (agents: Map<string, GraphAgent>) => {
         };
       })
     );
+  });
+
+  router.get("/agents/:agentId/graph", (c) => {
+    console.log("param =", c.req.param().agentId);
+    const agent = agents.get(c.req.param().agentId);
+    if (!agent) {
+      return c.notFound();
+    }
+    return c.json(agent.generateGraph());
   });
 
   const sendMessageBodySchema = z.object({
@@ -88,7 +97,7 @@ const createAgentRouter = (agents: Map<string, GraphAgent>) => {
       });
     }
 
-    const input = agent.getNode<void, Input, Input>("input")!;
+    const input = agent.getNode<void, ChatInput, ChatInput>("input")!;
     const user = agent.getNode<void, {}, User["_types"]["output"]>("user")!;
     const res = input.invoke({
       query: body.message.content,
@@ -182,4 +191,4 @@ const createAgentRouter = (agents: Map<string, GraphAgent>) => {
   return router;
 };
 
-export { createAgentRouter };
+export { createChatAgentRouter };

@@ -1,8 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { produce } from "immer";
-
-import { Chat } from "./types";
+import type { Chat } from "@reagentai/serve/chat";
 
 type NewMessage = {
   id: string;

@@ -20,6 +20,7 @@
   "dependencies": {
     "@reagentai/reagent": "workspace:^",
     "@reagentai/reagent-react": "workspace:^",
+    "@reagentai/serve": "workspace:^",
     "@remix-run/express": "^2.9.2",
     "@remix-run/node": "^2.9.2",
     "@remix-run/react": "^2.9.2",

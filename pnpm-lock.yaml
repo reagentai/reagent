@@ -63,6 +63,9 @@ importers:
       '@reagentai/reagent-react':
         specifier: workspace:^
         version: link:../react
+      '@reagentai/serve':
+        specifier: workspace:^
+        version: link:../serve
       '@remix-run/express':
         specifier: ^2.9.2
         version: 2.9.2(express@4.19.2)
@@ -127,6 +130,9 @@ importers:
       '@reagentai/reagent':
         specifier: workspace:^
         version: link:../reagent
+      '@reagentai/serve':
+        specifier: workspace:^
+        version: link:../serve
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
@@ -136,9 +142,6 @@ importers:
       highlight.js:
         specifier: ^11.9.0
         version: 11.9.0
-      hono:
-        specifier: ^4.3.9
-        version: 4.3.9
       immer:
         specifier: ^10.0.3
         version: 10.1.1
@@ -281,6 +284,18 @@ importers:
         specifier: ^1.6.0
         version: 1.6.0(@types/node@20.12.12)
     publishDirectory: dist
+
+  packages/serve:
+    dependencies:
+      '@reagentai/reagent':
+        specifier: workspace:^
+        version: link:../reagent
+      hono:
+        specifier: ^4.3.9
+        version: 4.3.9
+      rxjs:
+        specifier: ^7.8.1
+        version: 7.8.1
 
 packages:
 

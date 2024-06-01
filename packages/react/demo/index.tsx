@@ -116,24 +116,24 @@ const ReagentDemo = (props: Omit<SidebarProps, "agents">) => {
         <div className="h-full flex flex-col">
           <TopBar chatStore={store} />
           <ErrorBoundary fallback={<div>ERROR!</div>}>
+            {!agent && (
+              <div className="py-20 text-center font-medium text-red-700">
+                Invalid agent id
+              </div>
+            )}
+            {Object.entries(messages).length == 0 && agent && (
+              <div className="flex py-20 justify-center">
+                <div className="flex flex-col space-y-5">
+                  <div className="text-center text-2xl font-semibold text-gray-700">
+                    {agent.name}
+                  </div>
+                  <div className="text-gray-600">{agent.description}</div>
+                </div>
+              </div>
+            )}
             <AgentContextProvider
               nodes={[GetWeather, GenerateSQLQuery, AgentError]}
             >
-              {!agent && (
-                <div className="py-20 text-center font-medium text-red-700">
-                  Invalid agent id
-                </div>
-              )}
-              {Object.entries(messages).length == 0 && agent && (
-                <div className="flex py-20 justify-center">
-                  <div className="flex flex-col space-y-5">
-                    <div className="text-center text-2xl font-semibold text-gray-700">
-                      {agent.name}
-                    </div>
-                    <div className="text-gray-600">{agent.description}</div>
-                  </div>
-                </div>
-              )}
               <AIChat store={store} />
             </AgentContextProvider>
           </ErrorBoundary>

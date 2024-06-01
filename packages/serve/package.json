@@ -1,0 +1,13 @@
+{
+  "name": "@reagentai/serve",
+  "version": "0.1.0",
+  "description": "Reagent AI server module",
+  "type": "module",
+  "scripts": {},
+  "license": "MIT",
+  "dependencies": {
+    "@reagentai/reagent": "workspace:^",
+    "hono": "^4.3.9",
+    "rxjs": "^7.8.1"
+  }
+}

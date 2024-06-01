@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import clsx from "clsx";
 import Markdown from "react-markdown";
+import type { Chat } from "@reagentai/serve/chat";
 
-import { Chat } from "./types";
 import { AgentNodeUI } from "../agent";
 
 const ChatThread = (props: {

@@ -1,14 +1,13 @@
 import { GraphAgent } from "@reagentai/reagent/agent";
 import { ChatCompletion, User } from "@reagentai/reagent/agent/nodes";
-
-import { createInputNode } from "./input";
+import { createChatInputNode } from "@reagentai/serve/chat";
 
 const agent = new GraphAgent({
   name: "Simple AI Chat",
   description: "A simple AI chat agent.",
 });
 
-const input = agent.addNode("input", createInputNode());
+const input = agent.addNode("input", createChatInputNode());
 
 const chat1 = agent.addNode("chat-1", new ChatCompletion(), {
   config: {

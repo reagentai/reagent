@@ -1,10 +1,10 @@
 import { Hono } from "hono";
 import { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
-import { createAgentRouter } from "@reagentai/reagent-react/server/chat";
+import { createChatAgentRouter } from "@reagentai/serve/chat";
 import { agents } from "@reagentai/reagent-react/demo-agents";
 
 const app = new Hono();
-app.route("/api/chat", createAgentRouter(agents));
+app.route("/api/chat", createChatAgentRouter(agents));
 
 export const loader = async (args: LoaderFunctionArgs) => {
   return handleRequest(args);

@@ -3,9 +3,9 @@ import {
   ChatCompletionWithToolCalling,
   User,
 } from "@reagentai/reagent/agent/nodes";
+import { createChatInputNode } from "@reagentai/serve/chat";
 
 import { GetWeather } from "./tools/Weather";
-import { createInputNode } from "./input";
 import { AgentError } from "./tools/AgentError";
 
 const agent = new GraphAgent({
@@ -13,7 +13,7 @@ const agent = new GraphAgent({
   description: "This agent shows random weather in Weather Widget",
 });
 
-const input = agent.addNode("input", createInputNode());
+const input = agent.addNode("input", createChatInputNode());
 const error = agent.addNode("error", new AgentError());
 
 const chat1 = agent.addNode("chat-1", new ChatCompletionWithToolCalling(), {
