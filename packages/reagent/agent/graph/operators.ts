@@ -217,11 +217,11 @@ const __tagValueProvider = (
       get value() {
         return (options: { runId: string }) => {
           return new Promise((resolve) => {
-            this.pipe(filter((e: any) => e.run.id == options.runId)).subscribe(
-              (e: any) => {
+            stream
+              .pipe(filter((e: any) => e.run.id == options.runId))
+              .subscribe((e: any) => {
                 resolve(e.value);
-              }
-            );
+              });
           });
         };
       },

@@ -91,9 +91,6 @@ class GraphNode<
     const self = this;
     const allProviders = Object.entries(edges);
     const providers = allProviders.map(([targetField, provider]: any) => {
-      if (Array.isArray(provider)) {
-        throw new Error("unexpected");
-      }
       return {
         targetField,
         ...(provider[VALUE_PROVIDER] || {}),

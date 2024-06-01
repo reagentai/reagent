@@ -53,7 +53,7 @@ class GraphAgent {
     Output extends Record<string, unknown>,
     State extends Record<string, unknown> = {},
   >(nodeId: string) {
-    return this.#nodesById.get(nodeId) as
+    return this.#nodesById.get(nodeId)?.graphNode as
       | GraphNode<Config, Input, Output, State>
       | undefined;
   }
