@@ -66,10 +66,11 @@ importers:
       '@types/react-dom':
         specifier: ^18.3.0
         version: 18.3.0
+    publishDirectory: dist
 
   packages/demo-cli:
     dependencies:
-      '@reagent/cli':
+      '@reagentai/cli':
         specifier: workspace:^
         version: link:../cli
       '@reagentai/reagent':

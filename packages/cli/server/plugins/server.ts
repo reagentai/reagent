@@ -11,7 +11,7 @@ const createRouter = () => {
       <html>
           <head>
               <script type="module" src="/@vite/client"></script>
-              <script src="@reagent/serve/entry" type="module"></script>
+              <script src="/virtual:reagent-entry-client" type="module"></script>
           </head>
           <body><div id="reagent-agent" style="width: 100%; height: 100%"></div></body>
       </html>

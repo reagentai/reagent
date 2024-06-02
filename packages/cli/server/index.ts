@@ -21,7 +21,7 @@ const serve = async (options: { file: string; open: boolean }) => {
             config: {
               content: [
                 "**/*.{jsx,tsx,html,css}",
-                "**/@reagent/cli/entry-client.js",
+                "**/@reagentai/cli/entry-client.js",
               ],
             },
           }),
@@ -36,7 +36,7 @@ const serve = async (options: { file: string; open: boolean }) => {
     },
     resolve: {
       alias: {
-        "/@reagent/serve/entry": "@reagent/cli/entry-client",
+        "/virtual:reagent-entry-client": "@reagentai/cli/entry-client",
         "virtual:reagent-agent-module": path.join(process.cwd(), options.file),
       },
     },

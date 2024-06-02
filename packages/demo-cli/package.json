@@ -7,7 +7,7 @@
     "serve": "reagent serve chat --open false"
   },
   "dependencies": {
-    "@reagent/cli": "workspace:^",
+    "@reagentai/cli": "workspace:^",
     "@reagentai/reagent": "workspace:^",
     "@reagentai/serve": "workspace:^",
     "react": "^18.3.1"

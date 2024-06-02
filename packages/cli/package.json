@@ -1,5 +1,5 @@
 {
-  "name": "@reagent/cli",
+  "name": "@reagentai/cli",
   "version": "0.1.0",
   "description": "Reagent cli",
   "type": "module",
@@ -7,15 +7,26 @@
     "reagent": "dist/reagent.js"
   },
   "scripts": {
-    "build-client": " vite build -c vite.client.config.js",
-    "build-bin": " vite build -c vite.bin.config.js",
+    "build-client": "vite build -c vite.client.config.js",
+    "build-bin": "vite build -c vite.bin.config.js",
     "build": "pnpm run \"/^build-[client|bin]/\""
   },
-  "license": "MIT",
   "exports": {
     "./reagent": "./dist/reagent.js",
     "./entry-client": "./dist/entry-client.js"
   },
+  "publishConfig": {
+    "directory": "dist",
+    "bin": {
+      "reagent": "reagent.js"
+    },
+    "exports": {
+      "./reagent": "./reagent.js",
+      "./entry-client": "./entry-client.js"
+    },
+    "linkDirectory": false
+  },
+  "license": "MIT",
   "dependencies": {
     "@hono/node-server": "^1.11.2",
     "@hono/vite-dev-server": "^0.12.1",
