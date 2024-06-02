@@ -1,12 +1,14 @@
 import { z, Context, createAgentNode } from "../";
+import { BaseModelProvider } from "../../llm/models";
 
 const inputSchema = z.object({});
 
 const outputSchema = z.object({
   query: z.string().label("Query"),
+  model: z.instanceof(BaseModelProvider).label("Model"),
 });
 
-export default createAgentNode({
+const ChatInputNode = createAgentNode({
   id: "@core/input",
   name: "Chat Input",
   version: "0.0.1",
@@ -20,3 +22,5 @@ export default createAgentNode({
     yield input;
   },
 });
+
+export default ChatInputNode;

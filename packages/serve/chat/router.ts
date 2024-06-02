@@ -2,7 +2,10 @@ import { Hono } from "hono";
 import { ReplaySubject, Subject, count, take } from "rxjs";
 import { uniqueId } from "@reagentai/reagent/utils/uniqueId";
 import { GraphAgent, z } from "@reagentai/reagent/agent";
-import { User } from "@reagentai/reagent/agent/nodes";
+import {
+  User,
+  ChatInput as ChatInputNode,
+} from "@reagentai/reagent/agent/nodes";
 import {
   AnthropicChat,
   Groq,
@@ -11,7 +14,8 @@ import {
 import { DummyModel } from "@reagentai/reagent/llm/models/dummy";
 
 import type { Chat } from "./types";
-import type { ChatInput } from "./input";
+
+type ChatInput = z.infer<(typeof ChatInputNode)["metadata"]["output"]>;
 
 const createChatAgentRouter = (agents: Map<string, GraphAgent>) => {
   const router = new Hono();
@@ -41,7 +45,7 @@ const createChatAgentRouter = (agents: Map<string, GraphAgent>) => {
 
   const sendMessageBodySchema = z.object({
     id: z.string(),
-    agentId: z.string().default("weather"),
+    agentId: z.string().default("default"),
     message: z.object({
       content: z.string(),
     }),
