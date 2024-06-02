@@ -1,0 +1,40 @@
+{
+  "name": "@reagent/cli",
+  "version": "0.1.0",
+  "description": "Reagent cli",
+  "type": "module",
+  "bin": {
+    "reagent": "dist/reagent.js"
+  },
+  "scripts": {
+    "build-client": " vite build -c vite.client.config.js",
+    "build-bin": " vite build -c vite.bin.config.js",
+    "build": "pnpm run \"/^build-[client|bin]/\""
+  },
+  "license": "MIT",
+  "exports": {
+    "./reagent": "./dist/reagent.js",
+    "./entry-client": "./dist/entry-client.js"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.11.2",
+    "@hono/vite-dev-server": "^0.12.1",
+    "@radix-ui/react-toast": "^1.1.5",
+    "@reagentai/reagent": "workspace:^",
+    "@reagentai/reagent-react": "workspace:^",
+    "@reagentai/serve": "workspace:^",
+    "@vitejs/plugin-react": "^4.3.0",
+    "commander": "^12.1.0",
+    "hono": "^4.3.9",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-error-boundary": "^4.0.13",
+    "tailwindcss": "^3.4.3",
+    "vite": "^5.2.11",
+    "zustand": "^4.5.2"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.2",
+    "@types/react-dom": "^18.3.0"
+  }
+}
