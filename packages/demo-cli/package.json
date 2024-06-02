@@ -1,0 +1,15 @@
+{
+  "name": "demo-cli",
+  "version": "0.1.0",
+  "description": "Reagent cli demo",
+  "type": "module",
+  "scripts": {
+    "serve": "reagent serve chat --open false"
+  },
+  "dependencies": {
+    "@reagent/cli": "workspace:^",
+    "@reagentai/reagent": "workspace:^",
+    "@reagentai/serve": "workspace:^",
+    "react": "^18.3.1"
+  }
+}
