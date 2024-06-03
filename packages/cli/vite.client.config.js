@@ -10,7 +10,12 @@ export default defineConfig({
       formats: ["es"],
     },
     rollupOptions: {
-      external: ["react", "virtual:reagent-agent-module", "reagent.css"],
+      external: [
+        "react",
+        "react-dom",
+        "virtual:reagent-agent-module",
+        "reagent.css",
+      ],
       preserveEntrySignatures: "strict",
       output: {
         format: "esm",

@@ -13,7 +13,8 @@
     "resolveJsonModule": true,
     "lib": ["dom", "dom.iterable", "esnext"],
     "skipLibCheck": true,
-    "incremental": true
+    "incremental": true,
+    "types": ["vite/client"]
   },
   "exclude": ["node_modules"]
 }

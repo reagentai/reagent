@@ -19,6 +19,7 @@ const serve = async (options: { file: string; open: boolean }) => {
         plugins: [
           tailwindcss({
             config: {
+              darkMode: "class",
               content: [
                 "**/*.{jsx,tsx,html,css}",
                 "**/@reagentai/cli/entry-client.js",

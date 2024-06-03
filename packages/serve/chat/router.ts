@@ -35,7 +35,6 @@ const createChatAgentRouter = (agents: Map<string, GraphAgent>) => {
   });
 
   router.get("/agents/:agentId/graph", (c) => {
-    console.log("param =", c.req.param().agentId);
     const agent = agents.get(c.req.param().agentId);
     if (!agent) {
       return c.notFound();
