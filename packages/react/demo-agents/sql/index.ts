@@ -3,7 +3,7 @@ import { GraphAgent, mergeRenderStreams } from "@reagentai/reagent/agent";
 import {
   ChatCompletionWithToolCalling,
   User,
-  ChatInput
+  ChatInput,
 } from "@reagentai/reagent/agent/nodes";
 
 import { AgentError } from "../tools/AgentError";

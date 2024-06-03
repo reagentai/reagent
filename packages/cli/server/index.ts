@@ -29,7 +29,15 @@ const serve = async (options: { file: string; open: boolean }) => {
         ],
       },
     },
-    plugins: [virtualFiles(), devServer(), react()],
+    plugins: [
+      virtualFiles(),
+      devServer(),
+      react({
+        // for now, only include current dir here to avoid
+        //  @vitejs/plugin-react can't detect preamble error
+        include: [process.cwd()],
+      }),
+    ],
     root: process.cwd(),
     server: {
       open: options.open,

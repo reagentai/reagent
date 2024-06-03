@@ -1,8 +1,8 @@
 import { Suspense, lazy, useMemo, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { jsonStreamToAsyncIterator } from "@reagentai/reagent/llm/stream";
-import { AIChat, createChatStore } from "@reagentai/reagent-react/chat";
-import { AgentContextProvider } from "@reagentai/reagent-react/agent";
+import { AIChat, createChatStore } from "@reagentai/react/chat";
+import { AgentContextProvider } from "@reagentai/react/agent";
 // @ts-expect-error
 import agent, { nodes as agentNodes } from "virtual:reagent-agent-module";
 import "reagent.css";

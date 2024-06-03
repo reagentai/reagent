@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate, useParams } from "@remix-run/react";
-import ReagentDemo from "@reagentai/reagent-react/demo";
+import ReagentDemo from "@reagentai/react/demo";
 
 const Chat = () => {
   const navigate = useNavigate();

@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "test": "vitest run",
-    "prepublish": "tsc"
+    "build": "tsc"
   },
   "keywords": [],
   "publishConfig": {

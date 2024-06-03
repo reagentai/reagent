@@ -32,7 +32,7 @@
     "@hono/vite-dev-server": "^0.12.1",
     "@radix-ui/react-toast": "^1.1.5",
     "@reagentai/reagent": "workspace:^",
-    "@reagentai/reagent-react": "workspace:^",
+    "@reagentai/react": "workspace:^",
     "@reagentai/serve": "workspace:^",
     "@vitejs/plugin-react": "^4.3.0",
     "commander": "^12.1.0",

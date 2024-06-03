@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { createChatAgentRouter } from "@reagentai/serve/chat";
-import { agents } from "@reagentai/reagent-react/demo-agents";
+import { agents } from "@reagentai/react/demo-agents";
 
 const app = new Hono();
 app.route("/api/chat", createChatAgentRouter(agents));

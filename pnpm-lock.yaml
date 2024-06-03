@@ -23,12 +23,12 @@ importers:
       '@radix-ui/react-toast':
         specifier: ^1.1.5
         version: 1.1.5(@types/react-dom@18.3.0)(@types/react@18.3.2)(react-dom@18.3.1)(react@18.3.1)
+      '@reagentai/react':
+        specifier: workspace:^
+        version: link:../react
       '@reagentai/reagent':
         specifier: workspace:^
         version: link:../reagent
-      '@reagentai/reagent-react':
-        specifier: workspace:^
-        version: link:../react
       '@reagentai/serve':
         specifier: workspace:^
         version: link:../serve
@@ -82,6 +82,9 @@ importers:
       '@reagentai/cli':
         specifier: workspace:^
         version: link:../cli
+      '@reagentai/react':
+        specifier: workspace:^
+        version: link:../react
       '@reagentai/reagent':
         specifier: workspace:^
         version: link:../reagent
@@ -100,12 +103,12 @@ importers:
       '@babel/generator':
         specifier: ^7.24.5
         version: 7.24.5
+      '@reagentai/react':
+        specifier: workspace:^
+        version: link:../react
       '@reagentai/reagent':
         specifier: workspace:^
         version: link:../reagent
-      '@reagentai/reagent-react':
-        specifier: workspace:^
-        version: link:../react
       hono:
         specifier: ^4.3.9
         version: 4.3.9
@@ -140,12 +143,12 @@ importers:
 
   packages/demo-remix:
     dependencies:
+      '@reagentai/react':
+        specifier: workspace:^
+        version: link:../react
       '@reagentai/reagent':
         specifier: workspace:^
         version: link:../reagent
-      '@reagentai/reagent-react':
-        specifier: workspace:^
-        version: link:../react
       '@reagentai/serve':
         specifier: workspace:^
         version: link:../serve

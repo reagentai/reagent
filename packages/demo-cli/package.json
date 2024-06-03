@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@reagentai/cli": "workspace:^",
+    "@reagentai/react": "workspace:^",
     "@reagentai/reagent": "workspace:^",
     "@reagentai/serve": "workspace:^",
     "react": "^18.3.1",
