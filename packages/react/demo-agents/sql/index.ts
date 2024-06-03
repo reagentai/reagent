@@ -3,8 +3,8 @@ import { GraphAgent, mergeRenderStreams } from "@reagentai/reagent/agent";
 import {
   ChatCompletionWithToolCalling,
   User,
+  ChatInput
 } from "@reagentai/reagent/agent/nodes";
-import { createChatInputNode } from "@reagentai/serve/chat";
 
 import { AgentError } from "../tools/AgentError";
 import { GenerateSQLQuery } from "./GenerateSQLQuery";
@@ -14,7 +14,7 @@ const agent = new GraphAgent({
   description: "This agent generates and executes SQL queries",
 });
 
-const input = agent.addNode("input", createChatInputNode());
+const input = agent.addNode("input", new ChatInput());
 const error = agent.addNode("error", new AgentError());
 
 const storyGeneratorConfig = {
