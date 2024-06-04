@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://useportal.ai/" target="_blank" rel="noopener noreferrer">
-    <img width="180" src="https://raw.githubusercontent.com/useportal/reagent/main/logo.png" alt="Reagent logo">
+    <img width="180" src="https://raw.githubusercontent.com/useportal/reagent/main/assets/logo.png" alt="Reagent logo">
   </a>
 </p>
 <br/>
@@ -19,10 +19,11 @@ It supports rendering custom UI components directly from the workflow nodes and 
 
 ## Demo
 
-![Agent UI demo](reagent-weather-demo.gif)
+![Agent UI demo](assets/reagent-weather-demo.gif)
 
 ## Features
 
+- **Auto generate workflow graph**: Generate the agent graph automatically
 - **Supports Any AI Model**: Use OpenAI, Anthropic, Mistral, Groq or any other model provider
 - **Framework Agnostic**: Works with any modern JavaScript framework: React, Solid, Svelte and Vue
 - **Easy Integration**: Easily integrate into your existing application
@@ -102,6 +103,10 @@ To run this chat agent, copy the above code to a `agent.ts` and run the followin
 ```bash
 pnpm reagent dev agent.ts
 ```
+
+The following agent graph is auto generated for the above chat agent:
+
+![Agent UI demo](assets/chat-agent-graph.png)
 
 ## LICENSE
 
