@@ -1,12 +1,12 @@
 {
   "name": "@reagentai/react",
-  "version": "0.2.7",
+  "version": "0.2.8",
   "description": "React UI for Portal reagent",
   "type": "module",
   "scripts": {
     "test": "vitest run",
     "build": "tsc",
-    "prepare": "rm -r dist && pnpm build && cp package.json dist"
+    "prepublish": "rm -rf dist && pnpm build && cp package.json dist"
   },
   "license": "MIT",
   "publishConfig": {

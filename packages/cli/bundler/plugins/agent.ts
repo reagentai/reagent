@@ -10,11 +10,8 @@ const filterRegex = new RegExp(
   `\\.(${[...DEFAULT_EXTENSIONS, "tsx", "ts"].join("|").replace(/\./g, "")})$`
 );
 
-type Options = {
-  inputFile: string;
-};
-const createPlugin = (options: Options) => {
-  const inputFile = cleanUrl(options.inputFile);
+type Options = {};
+const createPlugin = (options: Options = {}) => {
   return {
     name: "vite-plugin-reagent-agent-treeshake",
     transform(code: string, id: string, transformOptions: any) {

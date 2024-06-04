@@ -6,7 +6,7 @@ import { reagent } from "@reagentai/reagent/dev/vite";
 
 import virtualFiles from "./plugins/virtual";
 import { devServer } from "./plugins/server";
-import createPlugin from "./plugins/agent";
+import createAgentPlugin from "./plugins/agent";
 
 type Options = { file: string; open: boolean };
 const dev = async (options: Options) => {
@@ -35,7 +35,7 @@ const dev = async (options: Options) => {
               darkMode: "class",
               content: [
                 "**/*.{jsx,tsx,html,css}",
-                "**/@reagentai/cli/entry-client.js",
+                "**/@reagentai/cli/**/*.{js,jsx,css}",
               ],
             },
           }),
@@ -51,9 +51,7 @@ const dev = async (options: Options) => {
         include: [process.cwd()],
       }),
       reagent({}),
-      createPlugin({
-        inputFile,
-      }),
+      createAgentPlugin(),
     ],
     root: process.cwd(),
     server: {

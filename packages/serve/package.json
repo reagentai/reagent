@@ -1,11 +1,11 @@
 {
   "name": "@reagentai/serve",
-  "version": "0.2.7",
+  "version": "0.2.8",
   "description": "Reagent AI server module",
   "type": "module",
   "scripts": {
     "build": "pnpm tsc",
-    "prepare": "rm -r dist && pnpm build && cp package.json dist"
+    "prepublish": "rm -rf dist && pnpm build && cp package.json dist"
   },
   "publishConfig": {
     "directory": "dist",

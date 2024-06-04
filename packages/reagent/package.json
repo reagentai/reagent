@@ -1,12 +1,12 @@
 {
   "name": "@reagentai/reagent",
-  "version": "0.2.7",
+  "version": "0.2.8",
   "description": "A framework to build AI agents",
   "type": "module",
   "scripts": {
     "test": "vitest run",
     "build": "tsc",
-    "prepare": "rm -r dist && pnpm build && cp package.json dist"
+    "prepublish": "rm -rf dist && pnpm build && cp package.json dist"
   },
   "keywords": [],
   "publishConfig": {
