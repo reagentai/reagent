@@ -17,6 +17,8 @@ Reagent is an open-source Javascript framework to build AI agents. It allows you
 
 It supports rendering custom UI components directly from the workflow nodes and seamlessly integrates with any frontend frameworks like NextJs, Remix, Solid-start, Svelte Kit, etc.
 
+## Demo
+
 ![Agent UI demo](reagent-weather-demo.gif)
 
 ## Features
