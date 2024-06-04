@@ -2,16 +2,29 @@ import path from "path";
 import { createServer } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "tailwindcss";
+import { reagent } from "@reagentai/reagent/dev/vite";
 
 import virtualFiles from "./plugins/virtual";
 import { devServer } from "./plugins/server";
+import createPlugin from "./plugins/agent";
 
-const serve = async (options: { file: string; open: boolean }) => {
+type Options = { file: string; open: boolean };
+const dev = async (options: Options) => {
+  const inputFile = path.join(process.cwd(), options.file);
   const server = await createServer({
     configFile: false,
     build: {
+      lib: {
+        entry: {
+          reagent: inputFile,
+        },
+        fileName: "out.js",
+        name: "out.js",
+        formats: ["es"],
+      },
       rollupOptions: {
         external: ["virtual:reagent-agent-module", "reagent.css"],
+        treeshake: true,
       },
     },
     css: {
@@ -37,6 +50,10 @@ const serve = async (options: { file: string; open: boolean }) => {
         //  @vitejs/plugin-react can't detect preamble error
         include: [process.cwd()],
       }),
+      reagent({}),
+      createPlugin({
+        inputFile,
+      }),
     ],
     root: process.cwd(),
     server: {
@@ -46,11 +63,11 @@ const serve = async (options: { file: string; open: boolean }) => {
     resolve: {
       alias: {
         "/virtual:reagent-entry-client": "@reagentai/cli/entry-client",
-        "virtual:reagent-agent-module": path.join(process.cwd(), options.file),
+        "virtual:reagent-agent-module": inputFile,
       },
     },
   });
   await server.listen();
 };
 
-export { serve };
+export { dev };

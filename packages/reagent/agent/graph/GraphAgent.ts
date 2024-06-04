@@ -102,14 +102,16 @@ class GraphAgent {
   }
 
   generateGraph() {
-    return [...this.#nodesById.entries()].map((e) => {
-      return {
-        id: e[0],
-        label: e[1].options.label || e[1].node.metadata.name,
-        node: pick(e[1].node.metadata, "id", "name"),
-        dependencies: e[1].graphNode.dependencies,
-      };
-    });
+    return {
+      nodes: [...this.#nodesById.entries()].map((e) => {
+        return {
+          id: e[0],
+          label: e[1].options.label || e[1].node.metadata.name,
+          node: pick(e[1].node.metadata, "id", "name"),
+          dependencies: e[1].graphNode.dependencies,
+        };
+      }),
+    };
   }
 }
 

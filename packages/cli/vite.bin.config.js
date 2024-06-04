@@ -1,5 +1,6 @@
 import path from "path";
 import { defineConfig } from "vite";
+import builtins from "builtins";
 
 export default defineConfig({
   build: {
@@ -9,20 +10,24 @@ export default defineConfig({
       entry: {
         reagent: path.join(__dirname, "index.ts"),
       },
-      fileName: "reagent.js",
-      name: "reagent.js",
+      fileName: "reagent",
+      name: "reagent",
       formats: ["es"],
     },
     rollupOptions: {
-      external: ["virtual:reagent-agent-module"],
-      preserveEntrySignatures: "strict",
+      external: [
+        "virtual:reagent-agent-module",
+        "@reagentai/reagent",
+        ...builtins(),
+        /^node:.+/,
+        "vite",
+        /^@vite:*/,
+        "tailwindcss",
+      ],
       output: {
-        format: "cjs",
+        format: "esm",
         name: "reagent",
       },
-    },
-    ssr: {
-      noExternals: true,
     },
   },
 });

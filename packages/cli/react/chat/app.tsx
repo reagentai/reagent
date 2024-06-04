@@ -1,20 +1,28 @@
-import { Suspense, lazy, useMemo, useState } from "react";
+import { Suspense, lazy, useEffect, useMemo, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { jsonStreamToAsyncIterator } from "@reagentai/reagent/llm/stream";
 import { AIChat, createChatStore } from "@reagentai/react/chat";
 import { AgentContextProvider } from "@reagentai/react/agent";
 // @ts-expect-error
-import agent, { nodes as agentNodes } from "virtual:reagent-agent-module";
+import { nodes as agentNodes } from "virtual:reagent-agent-module";
 import "reagent.css";
 
 // @ts-expect-error
 const AgentGraph = lazy(() => import("./graph.tsx"));
 
 const Agent = () => {
+  const agentId = "default";
   const [sendMessageError, setSendMessageEError] = useState<string | null>(
     null
   );
   const [isAgentGraphVisible, setAgentGraphVisiblity] = useState(false);
+  const [agent, setAgent] = useState<any>({});
+  useEffect(() => {
+    fetch(`/api/chat/agents/${agentId}`).then(async (res) => {
+      const agent = await res.json();
+      setAgent(agent);
+    });
+  }, []);
   const store = useMemo(
     () =>
       createChatStore(
@@ -55,6 +63,7 @@ const Agent = () => {
         <div className="h-full flex-col">
           <div className="h-9 shadow shadow-gray-300">
             <TopBar
+              agent={agent}
               isAgentGraphVisible={isAgentGraphVisible}
               toggleAgentGraphVisiblity={() => {
                 setAgentGraphVisiblity(!isAgentGraphVisible);
@@ -88,7 +97,7 @@ const Agent = () => {
             {isAgentGraphVisible && (
               <Suspense>
                 <div className="flex-1">
-                  <AgentGraph agentId="default" />
+                  <AgentGraph agentId={agentId} nodes={agent.graph.nodes} />
                 </div>
               </Suspense>
             )}
@@ -100,6 +109,7 @@ const Agent = () => {
 };
 
 const TopBar = (props: {
+  agent: any;
   chatStore: any;
   isAgentGraphVisible: boolean;
   toggleAgentGraphVisiblity: () => void;
@@ -108,7 +118,7 @@ const TopBar = (props: {
     <div className="top-bar w-full h-full py-1.5 px-2 flex justify-end space-x-4 text-xs bg-gray-100">
       <div className="flex flex-1 items-center">
         <div className="pl-32 font-medium text-sm text-gray-600">
-          {agent.name}
+          {props.agent.name}
         </div>
       </div>
       <div className="flex top-4 right-4 space-x-3">

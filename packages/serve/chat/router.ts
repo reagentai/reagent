@@ -34,12 +34,16 @@ const createChatAgentRouter = (agents: Map<string, GraphAgent>) => {
     );
   });
 
-  router.get("/agents/:agentId/graph", (c) => {
+  router.get("/agents/:agentId", (c) => {
     const agent = agents.get(c.req.param().agentId);
     if (!agent) {
       return c.notFound();
     }
-    return c.json(agent.generateGraph());
+    return c.json({
+      name: agent.name,
+      description: agent.description,
+      graph: agent.generateGraph(),
+    });
   });
 
   const sendMessageBodySchema = z.object({

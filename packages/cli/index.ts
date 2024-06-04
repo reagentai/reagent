@@ -1,6 +1,6 @@
 import { program } from "commander";
 import pkg from "./package.json";
-import { serve } from "./server";
+import * as bundler from "./bundler";
 
 program
   .name("reagent")
@@ -8,8 +8,8 @@ program
   .version(pkg.version);
 
 program
-  .command("serve")
-  .description("Start a web server for an agent")
+  .command("dev")
+  .description("Start a development web server for an agent")
   .argument("<file>", "path to the agent file")
   .option(
     "--open <open>",
@@ -17,7 +17,7 @@ program
     "true"
   )
   .action(async (file, options) => {
-    await serve({
+    await bundler.dev({
       file,
       open: options.open == "true",
     });

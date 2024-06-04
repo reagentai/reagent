@@ -10,46 +10,43 @@ import ReactFlow, {
 import dagre from "dagre";
 import style from "reactflow/dist/style.css?inline";
 
-const AgentGraph = (props: { agentId: string }) => {
+const AgentGraph = (props: { agentId: string; nodes: any[] }) => {
   const [graph, setGraph] = useState({
     nodes: [] as any[],
     edges: [] as any[],
   });
 
   useEffect(() => {
-    fetch(`/api/chat/agents/${props.agentId}/graph`).then(async (res) => {
-      const nodes = await res.json();
-      const edges: any[] = [];
-      nodes.forEach((n: any) => {
-        n.dependencies.forEach((dep: any) => {
-          edges.push({
-            id: `${dep.id}-${n.id}-${dep.field}`,
-            source: dep.id,
-            target: n.id,
-            markerEnd: {
-              type: MarkerType.ArrowClosed,
-            },
-          });
+    const edges: any[] = [];
+    props.nodes.forEach((n: any) => {
+      n.dependencies.forEach((dep: any) => {
+        edges.push({
+          id: `${dep.id}-${n.id}-${dep.field}`,
+          source: dep.id,
+          target: n.id,
+          markerEnd: {
+            type: MarkerType.ArrowClosed,
+          },
         });
+      });
+      return {
+        id: n.id,
+        type: "node",
+        data: { label: n.label },
+      };
+    });
+    const graph = {
+      nodes: props.nodes.map((n: any) => {
         return {
           id: n.id,
           type: "node",
           data: { label: n.label },
         };
-      });
-      const graph = {
-        nodes: nodes.map((n: any) => {
-          return {
-            id: n.id,
-            type: "node",
-            data: { label: n.label },
-          };
-        }),
-        edges,
-      };
-      setGraph(graph);
-    });
-  }, []);
+      }),
+      edges,
+    };
+    setGraph(graph);
+  }, [props.nodes]);
 
   return (
     <div>

@@ -4,7 +4,7 @@
   "description": "Reagent cli demo",
   "type": "module",
   "scripts": {
-    "serve": "reagent serve chat --open false"
+    "serve": "reagent dev chat --open false"
   },
   "dependencies": {
     "@reagentai/cli": "workspace:^",

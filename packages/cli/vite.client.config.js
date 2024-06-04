@@ -15,6 +15,7 @@ export default defineConfig({
         "react-dom",
         "virtual:reagent-agent-module",
         "reagent.css",
+        "@reagentai/reagent",
       ],
       preserveEntrySignatures: "strict",
       output: {
