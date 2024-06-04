@@ -1,10 +1,11 @@
 <p align="center">
   <a href="https://useportal.ai/" target="_blank" rel="noopener noreferrer">
-    <img width="180" src="https://raw.githubusercontent.com/useportal/reagent/main/assets/logo.png" alt="Reagent logo">
+    <img width="120" src="https://raw.githubusercontent.com/useportal/reagent/main/assets/logo.png" alt="Reagent logo">
   </a>
 </p>
 <br/>
 <p align="center">
+  <a href="https://x.com/reagent_ai"><img src="https://img.shields.io/twitter/follow/reagent_ai.svg" alt="Reagentai twitter"></a>
   <a href="https://npmjs.com/package/@reagentai/reagent"><img src="https://img.shields.io/npm/v/@reagentai/reagent.svg" alt="npm package"></a>
   <img src="https://img.shields.io/github/license/useportal/reagent" alt="MIT">
 </p>
