@@ -4,7 +4,6 @@ import react from "@vitejs/plugin-react";
 import tailwindcss from "tailwindcss";
 import { reagent } from "@reagentai/reagent/dev/vite";
 
-import virtualFiles from "./plugins/virtual";
 import { devServer } from "./plugins/server";
 import createAgentPlugin from "./plugins/agent";
 
@@ -43,7 +42,6 @@ const dev = async (options: Options) => {
       },
     },
     plugins: [
-      virtualFiles(),
       devServer(),
       react({
         // for now, only include current dir here to avoid

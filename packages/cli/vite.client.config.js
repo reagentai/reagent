@@ -1,5 +1,6 @@
 import path from "path";
 import { defineConfig } from "vite";
+import { viteStaticCopy } from "vite-plugin-static-copy";
 
 export default defineConfig({
   build: {
@@ -14,7 +15,7 @@ export default defineConfig({
         "react",
         "react-dom",
         "virtual:reagent-agent-module",
-        "reagent.css",
+        "./reagent.css",
         "@reagentai/reagent",
       ],
       preserveEntrySignatures: "strict",
@@ -23,4 +24,14 @@ export default defineConfig({
       },
     },
   },
+  plugins: [
+    viteStaticCopy({
+      targets: [
+        {
+          src: "./react/chat/reagent.css",
+          dest: "./",
+        },
+      ],
+    }),
+  ],
 });
