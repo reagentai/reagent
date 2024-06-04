@@ -48,8 +48,6 @@ const inputSchema = z.object({
 });
 
 type ChatResponseStream = {
-  runId: string;
-  nodeId: string;
   type: "content/delta";
   delta: string;
 };
@@ -111,8 +109,6 @@ const ChatCompletionWithToolCalling = createAgentNode({
       plugins: [
         createStreamDeltaStringSubscriber((chunk) => {
           stream.next({
-            runId: context.run.id,
-            nodeId: context.node.id,
             type: "message/content/delta",
             delta: chunk,
           });
@@ -130,7 +126,7 @@ const ChatCompletionWithToolCalling = createAgentNode({
 
     if (toolCalls && toolCalls.length > 0) {
       const toolResults = await tools.invokeTools(toolCalls, {
-        run: context.run,
+        session: context.session,
       });
 
       // Only call llm again if the tool call result isn't empty
@@ -229,7 +225,10 @@ class ToolsProvider extends Runnable {
     return this.toolsJson;
   }
 
-  async invokeTools(toolCalls: ToolCall[], options: { run: { id: string } }) {
+  async invokeTools(
+    toolCalls: ToolCall[],
+    options: { session: { id: string } }
+  ) {
     const tools = (await this.run())!;
     const result = await Promise.all(
       toolCalls.map(async (toolCall) => {
@@ -242,7 +241,7 @@ class ToolsProvider extends Runnable {
         const toolResult = await tool[TOOL_NODE].invoke(
           toolCall.function.arguments,
           {
-            run: options.run,
+            session: options.session,
           }
         );
         const output = await toolResult.output;

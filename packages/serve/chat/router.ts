@@ -112,7 +112,7 @@ const createChatAgentRouter = (agents: Map<string, GraphAgent>) => {
     });
 
     const completionSubject = new Subject();
-    user.output.ui.select({ runId: res.run.id }).then((stream) => {
+    user.output.ui.select({ sessionId: res.session.id }).then((stream) => {
       stream.subscribe({
         next(update) {
           replayStream.next({
@@ -137,29 +137,31 @@ const createChatAgentRouter = (agents: Map<string, GraphAgent>) => {
       });
     });
 
-    user.output.markdownStream.select({ runId: res.run.id }).then((stream) => {
-      stream.subscribe({
-        next(data: any) {
-          replayStream.next({
-            type: "message/content/delta" as const,
-            data: {
-              id: responseMessageId,
-              message: {
-                content: {
-                  delta: data.delta,
+    user.output.markdownStream
+      .select({ sessionId: res.session.id })
+      .then((stream) => {
+        stream.subscribe({
+          next(data: any) {
+            replayStream.next({
+              type: "message/content/delta" as const,
+              data: {
+                id: responseMessageId,
+                message: {
+                  content: {
+                    delta: data.delta,
+                  },
                 },
               },
-            },
-          });
-        },
-        complete() {
-          completionSubject.next(1);
-        },
-        error(err) {
-          console.error(err);
-        },
+            });
+          },
+          complete() {
+            completionSubject.next(1);
+          },
+          error(err) {
+            console.error(err);
+          },
+        });
       });
-    });
 
     completionSubject
       .pipe(take(2))

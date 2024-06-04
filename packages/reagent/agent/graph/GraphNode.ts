@@ -23,14 +23,14 @@ import { uniqueId } from "../../utils/uniqueId.js";
 import { VALUE_PROVIDER, __tagValueProvider } from "./operators.js";
 
 import type {
+  NodeDependency,
   OutputValueProvider,
   OutputValueProviderWithSelect,
   RenderUpdate,
 } from "./types";
 
 type MappedInputEvent = {
-  type: AgentEventType;
-  run: { id: string };
+  session: { id: string };
   targetField: string;
   value: any;
 };
@@ -50,7 +50,7 @@ class GraphNode<
   // is used more than once
   #_outputStreams: Record<string, any>;
   #_renderStream: any;
-  #dependencies: { id: string; field: string }[];
+  #dependencies: NodeDependency[];
   // This is "phantom" field only used for type inference
   _types: { output: Output };
 
@@ -67,7 +67,7 @@ class GraphNode<
     this.#dependencies = [];
     this.#node.init(
       this.#buildContext({
-        // runId when initializing will be different than when running
+        // sessionId when initializing will be different than when running
         id: "__NODE_INIT__",
       })
     );
@@ -95,13 +95,17 @@ class GraphNode<
         targetField,
         ...(provider[VALUE_PROVIDER] || {}),
         provider,
+      } as {
+        targetField: string;
+        type: string;
+        provider: OutputValueProvider<any>;
+        dependencies: NodeDependency[];
       };
     });
 
     this.#dependencies = providers
       .flatMap((p) => p.dependencies)
-      .filter((d) => Boolean(d))
-      .map((dependency) => pick(dependency, "id", "field"));
+      .filter((d) => Boolean(d));
 
     const outputSourceProviders = providers.filter((p) => p.type == "output");
     const uniqueOutputProviderNodes = new Set(
@@ -112,7 +116,7 @@ class GraphNode<
     const schemaSources = providers.filter((p) => p.type == "schema");
     const renderSources = providers.filter((p) => p.type == "render");
 
-    self.#stream.pipe(groupBy((e) => e.run.id)).subscribe((group) => {
+    self.#stream.pipe(groupBy((e) => e.session.id)).subscribe((group) => {
       const outputProvidersCompleted = group
         .pipe(
           filter((e) => {
@@ -129,17 +133,17 @@ class GraphNode<
       const outputProviderStream = group
         .pipe(take(1))
         .pipe(
-          mergeMap((e1: any) => {
+          mergeMap((e1) => {
             return merge<MappedInputEvent[]>(
               ...outputSourceProviders.map((node) => {
                 return node.provider
-                  .pipe(filter((e: any) => e.run.id == e1.run.id))
+                  .pipe(filter((e) => e.session!.id == e1.session.id))
                   .pipe(take(1))
                   .pipe(
-                    map((outputEvent: any) => {
+                    map((outputEvent) => {
                       return {
                         type: AgentEventType.Output,
-                        run: outputEvent.run,
+                        session: outputEvent.session!,
                         targetField: node.targetField,
                         value: outputEvent.value,
                       };
@@ -170,7 +174,7 @@ class GraphNode<
               ...valueProviders.map(({ targetField, provider }) => {
                 return of({
                   type: "raw",
-                  run: e.run,
+                  session: e.session,
                   targetField,
                   value: provider,
                 });
@@ -190,7 +194,7 @@ class GraphNode<
               ...schemaSources.map(({ targetField, provider }) => {
                 return of({
                   type: "node/schema",
-                  run: e.run,
+                  session: e.session,
                   targetField,
                   value: provider,
                 });
@@ -210,12 +214,12 @@ class GraphNode<
               ...renderSources.map(({ targetField, provider }) =>
                 provider.pipe(
                   filter((pe: any) => {
-                    return pe.run.id == e.run.id;
+                    return pe.session.id == e.session.id;
                   }),
                   map((pe: any) => {
                     return {
                       type: "node/render",
-                      run: e.run,
+                      session: e.session,
                       targetField,
                       value: pe.value,
                     };
@@ -272,7 +276,7 @@ class GraphNode<
             if (!schemaNodesThatWasRun.has(schemaSourceNode.id)) {
               self.#stream.next({
                 type: AgentEventType.RunSkipped,
-                run: runComplete.run,
+                session: runComplete.session,
                 node: schemaSourceNode,
               });
             }
@@ -299,7 +303,7 @@ class GraphNode<
               .pipe(inputReducer())
               .subscribe((e) => {
                 // TODO: not sure if this is being closed properly when a node is skipped
-                const context = self.#buildContext(e.run);
+                const context = self.#buildContext(e.session);
                 if (e.count > 0) {
                   self.#node.onInputEvent(context, e.input);
                 }
@@ -329,13 +333,13 @@ class GraphNode<
               renderSources.length +
               valueProviders.length
           ) {
-            self.#invoke(inputEvent.input, inputEvent.run);
+            self.#invoke(inputEvent.input, inputEvent.session);
           } else {
             // if all output provider nodes are completed but all expected inputs
             // weren't received, emit node skipped event
             self.#stream.next({
               type: AgentEventType.RunSkipped,
-              run: runCompleteEvent.run,
+              session: runCompleteEvent.session,
               node: {
                 id: self.#nodeId,
                 type: self.#node.metadata.id,
@@ -350,12 +354,12 @@ class GraphNode<
     });
   }
 
-  invoke(input: Input, options: { run?: { id: string } } = {}) {
-    const run = {
-      id: options.run?.id || uniqueId(),
+  invoke(input: Input, options: { session?: { id: string } } = {}) {
+    const session = {
+      id: options.session?.id || uniqueId(),
     };
     const self = this;
-    if (!options.run?.id) {
+    if (!options.session?.id) {
       this.#stream.next({
         type: AgentEventType.RunInvoked,
         node: {
@@ -363,11 +367,11 @@ class GraphNode<
           type: self.#node.metadata.id,
           version: self.#node.metadata.version,
         },
-        run,
+        session,
       });
     }
-    const output = this.#invoke(input, run);
-    return { run, output };
+    const output = this.#invoke(input, session);
+    return { session, output };
   }
 
   /**
@@ -437,7 +441,7 @@ class GraphNode<
             )
             .pipe(
               map((e) => {
-                return { run: e.run, field, value: e.output[field] };
+                return { session: e.session, field, value: e.output[field] };
               })
             );
 
@@ -475,7 +479,7 @@ class GraphNode<
             e.node.id == self.#nodeId || e.type == AgentEventType.RunInvoked
         )
       )
-      .pipe(groupBy((e) => e.run.id))
+      .pipe(groupBy((e) => e.session.id))
       .pipe(
         map((group) => {
           const runCompleted = group.pipe(
@@ -489,7 +493,7 @@ class GraphNode<
           // TODO: removing this doesn't stream render events; BUT WHY?
           group.subscribe((x) => {});
           return {
-            run: {
+            session: {
               id: group.key,
             },
             value: group
@@ -507,6 +511,8 @@ class GraphNode<
           dependencies: [
             {
               id: self.#nodeId,
+              type: self.#node.metadata.id,
+              version: self.#node.metadata.version,
               field: "__render__",
             },
           ],
@@ -516,10 +522,10 @@ class GraphNode<
         writable: false,
       },
       select: {
-        value: (options: { runId: string }) => {
+        value: (options: { sessionId: string }) => {
           return new Promise((resolve) => {
             stream
-              .pipe(filter((e: any) => e.run.id == options.runId))
+              .pipe(filter((e: any) => e.session.id == options.sessionId))
               .subscribe((e: any) => {
                 resolve(e.value);
               });
@@ -533,8 +539,8 @@ class GraphNode<
     return stream as unknown as OutputValueProvider<Observable<RenderUpdate>>;
   }
 
-  async #invoke(input: Input, run: { id: string }): Promise<Output> {
-    const context = this.#buildContext(run);
+  async #invoke(input: Input, session: { id: string }): Promise<Output> {
+    const context = this.#buildContext(session);
     // const validation = this.#node.metadata.input.safeParse(input);
     // if (!validation.success) {
     //   throw new Error(
@@ -550,7 +556,7 @@ class GraphNode<
     const output = {};
     for await (const partialOutput of generator) {
       this.#stream.sendOutput({
-        run,
+        session,
         node,
         output: partialOutput,
       });
@@ -558,23 +564,23 @@ class GraphNode<
     }
     this.#stream.next({
       type: AgentEventType.RunCompleted,
-      run,
+      session,
       node,
     });
     return output as Output;
   }
 
-  #buildContext(run: Context<any, any>["run"]): Context<any, any> {
+  #buildContext(session: Context<any, any>["session"]): Context<any, any> {
     const self = this;
     return {
-      run,
+      session,
       node: {
         id: self.#nodeId,
       },
       config: this.#config || {},
       sendOutput(output: Output) {
         self.#stream.sendOutput({
-          run,
+          session,
           node: {
             id: self.#nodeId,
             type: self.#node.metadata.id,
@@ -592,7 +598,7 @@ class GraphNode<
           version: self.#node.metadata.version,
         };
         self.#stream.sendRenderUpdate({
-          run,
+          session,
           node,
           update: {
             step: stepId,
@@ -602,7 +608,7 @@ class GraphNode<
         return {
           update(data) {
             self.#stream.sendRenderUpdate({
-              run,
+              session,
               node,
               update: {
                 step: stepId,
@@ -617,20 +623,20 @@ class GraphNode<
 }
 
 const inputReducer = () =>
-  reduce<{ run: any; targetField: string; value: any }, any>(
+  reduce<MappedInputEvent, any>(
     (acc, cur) => {
       // Note: ignore undefined values
       if (cur.value == undefined) {
         return acc;
       }
-      if (acc.run?.id) {
+      if (acc.session?.id) {
         // run is null for global events
-        // so only throw error if run id doesn't match for run events
-        if (cur.run != null && acc.run.id != cur.run.id) {
-          throw new Error(`unexpected error: run is must match`);
+        // so only throw error if session id doesn't match for run events
+        if (cur.session != null && acc.session.id != cur.session.id) {
+          throw new Error(`unexpected error: session id must match`);
         }
-      } else if (cur.run != null) {
-        acc["run"] = cur.run;
+      } else if (cur.session != null) {
+        acc["session"] = cur.session;
       }
 
       if (acc.input[cur.targetField] == undefined) {
@@ -647,7 +653,7 @@ const inputReducer = () =>
     },
     {
       input: {},
-      run: null,
+      session: null,
       count: 0,
     } as any
   );

@@ -11,9 +11,10 @@ enum AgentEventType {
 }
 
 namespace AgentEvent {
-  type Run = {
+  type Session = {
     id: string;
   };
+
   export type EventNode = {
     id: string;
     type: string;
@@ -22,33 +23,33 @@ namespace AgentEvent {
 
   export type RunInvoked = {
     type: AgentEventType.RunInvoked;
-    run: Run;
+    session: Session;
     // node invoked
     node: EventNode;
   };
 
   export type RunCompleted = {
     type: AgentEventType.RunCompleted;
-    run: Run;
+    session: Session;
     node: EventNode;
   };
 
   export type RunSkipped = {
     type: AgentEventType.RunSkipped;
-    run: Run;
+    session: Session;
     node: EventNode;
   };
 
   export type Output<O> = {
     type: AgentEventType.Output;
-    run: Run;
+    session: Session;
     node: EventNode;
     output: O;
   };
 
   export type RenderUpdate<State> = {
     type: AgentEventType.Render;
-    run: Run;
+    session: Session;
     node: EventNode;
     render: {
       step: string;
@@ -69,13 +70,13 @@ class EventStream<Output, State = any> extends ReplaySubject<
 > {
   constructor(config: { buffer?: number } = {}) {
     // TODO: pass in custom _timestampProvider such that the timestamp is
-    // same for all events of a given run. This way it can guaranteed that
-    // either all events of a run is bufferred or none at all
+    // same for all events of a given session. This way it can guaranteed that
+    // either all events of a session is bufferred or none at all
     super(config.buffer);
   }
 
   sendOutput(options: {
-    run: {
+    session: {
       id: string;
     };
     node: { id: string; type: string; version: string };
@@ -83,8 +84,8 @@ class EventStream<Output, State = any> extends ReplaySubject<
   }) {
     this.next({
       type: AgentEventType.Output,
-      run: {
-        id: options.run.id,
+      session: {
+        id: options.session.id,
       },
       node: options.node,
       output: options.output,
@@ -92,7 +93,7 @@ class EventStream<Output, State = any> extends ReplaySubject<
   }
 
   sendRenderUpdate(options: {
-    run: {
+    session: {
       id: string;
     };
     node: { id: string; type: string; version: string };
@@ -100,8 +101,8 @@ class EventStream<Output, State = any> extends ReplaySubject<
   }) {
     this.next({
       type: AgentEventType.Render,
-      run: {
-        id: options.run.id,
+      session: {
+        id: options.session.id,
       },
       node: options.node,
       render: {

@@ -5,7 +5,7 @@ export type Context<
   node: {
     id: string;
   };
-  run: {
+  session: {
     id: string;
   };
   config: Config;

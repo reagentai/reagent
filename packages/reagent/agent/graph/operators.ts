@@ -43,8 +43,8 @@ const mergeRenderStreams = <O>(
     return provider.dependencies;
   });
   // @ts-expect-error
-  const stream = merge(...renders)
-    .pipe(groupBy((e: any) => e.run.id))
+  const stream = merge<OutputValueProvider<any>["_event"][]>(...renders)
+    .pipe(groupBy((e) => e.session!.id))
     .pipe(
       map((group: any) => {
         const value = group
@@ -55,7 +55,7 @@ const mergeRenderStreams = <O>(
         // TODO: removing this doesn't stream render events; BUT WHY?
         value.subscribe();
         return {
-          run: {
+          session: {
             id: group.key,
           },
           value,
@@ -113,7 +113,7 @@ function mergeOutputs<O1, O2, O3, O4, O5, O6, Output>(
   callback: (v1: O1, v2: O2, v3: O3, v4: O4, v5: O5, v6: O6) => Output
 ): OutputValueProvider<Output>;
 function mergeOutputs<Output>(
-  ...providers: any[]
+  ...providers: (OutputValueProvider<any> | any)[]
 ): OutputValueProvider<Output> {
   const callback = providers.pop();
   const dependencies = providers.flatMap((r: any) => {
@@ -133,21 +133,26 @@ function mergeOutputs<Output>(
   const stream = firstOutputProvider
     .pipe(take(1))
     .pipe(
-      mergeMap((e1: any) => {
-        return merge<any[]>(
+      mergeMap((e1: OutputValueProvider<any>["_event"]) => {
+        return merge<OutputValueProvider<any>["_event"][]>(
           ...providers.map((node: any) => {
             // must be a value then
             if (!node[VALUE_PROVIDER]) {
               return of({ value: node });
             }
             return node
-              .pipe(filter((e: any) => e.run.id == e1.run.id))
+              .pipe(
+                filter(
+                  (e: OutputValueProvider<any>["_event"]) =>
+                    e.session!.id == e1.session!.id
+                )
+              )
               .pipe(take(1))
               .pipe(
                 map((outputEvent: any) => {
                   return {
                     type: AgentEventType.Output,
-                    run: outputEvent.run,
+                    session: outputEvent.session,
                     value: outputEvent.value,
                   };
                 })
@@ -160,21 +165,21 @@ function mergeOutputs<Output>(
     .pipe(
       reduce(
         (acc, cur: any) => {
-          if (!acc.run) {
-            acc.run = cur.run;
+          if (!acc.session) {
+            acc.session = cur.session;
           }
           acc.values.push(cur.value);
           return acc;
         },
         {
-          run: null,
+          session: null,
           values: [],
         } as any
       )
     )
     .pipe(
       map((reduced: any) => {
-        return { run: reduced.run, value: callback(...reduced.values) };
+        return { session: reduced.session, value: callback(...reduced.values) };
       })
     )
     .pipe(share());
@@ -198,7 +203,7 @@ const __tagValueProvider = (
           map((e: any) => {
             return {
               ...e,
-              value: cb(e.value, e.run),
+              value: cb(e.value, e.session),
             };
           })
         );
@@ -216,10 +221,10 @@ const __tagValueProvider = (
     },
     select: {
       get value() {
-        return (options: { runId: string }) => {
+        return (options: { sessionId: string }) => {
           return new Promise((resolve) => {
             stream
-              .pipe(filter((e: any) => e.run.id == options.runId))
+              .pipe(filter((e: any) => e.session.id == options.sessionId))
               .subscribe((e: any) => {
                 resolve(e.value);
               });
