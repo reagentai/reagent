@@ -9,6 +9,7 @@ import ReactFlow, {
 } from "reactflow";
 import dagre from "dagre";
 import style from "reactflow/dist/style.css?inline";
+import clsx from "clsx";
 
 const AgentGraph = (props: { agentId: string; nodes: any[] }) => {
   const [graph, setGraph] = useState({
@@ -29,18 +30,13 @@ const AgentGraph = (props: { agentId: string; nodes: any[] }) => {
           },
         });
       });
-      return {
-        id: n.id,
-        type: "node",
-        data: { label: n.label },
-      };
     });
     const graph = {
       nodes: props.nodes.map((n: any) => {
         return {
           id: n.id,
           type: "node",
-          data: { label: n.label },
+          data: { id: n.id, label: n.label, type: n.type },
         };
       }),
       edges,
@@ -59,7 +55,16 @@ const AgentGraph = (props: { agentId: string; nodes: any[] }) => {
 const NodeComponent = (props: any) => {
   return (
     <div className="relative">
-      <div className="flex max-w-52 px-3 py-2 justify-center rounded bg-gray-50 border border-gray-400">
+      <div
+        className={clsx(
+          "flex max-w-52 px-3 py-2 justify-center rounded border border-gray-400",
+          props.data.type.id == "@core/input"
+            ? "bg-indigo-300"
+            : props.data.type.id == "@core/user"
+              ? "bg-slate-300"
+              : "bg-gray-50"
+        )}
+      >
         <div>{props.data.label}</div>
       </div>
 

@@ -4,7 +4,7 @@ import { jsonStreamToAsyncIterator } from "@reagentai/reagent/llm/stream";
 import { AIChat, createChatStore } from "@reagentai/react/chat";
 import { AgentContextProvider } from "@reagentai/react/agent";
 // @ts-expect-error
-import { nodes as agentNodes } from "virtual:reagent-agent-module";
+import * as agentModule from "virtual:reagent-agent-module";
 import "./reagent.css";
 
 // @ts-expect-error
@@ -16,7 +16,7 @@ const Agent = () => {
     null
   );
   const [isAgentGraphVisible, setAgentGraphVisiblity] = useState(false);
-  const [agent, setAgent] = useState<any>({});
+  const [agent, setAgent] = useState<any>();
   useEffect(() => {
     fetch(`/api/chat/agents/${agentId}`).then(async (res) => {
       const agent = await res.json();
@@ -55,8 +55,11 @@ const Agent = () => {
       ),
     []
   );
-
   const messages = store((s) => s.messages);
+
+  if (!agent) {
+    return <div className="text-xs text-gray-600">Loading...</div>;
+  }
   return (
     <div className="flex">
       <div className="flex-1 h-screen">
@@ -89,7 +92,7 @@ const Agent = () => {
                     Error sending message: {sendMessageError}
                   </div>
                 )}
-                <AgentContextProvider nodes={agentNodes || []}>
+                <AgentContextProvider nodes={agentModule.nodes || []}>
                   <AIChat store={store} />
                 </AgentContextProvider>
               </ErrorBoundary>

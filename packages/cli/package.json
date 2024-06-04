@@ -38,6 +38,7 @@
     "@reagentai/serve": "workspace:^",
     "@vitejs/plugin-react": "^4.3.0",
     "builtins": "^5.1.0",
+    "clsx": "^2.1.1",
     "commander": "^12.1.0",
     "dagre": "^0.8.5",
     "hono": "^4.3.9",

@@ -107,7 +107,7 @@ class GraphAgent {
         return {
           id: e[0],
           label: e[1].options.label || e[1].node.metadata.name,
-          node: pick(e[1].node.metadata, "id", "name"),
+          type: pick(e[1].node.metadata, "id", "name"),
           dependencies: e[1].graphNode.dependencies,
         };
       }),
