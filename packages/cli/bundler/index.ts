@@ -7,7 +7,7 @@ import { reagent } from "@reagentai/reagent/dev/vite";
 import { devServer } from "./plugins/server";
 import createAgentPlugin from "./plugins/agent";
 
-type Options = { file: string; open: boolean };
+type Options = { file: string; open: boolean; port: number };
 const dev = async (options: Options) => {
   const inputFile = path.join(process.cwd(), options.file);
   const server = await createServer({
@@ -54,7 +54,7 @@ const dev = async (options: Options) => {
     root: process.cwd(),
     server: {
       open: options.open,
-      port: 1337,
+      port: options.port,
     },
     resolve: {
       alias: {

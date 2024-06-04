@@ -16,10 +16,12 @@ program
     "Open the browser if true; default value is true",
     "true"
   )
+  .option("--port <port>", "Agent port", "1337")
   .action(async (file, options) => {
     await bundler.dev({
       file,
       open: options.open == "true",
+      port: parseInt(options.port),
     });
   });
 
