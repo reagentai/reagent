@@ -1,5 +1,5 @@
-import { z, Context, AbstractAgentNode } from "../";
-import { ZodObjectSchema } from "../types";
+import { z, Context, AbstractAgentNode } from "../index.js";
+import type { ZodObjectSchema } from "../types.js";
 
 export default class Passthrough<
   Output extends Record<string, unknown>,

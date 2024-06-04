@@ -1,5 +1,5 @@
-import { z, Context, createAgentNode } from "../";
-import { BaseModelProvider } from "../../llm/models";
+import { z, Context, createAgentNode } from "../index.js";
+import { BaseModelProvider } from "../../llm/models/index.js";
 
 const inputSchema = z.object({});
 

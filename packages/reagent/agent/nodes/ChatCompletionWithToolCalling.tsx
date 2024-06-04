@@ -4,7 +4,7 @@ import slugify, { slugifyWithCounter } from "@sindresorhus/slugify";
 import zodToJsonSchema from "zod-to-json-schema";
 import { get, isEmpty, pick } from "lodash-es";
 
-import { ChatCompletionExecutor } from "../../llm/executors";
+import { ChatCompletionExecutor } from "../../llm/executors/index.js";
 import {
   ChatMessages,
   ChatPromptTemplate,

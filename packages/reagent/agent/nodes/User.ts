@@ -1,8 +1,7 @@
 import { Observable } from "rxjs";
 
-import { z, AbstractAgentNode, Context } from "../";
-import { AtLeastOne } from "../types";
-import { OutputValueProvider } from "../graph/GraphNode";
+import { z, AbstractAgentNode, Context } from "../index.js";
+import type { AtLeastOne } from "../types";
 
 const config = z.void();
 

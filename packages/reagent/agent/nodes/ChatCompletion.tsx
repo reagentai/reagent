@@ -1,7 +1,7 @@
 import dedent from "dedent";
 import { Observable, ReplaySubject } from "rxjs";
 
-import { ChatCompletionExecutor } from "../../llm/executors";
+import { ChatCompletionExecutor } from "../../llm/executors/index.js";
 import {
   ChatPromptTemplate,
   FormattedChatMessage,
