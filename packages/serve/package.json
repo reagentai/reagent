@@ -4,7 +4,8 @@
   "description": "Reagent AI server module",
   "type": "module",
   "scripts": {
-    "build": "pnpm tsc"
+    "build": "pnpm tsc",
+    "prepare": "pnpm build && cp package.json dist"
   },
   "publishConfig": {
     "directory": "dist",

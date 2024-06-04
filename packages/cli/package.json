@@ -9,7 +9,8 @@
   "scripts": {
     "build-client": "vite build -c vite.client.config.js",
     "build-bin": "vite build -c vite.bin.config.js",
-    "build": "pnpm run \"/^build-[client|bin]/\""
+    "build": "pnpm run \"/^build-[client|bin]/\"",
+    "prepare": "pnpm build && cp package.json dist"
   },
   "exports": {
     "./reagent": "./dist/reagent.js",

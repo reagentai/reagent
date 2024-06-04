@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "test": "vitest run",
-    "build": "tsc"
+    "build": "tsc",
+    "prepare": "pnpm build && cp package.json dist"
   },
   "license": "MIT",
   "publishConfig": {
