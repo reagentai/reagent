@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "pnpm tsc",
-    "prepare": "pnpm build && cp package.json dist"
+    "prepare": "rm -r dist && pnpm build && cp package.json dist"
   },
   "publishConfig": {
     "directory": "dist",
