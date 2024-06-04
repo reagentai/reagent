@@ -1,6 +1,8 @@
 import { expect, test } from "vitest";
 import { transformSync } from "@babel/core";
 import generate from "@babel/generator";
+// @ts-expect-error
+import picomatch from "picomatch";
 
 import { createBabelPlugin } from "./agent";
 
@@ -85,6 +87,13 @@ test.only("only keep `nodes` export and used varaible", () => {
   export const __reagentai_exports__ = true;
   `);
   expect(transformedCode).to.equal(cleanUpCode(expected));
+});
+
+test.only("test node_modules picomatch", () => {
+  const matches = picomatch(["**/*"], {
+    dot: true,
+  });
+  expect(matches("demo-cli/node_modules/.vite/rxjs.js")).toBe(true);
 });
 
 const transform = (code: string): { code: string } => {

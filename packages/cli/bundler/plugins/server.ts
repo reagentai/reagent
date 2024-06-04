@@ -1,5 +1,6 @@
 import type { Plugin as VitePlugin } from "vite";
 import { Hono } from "hono";
+import { once } from "lodash-es";
 import { getRequestListener } from "@hono/node-server";
 import { createChatAgentRouter } from "@reagentai/serve/chat";
 
@@ -25,17 +26,22 @@ export function devServer(): VitePlugin {
   const plugin: VitePlugin = {
     name: "reagent-dev-server",
     configureServer: async (server) => {
+      const createAppRouter = once(async () => {
+        const router = createRouter();
+        // need to load ssr modules after the server is ready
+        // so, do it in the first request
+        const agent = await server.ssrLoadModule(
+          "virtual:reagent-agent-module"
+        );
+        const agents = new Map([["default", agent.default]]);
+        router.route("/api/chat", createChatAgentRouter(agents as any));
+
+        return router;
+      });
       let app: any;
       server.middlewares.use(async (req, res, next) => {
         if (!app) {
-          app = createRouter();
-          // need to load ssr modules after the server is ready
-          // so, do it in the first request
-          const agent = await server.ssrLoadModule(
-            "virtual:reagent-agent-module"
-          );
-          const agents = new Map([["default", agent.default]]);
-          app.route("/api/chat", createChatAgentRouter(agents as any));
+          app = await createAppRouter();
         }
         const hasRoute = app.router.match(req.method!, req.url!)[0].length > 0;
         if (!hasRoute) {

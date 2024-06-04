@@ -48,8 +48,14 @@ const dev = async (options: Options) => {
         //  @vitejs/plugin-react can't detect preamble error
         include: [process.cwd()],
       }),
-      reagent({}),
-      createAgentPlugin(),
+      reagent({
+        include: ["**/@reagentai/**"],
+        exclude: ["**/node_modules/**"],
+      }),
+      createAgentPlugin({
+        include: ["**/@reagentai/**"],
+        exclude: ["**/node_modules/**"],
+      }),
     ],
     root: process.cwd(),
     server: {

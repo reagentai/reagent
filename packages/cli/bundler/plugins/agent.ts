@@ -1,4 +1,6 @@
 import { transformSync, DEFAULT_EXTENSIONS } from "@babel/core";
+// @ts-expect-error
+import picomatch from "picomatch";
 
 function cleanUrl(url: string) {
   const queryRE = /\?.*$/s;
@@ -10,8 +12,19 @@ const filterRegex = new RegExp(
   `\\.(${[...DEFAULT_EXTENSIONS, "tsx", "ts"].join("|").replace(/\./g, "")})$`
 );
 
-type Options = {};
+type Options = {
+  // glob pattern to include files
+  include?: string[];
+  // glob pattern to exclude files
+  exclude?: string[];
+};
 const createPlugin = (options: Options = {}) => {
+  const shouldInclude = picomatch(options.include || [], {
+    dot: true,
+  });
+  const shouldExclude = picomatch(options.exclude || ["**/node_modules/**"], {
+    dot: true,
+  });
   return {
     name: "vite-plugin-reagent-agent-treeshake",
     transform(code: string, id: string, transformOptions: any) {
@@ -22,7 +35,11 @@ const createPlugin = (options: Options = {}) => {
       }
       const filepath = cleanUrl(id);
       // no need to transform for server module
-      if (transformOptions.ssr || !filterRegex.test(filepath)) {
+      if (
+        transformOptions.ssr ||
+        !filterRegex.test(filepath) ||
+        (!shouldInclude(filepath) && shouldExclude(filepath))
+      ) {
         return;
       }
       const { code: transformedCode, map } = transformSync(code, {

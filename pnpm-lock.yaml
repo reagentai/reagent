@@ -53,6 +53,12 @@ importers:
       hono:
         specifier: ^4.3.9
         version: 4.3.9
+      lodash-es:
+        specifier: ^4.17.21
+        version: 4.17.21
+      picomatch:
+        specifier: ^4.0.2
+        version: 4.0.2
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -87,6 +93,9 @@ importers:
       '@types/dagre':
         specifier: ^0.7.52
         version: 0.7.52
+      '@types/lodash-es':
+        specifier: ^4.17.12
+        version: 4.17.12
       '@types/react':
         specifier: ^18.3.2
         version: 18.3.2
@@ -344,6 +353,9 @@ importers:
       nanoid:
         specifier: ^5.0.7
         version: 5.0.7
+      picomatch:
+        specifier: ^4.0.2
+        version: 4.0.2
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -5820,6 +5832,11 @@ packages:
   /picomatch@2.3.1:
     resolution: {integrity: sha512-JU3teHTNjmE2VCGFzuY8EXzCDVwEqB2a8fsIvwaStHhAWJEeVd1o1QD80CU6+ZdEXXSLbSsuLwJjkCBWqRQUVA==}
     engines: {node: '>=8.6'}
+
+  /picomatch@4.0.2:
+    resolution: {integrity: sha512-M7BAV6Rlcy5u+m6oPhAPFgJTzAioX/6B0DxyvDlo9l8+T3nLKbrczg2WLUyzd45L8RqfUMyGPzekbMvX2Ldkwg==}
+    engines: {node: '>=12'}
+    dev: false
 
   /pidtree@0.6.0:
     resolution: {integrity: sha512-eG2dWTVw5bzqGRztnHExczNxt5VGsE6OwTeCG3fdUf9KBsZzO3R5OIIIzWR+iZA0NtZ+RDVdaoE2dK1cn6jH4g==}

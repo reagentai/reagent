@@ -7,6 +7,7 @@
     "reagent": "./dist/reagent.js"
   },
   "scripts": {
+    "test": "vitest run",
     "build-client": "vite build -c vite.client.config.js",
     "build-bin": "vite build -c vite.bin.config.js",
     "build": "pnpm run \"/^build-[client|bin]/\"",
@@ -42,6 +43,8 @@
     "commander": "^12.1.0",
     "dagre": "^0.8.5",
     "hono": "^4.3.9",
+    "lodash-es": "^4.17.21",
+    "picomatch": "^4.0.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-error-boundary": "^4.0.13",
@@ -55,6 +58,7 @@
     "@types/babel__core": "^7.20.5",
     "@types/babel__generator": "^7.6.8",
     "@types/dagre": "^0.7.52",
+    "@types/lodash-es": "^4.17.12",
     "@types/react": "^18.3.2",
     "@types/react-dom": "^18.3.0",
     "vite-plugin-static-copy": "^1.0.5",

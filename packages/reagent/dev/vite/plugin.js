@@ -1,5 +1,7 @@
 import { transformSync, DEFAULT_EXTENSIONS } from "@babel/core";
 import { once } from "lodash-es";
+// @ts-expect-error
+import picomatch from "picomatch";
 
 import createBabelPlugin from "../babel/index.js";
 
@@ -22,6 +24,8 @@ const warnToolsConfigMissing = once(() => {
  *
  * @property {boolean} [ssr] - set this to true to transpile files for frontend
  * @property {string[]} [tools] - absolute paths to the Agent tools.
+ * @property {string[]} [include] - glob pattern to include files
+ * @property {string[]} [exclude] - glob pattern to exclude files; include takes precedence
  * This can either be path to individual paths or paths to the directory
  * where the tools are located. This must be provided for the tools to be
  * compiled properly. Narrowing this path could speed up build.
@@ -39,6 +43,12 @@ const createPlugin = (options = {}) => {
   if (!toolsPath) {
     warnToolsConfigMissing();
   }
+  const shouldInclude = picomatch(options.include || [], {
+    dot: true,
+  });
+  const shouldExclude = picomatch(options.exclude || ["**/node_modules/**"], {
+    dot: true,
+  });
   return {
     name: "vite-plugin-portal-reagent",
     transform(code, id, transformOptions) {
@@ -50,7 +60,8 @@ const createPlugin = (options = {}) => {
       const filepath = cleanUrl(id);
       if (
         (toolsPath && !toolsPath.find((tp) => filepath.startsWith(tp))) ||
-        !filterRegex.test(filepath)
+        !filterRegex.test(filepath) ||
+        (!shouldInclude(filepath) && shouldExclude(filepath))
       ) {
         return;
       }
