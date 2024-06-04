@@ -1,9 +1,9 @@
-export { z } from "./zod";
-export { EventStream } from "./stream";
-export { AbstractAgentNode, IS_AGENT_NODE, createAgentNode } from "./node";
+export { z } from "./zod.js";
+export { EventStream } from "./stream.js";
+export { AbstractAgentNode, IS_AGENT_NODE, createAgentNode } from "./node.js";
 
-export { GraphAgent } from "./graph/GraphAgent";
-export { mergeRenderStreams } from "./graph/operators";
+export { GraphAgent } from "./graph/GraphAgent.js";
+export { mergeRenderStreams } from "./graph/operators.js";
 
 export type { Context, RenderContext } from "./context";
 export type { AgentNode } from "./node";

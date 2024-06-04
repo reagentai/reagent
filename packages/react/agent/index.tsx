@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import type { Chat } from "@reagentai/serve/chat";
 
-import { useAgentContext } from "./context";
+import { useAgentContext } from "./context.js";
 
 const AgentNodeUI = (props: {} & Chat.Message["message"]["ui"]) => {
   "use client";

@@ -33,3 +33,4 @@ user.bind({
 });
 
 export default agent;
+export const __reagentai_exports__ = true;

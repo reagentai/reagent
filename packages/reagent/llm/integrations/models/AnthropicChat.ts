@@ -4,12 +4,12 @@ import delve from "dlv";
 import { get } from "lodash-es";
 import invariant from "tiny-invariant";
 
-import { Context, InitContext } from "../../core";
-import { BaseModelProvider, ModelOptions } from "../../models";
-import { Metadata } from "../../models/schema";
-import { ModelInvokeOptions } from "../../core/executor";
-import { FormattedChatMessage } from "../../prompt";
-import { jsonStreamToAsyncIterator } from "../../stream/stream";
+import { Context, InitContext } from "../../core/index.js";
+import { BaseModelProvider, ModelOptions } from "../../models/index.js";
+import { Metadata } from "../../models/schema.js";
+import { ModelInvokeOptions } from "../../core/executor.js";
+import { FormattedChatMessage } from "../../prompt/index.js";
+import { jsonStreamToAsyncIterator } from "../../stream/stream.js";
 
 type Options = Pick<ModelOptions, "model"> & {
   url?: string;

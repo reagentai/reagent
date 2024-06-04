@@ -1,7 +1,7 @@
-import { Context, InitContext } from "../core";
-import { ModelInvokeOptions } from "../core/executor";
-import { BaseModelProvider } from "./base";
-import { ChatCompletionResponse, Metadata } from "./schema";
+import { Context, InitContext } from "../core/index.js";
+import { ModelInvokeOptions } from "../core/executor.js";
+import { BaseModelProvider } from "./base.js";
+import { ChatCompletionResponse, Metadata } from "./schema.js";
 
 export class DummyModel extends BaseModelProvider {
   #response: string;

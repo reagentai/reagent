@@ -3,8 +3,9 @@ import cleanSet from "clean-set";
 import delve from "dlv";
 import { dset } from "dset";
 import { klona } from "klona";
-import { AbstractExecutor, ResolveOptions } from "./executor";
-import { FunctionRunnable, Runnable } from "./runable";
+
+import { AbstractExecutor, ResolveOptions } from "./executor.js";
+import { FunctionRunnable, Runnable } from "./runable.js";
 
 export class Runtime {
   state: any;

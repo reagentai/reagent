@@ -1,8 +1,8 @@
 import invariant from "tiny-invariant";
 
-import { InitContext } from "../../core";
-import { BaseModelProvider, ModelOptions } from "../../models/base";
-import { Metadata } from "../../models/schema";
+import { InitContext } from "../../core/index.js";
+import { BaseModelProvider, ModelOptions } from "../../models/base.js";
+import { Metadata } from "../../models/schema.js";
 
 type Options = Pick<ModelOptions, "apiKey" | "model"> & {
   url: string;

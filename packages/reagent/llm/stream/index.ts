@@ -1,2 +1,2 @@
-export * from "./response-builder";
-export * from "./stream";
+export * from "./response-builder.js";
+export * from "./stream.js";

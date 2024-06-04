@@ -3,7 +3,7 @@ import clsx from "clsx";
 import Markdown from "react-markdown";
 import type { Chat } from "@reagentai/serve/chat";
 
-import { AgentNodeUI } from "../agent";
+import { AgentNodeUI } from "../agent/index.js";
 
 const ChatThread = (props: {
   messages: Record<string, Chat.Message>;

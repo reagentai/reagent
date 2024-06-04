@@ -1,6 +1,6 @@
-import { Chatbox } from "./ChatBox";
-import { ChatThread } from "./ChatThread";
-import { ChatStore } from "./state";
+import { Chatbox } from "./ChatBox.js";
+import { ChatThread } from "./ChatThread.js";
+import { ChatStore } from "./state.js";
 
 const AIChat = (props: { store: ChatStore }) => {
   const messages = props.store((s) => s.messages);

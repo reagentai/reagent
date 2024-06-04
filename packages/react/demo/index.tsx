@@ -12,13 +12,13 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "../components/DropdownMenu";
-import { AIChat, createChatStore } from "../chat";
-import { AgentContextProvider } from "../agent";
-import { AgentError } from "../demo-agents/tools/AgentError";
-import { GetWeather } from "../demo-agents/tools/Weather";
-import { GenerateSQLQuery } from "../demo-agents/sql/GenerateSQLQuery";
-import Sidebar, { SidebarProps } from "./Sidebar";
+} from "../components/DropdownMenu.js";
+import { AIChat, createChatStore } from "../chat/index.js";
+import { AgentContextProvider } from "../agent/index.js";
+import { AgentError } from "../demo-agents/tools/AgentError.js";
+import { GetWeather } from "../demo-agents/tools/Weather.js";
+import { GenerateSQLQuery } from "../demo-agents/sql/GenerateSQLQuery.js";
+import Sidebar, { SidebarProps } from "./Sidebar.js";
 
 type AgentInfo = {
   id: string;

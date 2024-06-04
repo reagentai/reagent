@@ -1,7 +1,7 @@
 "@reagent-skip-transform";
-import { Context, InitContext, Runnable } from "../core";
-import { DefaultModelExecutor } from "./DefaultModelExecutor";
-import { ChatCompletionResponse } from "./schema";
+import { Context, InitContext, Runnable } from "../core/index.js";
+import { DefaultModelExecutor } from "./DefaultModelExecutor.js";
+import { ChatCompletionResponse } from "./schema.js";
 
 export type ModelOptions = {
   apiKey?: string;

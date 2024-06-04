@@ -1,4 +1,4 @@
-import { Context, InitContext, Runnable } from "../core";
+import { Context, InitContext, Runnable } from "../core/index.js";
 
 export type SystemMesageTemplate = ["system", string];
 export type AssistantMessageTemplate = ["assistant", string];

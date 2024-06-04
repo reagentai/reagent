@@ -9,8 +9,9 @@ import {
   of,
   reduce,
 } from "rxjs";
-import { OutputValueProvider } from "./types";
-import { AgentEvent, AgentEventType } from "../stream";
+
+import { AgentEvent, AgentEventType } from "../stream.js";
+import type { OutputValueProvider } from "./types";
 
 export const VALUE_PROVIDER = Symbol("___RENDER_VALUE_PROVIDER__");
 

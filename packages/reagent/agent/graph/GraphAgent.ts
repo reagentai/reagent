@@ -1,9 +1,9 @@
 import { Observer, Subscription } from "rxjs";
-
-import { GraphNode } from "./GraphNode";
-import { AbstractAgentNode } from "../node";
-import { EventStream } from "../stream";
 import { pick } from "lodash-es";
+
+import { GraphNode } from "./GraphNode.js";
+import { AbstractAgentNode } from "../node.js";
+import { EventStream } from "../stream.js";
 
 type AgentConfig = {
   name: string;

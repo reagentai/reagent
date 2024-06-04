@@ -1,6 +1,6 @@
-import chatAgent from "../demo-agents/chat";
-import weatherAgent from "../demo-agents/weather";
-import sqlAgent from "../demo-agents/sql";
+import chatAgent from "../demo-agents/chat.js";
+import weatherAgent from "../demo-agents/weather.js";
+import sqlAgent from "../demo-agents/sql/index.js";
 
 const agents = new Map([
   ["default", chatAgent],

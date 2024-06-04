@@ -1,13 +1,13 @@
 import { get } from "lodash-es";
 
-import { Context } from "../core";
+import { Context } from "../core/index.js";
 import {
   AbstractExecutor,
   AbstractExecutorOptions,
   InvokeOptions,
-} from "../core/executor";
-import { ChatCompletionExecutor } from "./ChatCompletion";
-import { ChatMessages } from "../prompt";
+} from "../core/executor.js";
+import { ChatCompletionExecutor } from "./ChatCompletion.js";
+import { ChatMessages } from "../prompt/index.js";
 
 export class ToolCallExecutor extends AbstractExecutor {
   #options: AbstractExecutorOptions;

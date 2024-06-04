@@ -3,7 +3,7 @@ import clsx from "clsx";
 import { HiOutlinePaperAirplane } from "react-icons/hi";
 import { uniqueId } from "@reagentai/reagent/utils/uniqueId";
 
-import { adjustTextareaHeight } from "../utils/textarea";
+import { adjustTextareaHeight } from "../utils/textarea.js";
 
 const Chatbox = (props: {
   isChatLocked: boolean;

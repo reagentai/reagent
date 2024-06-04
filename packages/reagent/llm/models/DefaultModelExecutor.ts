@@ -1,11 +1,12 @@
 import ky from "ky";
 import { get } from "lodash-es";
-import { Context } from "../core";
-import { ModelInvokeOptions } from "../core/executor";
-import { Metadata } from "./schema";
-import { jsonStreamToAsyncIterator } from "../stream/stream";
-import { createOpenAIStreamDeltaToResponseBuilder } from "../stream/response-builder";
-import { BaseModelExecutor } from "./BaseModelExecutor";
+
+import { Context } from "../core/index.js";
+import { ModelInvokeOptions } from "../core/executor.js";
+import { Metadata } from "./schema.js";
+import { jsonStreamToAsyncIterator } from "../stream/stream.js";
+import { createOpenAIStreamDeltaToResponseBuilder } from "../stream/response-builder.js";
+import { BaseModelExecutor } from "./BaseModelExecutor.js";
 
 /**
  * This is a default model executor that's compatible with OpenAI API

@@ -3,9 +3,10 @@ import { klona } from "klona";
 import cleanSet from "clean-set";
 // @ts-expect-error
 import delve from "dlv";
-import { AddRunableOptions, Context } from "./context";
-import { FunctionRunnable, Runnable } from "./runable";
-import { FormattedChatMessage } from "../prompt";
+
+import { AddRunableOptions, Context } from "./context.js";
+import { FunctionRunnable, Runnable } from "./runable.js";
+import { FormattedChatMessage } from "../prompt/index.js";
 
 export type AbstractExecutorOptions = {
   runnables: Runnable[];

@@ -1,6 +1,7 @@
 // @ts-expect-error
 import delve from "dlv";
-import { Context } from "../core";
+
+import { Context } from "../core/index.js";
 
 type ToolCall = {
   id: string;

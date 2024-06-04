@@ -1,2 +1,2 @@
-export { ChatCompletionExecutor } from "./ChatCompletion";
-export { ToolCallExecutor } from "./ToolCallExecutor";
+export { ChatCompletionExecutor } from "./ChatCompletion.js";
+export { ToolCallExecutor } from "./ToolCallExecutor.js";

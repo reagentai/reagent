@@ -1,6 +1,10 @@
-import { z } from "./zod";
-import { Context, RenderContext } from "./context";
-import { AsyncGeneratorWithField, AtLeastOne, ZodObjectSchema } from "./types";
+import { z } from "./zod.js";
+import { Context, RenderContext } from "./context.js";
+import type {
+  AsyncGeneratorWithField,
+  AtLeastOne,
+  ZodObjectSchema,
+} from "./types";
 
 type WithDefaultEmpty<T> =
   T extends Record<string, unknown> ? T : Record<string, unknown>;

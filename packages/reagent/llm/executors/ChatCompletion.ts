@@ -1,15 +1,15 @@
 import { klona } from "klona";
 
-import { Context } from "../core";
+import { Context } from "../core/index.js";
 import {
   AbstractExecutor,
   AbstractExecutorOptions,
   InvokeOptions,
   RunInfo,
-} from "../core/executor";
-import type { Metadata as ModelMetadata } from "../models/schema";
-import { FormattedChatMessage } from "../prompt";
-import { uniqueId } from "../../utils/uniqueId";
+} from "../core/executor.js";
+import type { Metadata as ModelMetadata } from "../models/schema.js";
+import { FormattedChatMessage } from "../prompt/index.js";
+import { uniqueId } from "../../utils/uniqueId.js";
 
 export class ChatCompletionExecutor extends AbstractExecutor {
   constructor(options: AbstractExecutorOptions) {

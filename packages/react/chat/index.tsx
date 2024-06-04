@@ -1,3 +1,3 @@
-export { createChatStore } from "./state";
-export { AIChat } from "./AIChat";
-export { ChatThread } from "./ChatThread";
+export { createChatStore } from "./state.js";
+export { AIChat } from "./AIChat.js";
+export { ChatThread } from "./ChatThread.js";

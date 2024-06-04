@@ -1,8 +1,9 @@
 import ky from "ky";
-import { Context, InitContext } from "../../core";
-import { BaseModelProvider, ModelOptions } from "../../models";
-import { Metadata } from "../../models/schema";
-import { ModelInvokeOptions } from "../../core/executor";
+
+import { Context, InitContext } from "../../core/index.js";
+import { BaseModelProvider, ModelOptions } from "../../models/index.js";
+import { Metadata } from "../../models/schema.js";
+import { ModelInvokeOptions } from "../../core/executor.js";
 
 type Options = Pick<ModelOptions, "apiKey" | "model"> & {
   url: string;

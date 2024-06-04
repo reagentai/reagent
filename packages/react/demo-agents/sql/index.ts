@@ -83,3 +83,5 @@ user.bind({
 });
 
 export default agent;
+export const nodes = [GenerateSQLQuery];
+export const __reagentai_exports__ = true;

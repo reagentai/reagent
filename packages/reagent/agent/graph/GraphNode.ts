@@ -16,11 +16,11 @@ import {
 import { fromError } from "zod-validation-error";
 import { pick, uniqBy } from "lodash-es";
 
-import { Context } from "../context";
-import { AbstractAgentNode } from "../node";
-import { EventStream, AgentEventType } from "../stream";
-import { uniqueId } from "../../utils/uniqueId";
-import { VALUE_PROVIDER, __tagValueProvider } from "./operators";
+import { Context } from "../context.js";
+import { AbstractAgentNode } from "../node.js";
+import { EventStream, AgentEventType } from "../stream.js";
+import { uniqueId } from "../../utils/uniqueId.js";
+import { VALUE_PROVIDER, __tagValueProvider } from "./operators.js";
 
 import type {
   OutputValueProvider,

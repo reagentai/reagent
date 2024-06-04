@@ -1,5 +1,5 @@
-export { GenericChatModel } from "./GenericChatModel";
-export { OpenAI } from "./OpenAI";
-export { AnthropicChat } from "./AnthropicChat";
-export { Groq } from "./Groq";
-export { OllamaChat } from "./OllamaChat";
+export { GenericChatModel } from "./GenericChatModel.js";
+export { OpenAI } from "./OpenAI.js";
+export { AnthropicChat } from "./AnthropicChat.js";
+export { Groq } from "./Groq.js";
+export { OllamaChat } from "./OllamaChat.js";

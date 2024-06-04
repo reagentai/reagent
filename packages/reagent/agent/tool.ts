@@ -1,6 +1,7 @@
-import { GraphNode } from "./graph/GraphNode";
-import { ZodObjectSchema } from "./types";
-import { z } from "./zod";
+import { GraphNode } from "./graph/GraphNode.js";
+import { z } from "./zod.js";
+
+import type { ZodObjectSchema } from "./types";
 
 const agentToolSchema = z.object({
   id: z.string().min(1),

@@ -5,8 +5,8 @@ import {
   ChatInput,
 } from "@reagentai/reagent/agent/nodes";
 
-import { GetWeather } from "./tools/Weather";
-import { AgentError } from "./tools/AgentError";
+import { GetWeather } from "./tools/Weather.js";
+import { AgentError } from "./tools/AgentError.js";
 
 const agent = new GraphAgent({
   name: "Weather app",
@@ -45,3 +45,5 @@ user.bind({
 });
 
 export default agent;
+export const nodes = [GetWeather];
+export const __reagentai_exports__ = true;

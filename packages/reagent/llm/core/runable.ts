@@ -1,4 +1,4 @@
-import { Context, InitContext } from "./context";
+import { Context, InitContext } from "./context.js";
 
 export abstract class Runnable<I = unknown, O = unknown> {
   abstract get namespace(): string;

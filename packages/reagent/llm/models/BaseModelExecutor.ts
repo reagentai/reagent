@@ -1,6 +1,6 @@
-import { Context, InitContext, Runnable } from "../core";
-import { ModelInvokeOptions } from "../core/executor";
-import { ChatCompletionResponse } from "./schema";
+import { Context, InitContext, Runnable } from "../core/index.js";
+import { ModelInvokeOptions } from "../core/executor.js";
+import { ChatCompletionResponse } from "./schema.js";
 
 export type ModelOptions = {
   apiKey?: string;
