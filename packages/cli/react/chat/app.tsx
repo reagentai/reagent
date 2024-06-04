@@ -75,10 +75,10 @@ const Agent = () => {
             />
           </div>
           <div className="flex flex-1 h-[calc(100%-theme(spacing.9))] divide-x-2 divide-gray-200 overflow-hidden">
-            <div className="flex-1 h-full overflow-auto">
+            <div className="flex flex-col flex-1 h-full overflow-auto">
               <ErrorBoundary fallback={<div>ERROR!</div>}>
                 {Object.entries(messages).length == 0 && agent && (
-                  <div className="flex py-20 justify-center">
+                  <div className="agent-info flex py-20 justify-center">
                     <div className="flex flex-col space-y-5">
                       <div className="text-center text-2xl font-semibold text-gray-700">
                         {agent.name}
@@ -92,9 +92,11 @@ const Agent = () => {
                     Error sending message: {sendMessageError}
                   </div>
                 )}
-                <AgentContextProvider nodes={agentModule.nodes || []}>
-                  <AIChat store={store} />
-                </AgentContextProvider>
+                <div className="flex-1">
+                  <AgentContextProvider nodes={agentModule.nodes || []}>
+                    <AIChat store={store} />
+                  </AgentContextProvider>
+                </div>
               </ErrorBoundary>
             </div>
             {isAgentGraphVisible && (
