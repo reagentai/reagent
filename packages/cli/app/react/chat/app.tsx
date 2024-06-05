@@ -1,11 +1,25 @@
 import { Suspense, lazy, useEffect, useMemo, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import { jsonStreamToAsyncIterator } from "@reagentai/reagent/llm/stream";
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import { jsonStreamToAsyncIterator } from "@reagentai/reagent/llm/stream/index.js";
 import { AIChat, createChatStore } from "@reagentai/react/chat";
 import { AgentContextProvider } from "@reagentai/react/agent";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@reagentai/react/components/DropdownMenu.js";
+
 // @ts-expect-error
 import * as agentModule from "virtual:reagent-agent-module";
 import "./reagent.css";
+
+import { models as llmModels } from "../../models";
 
 // @ts-expect-error
 const AgentGraph = lazy(() => import("./graph.tsx"));
@@ -15,6 +29,7 @@ const Agent = () => {
   const [invokeError, setInvokeError] = useState<string | null>(null);
   const [isAgentGraphVisible, setAgentGraphVisiblity] = useState(false);
   const [agent, setAgent] = useState<any>();
+  const llmModelId = useTopBarStore((s: any) => s.llmModelId);
   useEffect(() => {
     fetch(`/api/chat/agents/${agentId}`).then(async (res) => {
       const agent = await res.json();
@@ -29,7 +44,10 @@ const Agent = () => {
           async invoke(nodeId, input, state) {
             const res = await fetch(`/api/chat/invoke`, {
               method: "POST",
-              body: JSON.stringify(input),
+              body: JSON.stringify({
+                ...input,
+                model: llmModels.find((m) => m.id == llmModelId)?.model,
+              }),
               headers: {
                 "content-type": "application/json",
               },
@@ -117,6 +135,8 @@ const TopBar = (props: {
   isAgentGraphVisible: boolean;
   toggleAgentGraphVisiblity: () => void;
 }) => {
+  const llmModelId = useTopBarStore((s: any) => s.llmModelId);
+  const setLLMModelId = useTopBarStore((s: any) => s.setLLMModelId);
   return (
     <div className="top-bar w-full h-full py-1.5 px-2 flex justify-end space-x-4 text-xs bg-gray-100">
       <div className="flex flex-1 items-center">
@@ -124,6 +144,27 @@ const TopBar = (props: {
           {props.agent.name}
         </div>
       </div>
+      <DropdownMenu>
+        <DropdownMenuTrigger className="px-2 select-none outline-none">
+          {llmModels.find((m) => m.id == llmModelId)?.id || "Select model"}
+        </DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <DropdownMenuLabel>Select model</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuRadioGroup
+            value={llmModelId}
+            onValueChange={setLLMModelId}
+          >
+            {llmModels.map((model, index) => {
+              return (
+                <DropdownMenuRadioItem key={index} value={model.id}>
+                  {model.label}
+                </DropdownMenuRadioItem>
+              );
+            })}
+          </DropdownMenuRadioGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
       <div className="flex top-4 right-4 space-x-3">
         <button
           className="bg-indigo-200 rounded px-4 py-1 cursor-pointer"
@@ -149,5 +190,26 @@ const TopBar = (props: {
     </div>
   );
 };
+
+const useTopBarStore = create(
+  persist(
+    (set, get) => {
+      return {
+        llmModelId: undefined as (typeof llmModels)[0] | undefined,
+        setLLMModelId(modelId: string) {
+          set((prev: any) => {
+            return {
+              ...prev,
+              llmModelId: modelId,
+            };
+          });
+        },
+      };
+    },
+    {
+      name: "reagent-dev-chat-app-topbar",
+    }
+  )
+);
 
 export default Agent;

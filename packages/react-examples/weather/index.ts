@@ -1,9 +1,12 @@
-import { GraphAgent, mergeRenderStreams } from "@reagentai/reagent/agent";
+import {
+  GraphAgent,
+  mergeRenderStreams,
+} from "@reagentai/reagent/agent/index.js";
 import {
   ChatCompletionWithToolCalling,
   User,
   ChatInput,
-} from "@reagentai/reagent/agent/nodes";
+} from "@reagentai/reagent/agent/nodes/index.js";
 
 import { GetWeather } from "./Weather.js";
 import { AgentError } from "../tools/AgentError.js";
@@ -45,5 +48,5 @@ user.bind({
 });
 
 export default agent;
-export const nodes = [GetWeather];
+export const nodes = [GetWeather, AgentError];
 export const __reagentai_exports__ = true;

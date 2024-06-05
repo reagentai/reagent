@@ -58,8 +58,9 @@ class ChatPromptTemplate extends Runnable {
 
   init(ctxt: InitContext) {
     for (const message of this.#messages) {
-      if (message instanceof Runnable) {
-        ctxt.addRunnable(message);
+      // @ts-expect-error
+      if (message instanceof Runnable || message.__isReagentRunnable) {
+        ctxt.addRunnable(message as Runnable);
         continue;
       } else if (Array.isArray(message[1])) {
         message[1].forEach((message: any) => {

@@ -140,7 +140,7 @@ abstract class AbstractExecutor extends Runnable {
       );
     }
 
-    if (runnable instanceof Runnable) {
+    if (runnable instanceof Runnable || runnable.__isReagentRunnable) {
       const res = await runnable.run(
         ctxt.bindNamespace(namespace),
         options.argument

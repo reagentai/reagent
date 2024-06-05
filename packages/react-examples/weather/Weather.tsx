@@ -1,4 +1,4 @@
-import { createAgentNode, z } from "@reagentai/reagent/agent";
+import { createAgentNode, z } from "@reagentai/reagent/agent/index.js";
 import { generateMock } from "@anatine/zod-mock";
 
 const outputSchema = z.object({
@@ -17,7 +17,7 @@ const outputSchema = z.object({
 });
 
 const GetWeather = createAgentNode({
-  id: "@reagentai/demo-agents/getWeather",
+  id: "@reagentai/react-examples/getWeather",
   name: "Get weather",
   description: `Get the weather info of a city at any given time. Current date time is ${new Date().toISOString()}`,
   version: "0.0.1",

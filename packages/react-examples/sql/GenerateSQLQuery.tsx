@@ -13,7 +13,7 @@ const outputSchema = z.object({
 });
 
 const GenerateSQLQuery = createAgentNode({
-  id: "@reagentai/demo-agents/generate-sql-query",
+  id: "@reagentai/react-examples/generate-sql-query",
   name: "Generate SQL query",
   description: `Generate SQL query for provided tables and columns`,
   version: "0.0.1",

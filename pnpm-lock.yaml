@@ -31,7 +31,7 @@ importers:
         version: link:../react
       '@reagentai/reagent':
         specifier: workspace:^
-        version: link:../reagent
+        version: link:../reagent/dist
       '@reagentai/serve':
         specifier: workspace:^
         version: link:../serve
@@ -117,7 +117,7 @@ importers:
         version: link:../react-examples
       '@reagentai/reagent':
         specifier: workspace:^
-        version: link:../reagent
+        version: link:../reagent/dist
       '@reagentai/serve':
         specifier: workspace:^
         version: link:../serve
@@ -138,7 +138,7 @@ importers:
         version: link:../react
       '@reagentai/reagent':
         specifier: workspace:^
-        version: link:../reagent
+        version: link:../reagent/dist
       hono:
         specifier: ^4.3.9
         version: 4.3.9
@@ -178,7 +178,7 @@ importers:
         version: link:../react
       '@reagentai/reagent':
         specifier: workspace:^
-        version: link:../reagent
+        version: link:../reagent/dist
       '@reagentai/serve':
         specifier: workspace:^
         version: link:../serve
@@ -239,7 +239,7 @@ importers:
         version: 2.0.6(@types/react@18.3.2)(react-dom@18.3.1)(react@18.3.1)
       '@reagentai/reagent':
         specifier: workspace:^
-        version: link:../reagent
+        version: link:../reagent/dist
       '@reagentai/serve':
         specifier: workspace:^
         version: link:../serve
@@ -287,9 +287,12 @@ importers:
       '@faker-js/faker':
         specifier: ^8.4.1
         version: 8.4.1
+      '@reagentai/react':
+        specifier: workspace:^
+        version: link:../react
       '@reagentai/reagent':
         specifier: workspace:^
-        version: link:../reagent
+        version: link:../reagent/dist
       dedent:
         specifier: ^1.5.3
         version: 1.5.3
@@ -428,7 +431,7 @@ importers:
     dependencies:
       '@reagentai/reagent':
         specifier: workspace:^
-        version: link:../reagent
+        version: link:../reagent/dist
       hono:
         specifier: ^4.3.9
         version: 4.3.9

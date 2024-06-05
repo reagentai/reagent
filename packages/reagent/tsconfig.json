@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "outDir": "dist",
+    "declaration": true,
     "strict": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
@@ -9,6 +10,8 @@
     "moduleResolution": "node",
     "jsx": "react-jsx",
     "experimentalDecorators": true,
-    "skipLibCheck": true
-  }
+    "skipLibCheck": true,
+    "allowJs": true
+  },
+  "exclude": ["dist/**/*", "**/*.test.ts"]
 }

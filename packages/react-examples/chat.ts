@@ -1,9 +1,9 @@
-import { GraphAgent } from "@reagentai/reagent/agent";
+import { GraphAgent } from "@reagentai/reagent/agent/index.js";
 import {
   ChatCompletion,
   User,
   ChatInput,
-} from "@reagentai/reagent/agent/nodes";
+} from "@reagentai/reagent/agent/nodes/index.js";
 
 const agent = new GraphAgent({
   name: "Simple AI Chat",

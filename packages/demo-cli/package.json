@@ -9,6 +9,7 @@
   "dependencies": {
     "@reagentai/cli": "workspace:^",
     "@reagentai/react": "workspace:^",
+    "@reagentai/react-examples": "workspace:^",
     "@reagentai/reagent": "workspace:^",
     "@reagentai/serve": "workspace:^",
     "react": "^18.3.1",

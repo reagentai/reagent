@@ -17,12 +17,12 @@ export default defineConfig({
     rollupOptions: {
       external: [
         "virtual:reagent-agent-module",
-        "@reagentai/reagent",
+        /\@reagentai\/reagent*/,
         ...builtins(),
         /^node:.+/,
         "vite",
         /^@vite:*/,
-        "tailwindcss",
+        /tailwindcss*/,
       ],
       output: {
         format: "esm",

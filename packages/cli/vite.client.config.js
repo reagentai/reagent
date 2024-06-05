@@ -6,7 +6,7 @@ export default defineConfig({
   build: {
     emptyOutDir: false,
     lib: {
-      entry: path.join(__dirname, "react/chat/entry-client.tsx"),
+      entry: path.join(__dirname, "app/react/chat/entry-client.tsx"),
       fileName: "entry-client",
       formats: ["es"],
     },
@@ -28,7 +28,7 @@ export default defineConfig({
     viteStaticCopy({
       targets: [
         {
-          src: "./react/chat/reagent.css",
+          src: "./app/react/chat/reagent.css",
           dest: "./",
         },
       ],

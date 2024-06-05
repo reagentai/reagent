@@ -16,6 +16,7 @@
   "dependencies": {
     "@anatine/zod-mock": "^3.13.4",
     "@faker-js/faker": "^8.4.1",
+    "@reagentai/react": "workspace:^",
     "@reagentai/reagent": "workspace:^",
     "dedent": "^1.5.3",
     "highlight.js": "^11.9.0",

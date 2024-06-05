@@ -1,17 +1,17 @@
 import { Hono } from "hono";
 import { ReplaySubject, Subject, count, take } from "rxjs";
-import { uniqueId } from "@reagentai/reagent/utils/uniqueId";
-import { GraphAgent, z } from "@reagentai/reagent/agent";
+import { uniqueId } from "@reagentai/reagent/utils/uniqueId.js";
+import { GraphAgent, z } from "@reagentai/reagent/agent/index.js";
 import {
   User,
   ChatInput as ChatInputNode,
-} from "@reagentai/reagent/agent/nodes";
+} from "@reagentai/reagent/agent/nodes/index.js";
 import {
   AnthropicChat,
   Groq,
   OpenAI,
-} from "@reagentai/reagent/llm/integrations/models";
-import { DummyModel } from "@reagentai/reagent/llm/models/dummy";
+} from "@reagentai/reagent/llm/integrations/models/index.js";
+import { DummyModel } from "@reagentai/reagent/llm/models/dummy.js";
 
 import type { Chat } from "./types";
 
@@ -85,6 +85,7 @@ const createChatAgentRouter = (agents: Map<string, GraphAgent>) => {
     let model: any = new DummyModel({
       response: "Please select a AI model provider.",
     });
+
     if (body.model?.provider == "openai") {
       model = new OpenAI({
         // @ts-expect-error
