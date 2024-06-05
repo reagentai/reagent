@@ -1,10 +1,9 @@
 {
-  "name": "@reagentai/react",
+  "name": "@reagentai/react-examples",
   "version": "0.2.10",
-  "description": "React UI for Reagent agents",
+  "description": "React examples of Reagent AI agent",
   "type": "module",
   "scripts": {
-    "test": "vitest run",
     "build": "tsc",
     "prepublish": "rm -rf dist && pnpm build && cp package.json dist"
   },
@@ -13,22 +12,20 @@
     "directory": "dist",
     "linkDirectory": false
   },
+  "keywords": [],
   "dependencies": {
-    "@radix-ui/react-dropdown-menu": "^2.0.6",
+    "@anatine/zod-mock": "^3.13.4",
+    "@faker-js/faker": "^8.4.1",
     "@reagentai/reagent": "workspace:^",
-    "@reagentai/serve": "workspace:^",
-    "clsx": "^2.1.1",
-    "immer": "^10.0.3",
-    "lucide-react": "^0.379.0",
+    "dedent": "^1.5.3",
+    "highlight.js": "^11.9.0",
     "react": "^18.3.1",
     "react-error-boundary": "^4.0.13",
-    "react-icons": "^5.2.1",
     "react-markdown": "^9.0.1",
-    "tailwind-merge": "^2.3.0",
+    "sql-formatter": "^15.3.1",
     "zustand": "^4.5.2"
   },
   "devDependencies": {
-    "@types/react": "^18.3.2",
-    "typescript": "5.4.5"
+    "@types/react": "^18.3.2"
   }
 }
