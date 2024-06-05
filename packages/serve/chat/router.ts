@@ -46,7 +46,7 @@ const createChatAgentRouter = (agents: Map<string, GraphAgent>) => {
     });
   });
 
-  const sendMessageBodySchema = z.object({
+  const invokeSchema = z.object({
     id: z.string(),
     agentId: z.string().default("default"),
     message: z.object({
@@ -60,8 +60,8 @@ const createChatAgentRouter = (agents: Map<string, GraphAgent>) => {
       .optional(),
   });
 
-  router.post("/sendMessage", async (ctx) => {
-    const body = sendMessageBodySchema.parse(await ctx.req.json());
+  router.post("/invoke", async (ctx) => {
+    const body = invokeSchema.parse(await ctx.req.json());
     const replayStream = new ReplaySubject<Chat.Response>();
 
     let responseMessageId = uniqueId();

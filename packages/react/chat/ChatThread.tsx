@@ -30,7 +30,7 @@ const ChatThread = (props: {
       getComputedStyle(chatMessagesRef.current!).height
     );
     chatMessagesContainerRef.current!.scrollTo(0, containerHeight + 100_000);
-  }, [chatMessagesRef, chatMessagesContainerRef, lastMessage]);
+  }, [chatMessagesRef.current, chatMessagesContainerRef.current, lastMessage]);
 
   return (
     <div
@@ -53,8 +53,8 @@ const ChatThread = (props: {
                 const isLastMessage = index == sortedMessages.length - 1;
                 // const message = props.messages[messageId];
 
-                if (isLastMessage && lastMessage != message.message) {
-                  setLastMessage(message.message as any);
+                if (isLastMessage && lastMessage !== message) {
+                  setLastMessage(message as any);
                 }
                 return (
                   <ChatMessage

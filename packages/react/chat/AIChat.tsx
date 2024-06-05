@@ -5,7 +5,9 @@ import { ChatStore } from "./state.js";
 const AIChat = (props: { store: ChatStore }) => {
   const messages = props.store((s) => s.messages);
   const sortedMessageIds = props.store((s) => s.sortedMessageIds);
-  const sendNewMessage = props.store((s) => s.sendNewMessage);
+  const sendNewMessage = props.store(
+    (s) => (msg: any) => s.invoke("input", msg)
+  );
   const sendNewMessageMutation = {
     mutate(input: any) {
       sendNewMessage(input);

@@ -12,13 +12,14 @@ export type ChatState = {
   messages: Record<string, Chat.Message>;
   sortedMessageIds: string[];
   setMessages: (messages: Record<string, Chat.Message>) => void;
-  sendNewMessage: (message: NewMessage) => void;
+  invoke: (nodeId: string, message: NewMessage) => void;
 };
 
 export const createChatStore = (
   init: {
     messages: Record<string, Chat.Message>;
-    sendNewMessage: (
+    invoke: (
+      nodeId: string,
       message: NewMessage,
       state: ChatState
     ) => Promise<Chat.ResponseStream>;
@@ -62,7 +63,7 @@ export const createChatStore = (
               })
             );
           },
-          async sendNewMessage(message) {
+          async invoke(nodeId: string, message) {
             set((s) => {
               const state = produce(s, (state) => {
                 state.messages[message.id] = {
@@ -78,7 +79,7 @@ export const createChatStore = (
               });
             });
 
-            const response = await init.sendNewMessage(message, get());
+            const response = await init.invoke(nodeId, message, get());
             for await (const msg of response) {
               if (msg.type == "message/content") {
                 const message = msg.data;

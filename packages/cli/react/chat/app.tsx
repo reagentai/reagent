@@ -12,9 +12,7 @@ const AgentGraph = lazy(() => import("./graph.tsx"));
 
 const Agent = () => {
   const agentId = "default";
-  const [sendMessageError, setSendMessageEError] = useState<string | null>(
-    null
-  );
+  const [invokeError, setInvokeError] = useState<string | null>(null);
   const [isAgentGraphVisible, setAgentGraphVisiblity] = useState(false);
   const [agent, setAgent] = useState<any>();
   useEffect(() => {
@@ -28,8 +26,8 @@ const Agent = () => {
       createChatStore(
         {
           messages: {},
-          async sendNewMessage(input, state) {
-            const res = await fetch(`/api/chat/sendMessage`, {
+          async invoke(nodeId, input, state) {
+            const res = await fetch(`/api/chat/invoke`, {
               method: "POST",
               body: JSON.stringify(input),
               headers: {
@@ -37,7 +35,7 @@ const Agent = () => {
               },
             });
             if (res.status != 200) {
-              setSendMessageEError((await res.text()) || res.statusText);
+              setInvokeError((await res.text()) || res.statusText);
               return (async function* asyncGenerator() {})();
             }
             const iterator = jsonStreamToAsyncIterator(res.body!);
@@ -87,12 +85,12 @@ const Agent = () => {
                     </div>
                   </div>
                 )}
-                {sendMessageError && (
+                {invokeError && (
                   <div className="py-3 text-center text-base text-red-700">
-                    Error sending message: {sendMessageError}
+                    Error sending message: {invokeError}
                   </div>
                 )}
-                <div className="flex-1">
+                <div className="h-full">
                   <AgentContextProvider nodes={agentModule.nodes || []}>
                     <AIChat store={store} />
                   </AgentContextProvider>
