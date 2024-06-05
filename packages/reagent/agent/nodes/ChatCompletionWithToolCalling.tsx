@@ -180,7 +180,7 @@ const ChatCompletionWithToolCalling = createAgentNode({
   },
 });
 
-const TOOL_NODE = "__REAGENT_TOOL_NODE__";
+const TOOL_NODE = Symbol("__TOOL_NODE__");
 
 type ToolZodSchema = NonNullable<z.infer<typeof inputSchema>["tools"]>[0];
 type ToolSchema = {

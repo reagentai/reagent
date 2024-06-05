@@ -29,7 +29,7 @@ export type Metadata<
 
 type RunResult<T> = AsyncGeneratorWithField<T>;
 
-export const IS_AGENT_NODE = "__REAGENT_AGENT_NODE__";
+export const IS_AGENT_NODE = Symbol("_AGENT_NODE_");
 
 export abstract class AbstractAgentNode<
   Config extends Record<string, unknown> | void,

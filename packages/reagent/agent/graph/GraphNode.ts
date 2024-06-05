@@ -14,7 +14,7 @@ import {
   zip,
 } from "rxjs";
 import { fromError } from "zod-validation-error";
-import { uniqBy } from "lodash-es";
+import { pick, uniqBy } from "lodash-es";
 
 import { Context } from "../context.js";
 import { AbstractAgentNode } from "../node.js";
