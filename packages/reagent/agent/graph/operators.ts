@@ -13,7 +13,7 @@ import {
 import { AgentEvent, AgentEventType } from "../stream.js";
 import type { OutputValueProvider } from "./types";
 
-export const VALUE_PROVIDER = Symbol("___RENDER_VALUE_PROVIDER__");
+export const VALUE_PROVIDER = "___REAGENT_RENDER_VALUE_PROVIDER__";
 
 /**
  * Merges two streams into one
