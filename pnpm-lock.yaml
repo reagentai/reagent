@@ -53,9 +53,6 @@ importers:
       hono:
         specifier: ^4.3.9
         version: 4.3.9
-      lodash-es:
-        specifier: ^4.17.21
-        version: 4.17.21
       picomatch:
         specifier: ^4.0.2
         version: 4.0.2
@@ -93,9 +90,6 @@ importers:
       '@types/dagre':
         specifier: ^0.7.52
         version: 0.7.52
-      '@types/lodash-es':
-        specifier: ^4.17.12
-        version: 4.17.12
       '@types/react':
         specifier: ^18.3.2
         version: 18.3.2
@@ -118,6 +112,9 @@ importers:
       '@reagentai/react':
         specifier: workspace:^
         version: link:../react
+      '@reagentai/react-examples':
+        specifier: workspace:^
+        version: link:../react-examples
       '@reagentai/reagent':
         specifier: workspace:^
         version: link:../reagent
@@ -237,12 +234,6 @@ importers:
 
   packages/react:
     dependencies:
-      '@anatine/zod-mock':
-        specifier: ^3.13.4
-        version: 3.13.4(@faker-js/faker@8.4.1)(zod@3.23.8)
-      '@faker-js/faker':
-        specifier: ^8.4.1
-        version: 8.4.1
       '@radix-ui/react-dropdown-menu':
         specifier: ^2.0.6
         version: 2.0.6(@types/react@18.3.2)(react-dom@18.3.1)(react@18.3.1)
@@ -255,12 +246,6 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
-      dedent:
-        specifier: ^1.5.1
-        version: 1.5.3
-      highlight.js:
-        specifier: ^11.9.0
-        version: 11.9.0
       immer:
         specifier: ^10.0.3
         version: 10.1.1
@@ -279,12 +264,6 @@ importers:
       react-markdown:
         specifier: ^9.0.1
         version: 9.0.1(@types/react@18.3.2)(react@18.3.1)
-      rxjs:
-        specifier: ^7.8.1
-        version: 7.8.1
-      sql-formatter:
-        specifier: ^15.3.1
-        version: 15.3.1
       tailwind-merge:
         specifier: ^2.3.0
         version: 2.3.0
@@ -298,6 +277,44 @@ importers:
       typescript:
         specifier: 5.4.5
         version: 5.4.5
+    publishDirectory: dist
+
+  packages/react-examples:
+    dependencies:
+      '@anatine/zod-mock':
+        specifier: ^3.13.4
+        version: 3.13.4(@faker-js/faker@8.4.1)(zod@3.23.8)
+      '@faker-js/faker':
+        specifier: ^8.4.1
+        version: 8.4.1
+      '@reagentai/reagent':
+        specifier: workspace:^
+        version: link:../reagent
+      dedent:
+        specifier: ^1.5.3
+        version: 1.5.3
+      highlight.js:
+        specifier: ^11.9.0
+        version: 11.9.0
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
+      react-error-boundary:
+        specifier: ^4.0.13
+        version: 4.0.13(react@18.3.1)
+      react-markdown:
+        specifier: ^9.0.1
+        version: 9.0.1(@types/react@18.3.2)(react@18.3.1)
+      sql-formatter:
+        specifier: ^15.3.1
+        version: 15.3.1
+      zustand:
+        specifier: ^4.5.2
+        version: 4.5.2(@types/react@18.3.2)(immer@10.1.1)(react@18.3.1)
+    devDependencies:
+      '@types/react':
+        specifier: ^18.3.2
+        version: 18.3.2
     publishDirectory: dist
 
   packages/reagent:
@@ -422,6 +439,9 @@ importers:
       typescript:
         specifier: 5.4.5
         version: 5.4.5
+    publishDirectory: dist
+
+  packages/thirdparty:
     publishDirectory: dist
 
 packages:
