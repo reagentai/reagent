@@ -41,6 +41,9 @@ const dev = async (options: Options) => {
         ],
       },
     },
+    optimizeDeps: {
+      exclude: ["**/@reagentai/**"],
+    },
     plugins: [
       devServer(),
       react({

@@ -81,9 +81,8 @@ const user = agent.addNode("user", new User());
 
 // bind chat completion node's inputs
 chat1.bind({
-  model: new DummyModel({ response: "Please use a valid AI model" }),
   // TODO: replace model with an actual model
-  // model: new Groq({ model: "llama3-8b-8192" }),
+  model: new Groq({ model: "llama3-8b-8192" }),
   query: input.output.query,
 });
 
