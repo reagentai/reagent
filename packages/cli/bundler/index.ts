@@ -42,7 +42,7 @@ const dev = async (options: Options) => {
       },
     },
     optimizeDeps: {
-      exclude: ["@reagentai/*"],
+      exclude: ["virtual:reagent-agent-module"],
     },
     plugins: [
       devServer(),
@@ -53,9 +53,11 @@ const dev = async (options: Options) => {
       }),
       reagent({
         include: ["**/@reagentai/**"],
+        exclude: ["**/node_modules/**"],
       }),
       createAgentPlugin({
         include: ["**/@reagentai/**"],
+        exclude: ["**/node_modules/**"],
       }),
     ],
     root: process.cwd(),
