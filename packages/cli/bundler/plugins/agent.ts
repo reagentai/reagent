@@ -22,7 +22,7 @@ const createPlugin = (options: Options = {}) => {
   const shouldInclude = picomatch(options.include || [], {
     dot: true,
   });
-  const shouldExclude = picomatch(options.exclude || ["**/node_modules/**"], {
+  const shouldExclude = picomatch(options.exclude || [], {
     dot: true,
   });
   return {

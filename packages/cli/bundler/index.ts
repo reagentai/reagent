@@ -50,11 +50,9 @@ const dev = async (options: Options) => {
       }),
       reagent({
         include: ["**/@reagentai/**"],
-        exclude: ["**/node_modules/**"],
       }),
       createAgentPlugin({
         include: ["**/@reagentai/**"],
-        exclude: ["**/node_modules/**"],
       }),
     ],
     root: process.cwd(),
