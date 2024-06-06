@@ -29,7 +29,12 @@ class GraphAgent {
   #stream: EventStream<any>;
   constructor(config: AgentConfig) {
     this.#config = config;
-    this.#stream = new EventStream();
+    this.#stream = new EventStream({
+      // as long as single session doesn't have more than 2_000 events,
+      // this should be fine for now. Note, each markdown stream is a
+      // single event, so it should be fine
+      buffer: 2_000,
+    });
     this.#nodesById = new Map();
   }
 
