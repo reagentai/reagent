@@ -23,14 +23,22 @@ const ChatThread = (props: {
   };
 
   const [lastMessage, setLastMessage] = useState(null);
+  const scrollToBottom = () => {
+    if (chatMessagesRef.current && chatMessagesContainerRef.current) {
+      const containerHeight = parseFloat(
+        getComputedStyle(chatMessagesRef.current!).height
+      );
+      chatMessagesContainerRef.current!.scrollTo({
+        top: containerHeight + 100_000,
+        left: 0,
+        behavior: "smooth",
+      });
+    }
+  };
+
   useEffect(() => {
-    // Note(sagar): scroll to the bottom. Need to do it after
-    // the last message is rendered
-    const containerHeight = parseFloat(
-      getComputedStyle(chatMessagesRef.current!).height
-    );
-    chatMessagesContainerRef.current!.scrollTo(0, containerHeight + 100_000);
-  }, [chatMessagesRef.current, chatMessagesContainerRef.current, lastMessage]);
+    scrollToBottom();
+  }, []);
 
   return (
     <div
@@ -51,10 +59,10 @@ const ChatThread = (props: {
             >
               {sortedMessages.map((message, index) => {
                 const isLastMessage = index == sortedMessages.length - 1;
-                // const message = props.messages[messageId];
 
                 if (isLastMessage && lastMessage !== message) {
                   setLastMessage(message as any);
+                  scrollToBottom();
                 }
                 return (
                   <ChatMessage

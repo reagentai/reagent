@@ -118,11 +118,6 @@ export const createChatStore = (
                   });
                 });
               }
-              await new Promise((r) => {
-                setTimeout(() => {
-                  r(null);
-                }, 2);
-              });
             }
           },
         };
