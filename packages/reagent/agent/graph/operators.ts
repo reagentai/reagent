@@ -219,20 +219,6 @@ const __tagValueProvider = (
       enumerable: false,
       writable: false,
     },
-    select: {
-      get value() {
-        return (options: { sessionId: string }) => {
-          return new Promise((resolve) => {
-            stream
-              .pipe(filter((e: any) => e.session.id == options.sessionId))
-              .subscribe((e: any) => {
-                resolve(e.value);
-              });
-          });
-        };
-      },
-      enumerable: false,
-    },
   });
 };
 

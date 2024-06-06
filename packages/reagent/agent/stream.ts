@@ -1,11 +1,11 @@
-import { ReplaySubject } from "rxjs";
+import { Observable, ReplaySubject } from "rxjs";
 
 enum AgentEventType {
-  RunInvoked = "run/invoked",
+  SessionStarted = "session/started",
   // This is trigged when all the node inputs aren't received
   // but the nodes that provide the input values are already executed
   RunSkipped = "run/skipped",
-  RunCompleted = "run/complete",
+  RunCompleted = "run/completed",
   Output = "output",
   Render = "render",
 }
@@ -21,8 +21,8 @@ namespace AgentEvent {
     version: string;
   };
 
-  export type RunInvoked = {
-    type: AgentEventType.RunInvoked;
+  export type SessionStarted = {
+    type: AgentEventType.SessionStarted;
     session: Session;
     // node invoked
     node: EventNode;
@@ -59,7 +59,7 @@ namespace AgentEvent {
 }
 
 type AgentEvent<Output, State> =
-  | AgentEvent.RunInvoked
+  | AgentEvent.SessionStarted
   | AgentEvent.RunSkipped
   | AgentEvent.RunCompleted
   | AgentEvent.Output<Output>

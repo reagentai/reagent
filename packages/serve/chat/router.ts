@@ -113,30 +113,35 @@ const createChatAgentRouter = (agents: Map<string, GraphAgent>) => {
     });
 
     const completionSubject = new Subject();
-    user.output.ui.select({ sessionId: res.session.id }).then((stream) => {
-      stream.subscribe({
-        next(update) {
-          replayStream.next({
-            type: "message/ui/update" as const,
-            data: {
-              id: responseMessageId,
-              message: {
-                ui: {
-                  node: update.node,
-                  render: update.render,
+    user.output.ui
+      .select({ sessionId: res.session.id })
+      .then((stream) => {
+        stream.subscribe({
+          next(update) {
+            replayStream.next({
+              type: "message/ui/update" as const,
+              data: {
+                id: responseMessageId,
+                message: {
+                  ui: {
+                    node: update.node,
+                    render: update.render,
+                  },
                 },
               },
-            },
-          });
-        },
-        complete() {
-          completionSubject.next(1);
-        },
-        error(err) {
-          console.error(err);
-        },
+            });
+          },
+          complete() {
+            completionSubject.next(1);
+          },
+          error(err) {
+            console.error(err);
+          },
+        });
+      })
+      .catch(() => {
+        completionSubject.next(1);
       });
-    });
 
     user.output.markdownStream
       .select({ sessionId: res.session.id })
@@ -162,6 +167,9 @@ const createChatAgentRouter = (agents: Map<string, GraphAgent>) => {
             console.error(err);
           },
         });
+      })
+      .catch(() => {
+        completionSubject.next(1);
       });
 
     completionSubject

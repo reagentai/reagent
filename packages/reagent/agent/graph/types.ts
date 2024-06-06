@@ -30,6 +30,9 @@ export type OutputValueProviderWithSelect<Output> =
     /**
      * Select the output result by session id
      *
+     * Promise will be rejected if the output for the session
+     * wasn't emitted
+     *
      * @param sessionId
      */
     select(options: { sessionId: string }): Promise<Output>;

@@ -1,7 +1,7 @@
 import type { Plugin as VitePlugin } from "vite";
 import { Hono } from "hono";
 import { getRequestListener } from "@hono/node-server";
-import { createChatAgentRouter } from "@reagentai/serve/chat";
+import { createChatAgentRouter } from "@reagentai/serve/chat/index.js";
 
 const createRouter = () => {
   const app = new Hono();
