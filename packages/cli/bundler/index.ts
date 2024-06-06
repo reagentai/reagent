@@ -42,7 +42,7 @@ const dev = async (options: Options) => {
       },
     },
     optimizeDeps: {
-      exclude: ["**/@reagentai/**"],
+      exclude: ["@reagentai/*"],
     },
     plugins: [
       devServer(),
