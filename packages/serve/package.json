@@ -1,15 +1,21 @@
 {
   "name": "@reagentai/serve",
-  "version": "0.2.12",
+  "version": "0.2.13",
   "description": "Reagent AI server module",
   "type": "module",
   "scripts": {
     "build": "pnpm tsc",
     "prepublish": "rm -rf dist && pnpm build && cp package.json dist"
   },
+  "exports": {
+    "./*": "./dist/*"
+  },
   "publishConfig": {
     "directory": "dist",
-    "linkDirectory": false
+    "linkDirectory": false,
+    "exports": {
+      "./*": "./*"
+    }
   },
   "license": "MIT",
   "dependencies": {
