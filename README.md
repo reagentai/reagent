@@ -49,6 +49,7 @@ npm install @reagentai/reagent @reagentai/cli
 Here's a very simple AI chat application.
 
 ```typescript
+import 'dotenv/config';
 import { GraphAgent } from "@reagentai/reagent/agent";
 import {
   ChatCompletion,
