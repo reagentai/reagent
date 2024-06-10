@@ -99,7 +99,7 @@ export const nodes = [];
 export const __reagentai_exports__ = true;
 ```
 
-To run this chat agent, copy the above code to a `agent.ts`, rename `.env.example` to `.env`, add your API key, and run the following command:
+To run this chat agent, copy the above code to a `agent.ts`, add `.env` file with `GROQ_API_KEY={groq_api_key}`, and run the following command:
 
 ```bash
 pnpm reagent dev agent.ts
