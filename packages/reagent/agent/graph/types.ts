@@ -1,7 +1,7 @@
 import { Observable } from "rxjs";
 
-export type DependencyNode = {
-  // dependency node id
+export type NodeMetadata = {
+  // node id
   id: string;
   type: string;
   version: string;

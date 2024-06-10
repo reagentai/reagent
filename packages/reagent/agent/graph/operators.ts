@@ -77,25 +77,25 @@ const mergeRenderStreams = <O>(
   }) as unknown as OutputValueProvider<O>;
 };
 
-function mergeOutputs<O1, O2, Output>(
+function mergeMapOutputs<O1, O2, Output>(
   provider1: OutputValueProvider<O1> | O1,
   provider2: OutputValueProvider<O2> | O2,
   callback: (v1: O1, v2: O2) => Output
 ): OutputValueProvider<Output>;
-function mergeOutputs<O1, O2, O3, Output>(
+function mergeMapOutputs<O1, O2, O3, Output>(
   provider1: OutputValueProvider<O1> | O1,
   provider2: OutputValueProvider<O2> | O2,
   provider3: OutputValueProvider<O3> | O3,
   callback: (v1: O1, v2: O2, v3: O3) => Output
 ): OutputValueProvider<Output>;
-function mergeOutputs<O1, O2, O3, O4, Output>(
+function mergeMapOutputs<O1, O2, O3, O4, Output>(
   provider1: OutputValueProvider<O1> | O1,
   provider2: OutputValueProvider<O2> | O2,
   provider3: OutputValueProvider<O3> | O3,
   provider4: OutputValueProvider<O4> | O4,
   callback: (v1: O1, v2: O2, v3: O3, v4: O4) => Output
 ): OutputValueProvider<Output>;
-function mergeOutputs<O1, O2, O3, O4, O5, Output>(
+function mergeMapOutputs<O1, O2, O3, O4, O5, Output>(
   provider1: OutputValueProvider<O1> | O1,
   provider2: OutputValueProvider<O2> | O2,
   provider3: OutputValueProvider<O3> | O3,
@@ -103,7 +103,7 @@ function mergeOutputs<O1, O2, O3, O4, O5, Output>(
   provider5: OutputValueProvider<O5> | O5,
   callback: (v1: O1, v2: O2, v3: O3, v4: O4, v5: O5) => Output
 ): OutputValueProvider<Output>;
-function mergeOutputs<O1, O2, O3, O4, O5, O6, Output>(
+function mergeMapOutputs<O1, O2, O3, O4, O5, O6, Output>(
   provider1: OutputValueProvider<O1> | O1,
   provider2: OutputValueProvider<O2> | O2,
   provider3: OutputValueProvider<O3> | O3,
@@ -112,7 +112,7 @@ function mergeOutputs<O1, O2, O3, O4, O5, O6, Output>(
   provider6: OutputValueProvider<O6> | O6,
   callback: (v1: O1, v2: O2, v3: O3, v4: O4, v5: O5, v6: O6) => Output
 ): OutputValueProvider<Output>;
-function mergeOutputs<Output>(
+function mergeMapOutputs<Output>(
   ...providers: (OutputValueProvider<any> | any)[]
 ): OutputValueProvider<Output> {
   const callback = providers.pop();
@@ -140,23 +140,26 @@ function mergeOutputs<Output>(
             if (!node[VALUE_PROVIDER]) {
               return of({ value: node });
             }
-            return node
-              .pipe(
-                filter(
-                  (e: OutputValueProvider<any>["_event"]) =>
-                    e.session!.id == e1.session!.id
+            return (
+              node
+                .pipe(
+                  filter(
+                    (e: OutputValueProvider<any>["_event"]) =>
+                      e.session!.id == e1.session!.id
+                  )
                 )
-              )
-              .pipe(take(1))
-              .pipe(
-                map((outputEvent: any) => {
-                  return {
-                    type: AgentEventType.Output,
-                    session: outputEvent.session,
-                    value: outputEvent.value,
-                  };
-                })
-              );
+                .pipe(take(1))
+                // TODO: maybe remove the map since it might be redundant?
+                .pipe(
+                  map((outputEvent: any) => {
+                    return {
+                      type: AgentEventType.Output,
+                      session: outputEvent.session,
+                      value: outputEvent.value,
+                    };
+                  })
+                )
+            );
           })
         );
       })
@@ -222,4 +225,4 @@ const __tagValueProvider = (
   });
 };
 
-export { __tagValueProvider, mergeRenderStreams, mergeOutputs };
+export { __tagValueProvider, mergeRenderStreams, mergeMapOutputs };

@@ -3,7 +3,7 @@ export { EventStream } from "./stream.js";
 export { AbstractAgentNode, IS_AGENT_NODE, createAgentNode } from "./node.js";
 
 export { GraphAgent } from "./graph/GraphAgent.js";
-export { mergeRenderStreams } from "./graph/operators.js";
+export { mergeRenderStreams, mergeMapOutputs } from "./graph/operators.js";
 
 export type { Context, RenderContext } from "./context";
 export type { AgentNode } from "./node";

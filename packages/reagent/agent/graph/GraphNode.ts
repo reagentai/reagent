@@ -30,11 +30,13 @@ import type {
 } from "./types";
 
 type MappedInputEvent = {
-  session: { id: string };
+  session: { id: string } | null;
   targetField: string;
   isArray: boolean;
   value: any;
 };
+
+export const NODE_OUTPUT_FIELD = Symbol("___NODE_OUTPUT_FIELD__");
 
 class GraphNode<
   Config extends Record<string, unknown> | void,
@@ -84,6 +86,14 @@ class GraphNode<
 
     // @ts-expect-error
     this._types = undefined;
+  }
+
+  get node() {
+    return {
+      id: this.#nodeId,
+      type: this.#node.metadata.id,
+      version: this.#node.metadata.version,
+    };
   }
 
   get dependencies() {
@@ -146,10 +156,12 @@ class GraphNode<
     // TODO: this render streams replays all previous renders
     // figure out how to clean up old events
     // one idea is to pass TimestampProvider in replay event stream
-    const renderStreams = of(...renderSources).pipe(
+    const renderStreams: Observable<MappedInputEvent> = of(
+      ...renderSources
+    ).pipe(
       mergeMap(({ targetField, provider, isArray }) =>
         provider.pipe(
-          map((pe: any) => {
+          map((pe) => {
             return {
               type: "node/render",
               session: pe.session,
@@ -216,7 +228,7 @@ class GraphNode<
           take(outputSourceProviders.length)
         );
 
-      const valueProviderStreams = group
+      const valueProviderStreams: Observable<MappedInputEvent> = group
         .pipe(filter((e) => e.type == AgentEventType.SessionStarted))
         .pipe(take(1))
         .pipe(
@@ -237,7 +249,7 @@ class GraphNode<
         .pipe(take(valueProviders.length))
         .pipe(share());
 
-      const schemaProviderStream = group
+      const schemaProviderStream: Observable<MappedInputEvent> = group
         .pipe(filter((e) => e.type == AgentEventType.SessionStarted))
         .pipe(take(1))
         .pipe(
@@ -475,6 +487,15 @@ class GraphNode<
             },
           ]);
           Object.defineProperties(stream, {
+            [NODE_OUTPUT_FIELD]: {
+              value: {
+                node: self.node,
+                field,
+              },
+              configurable: false,
+              enumerable: false,
+              writable: false,
+            },
             select: {
               get value() {
                 return (options: { sessionId: string }) => {
@@ -605,6 +626,7 @@ class GraphNode<
   }
 
   async #invoke(input: Input, session: { id: string }): Promise<Output> {
+    const self = this;
     const context = this.#buildContext(session);
     // const validation = this.#node.metadata.input.safeParse(input);
     // if (!validation.success) {
@@ -612,17 +634,13 @@ class GraphNode<
     //     `[node=${this.#node.metadata.id}]: ${fromError(validation.error)}`
     //   );
     // }
-    const node = {
-      id: this.#nodeId,
-      type: this.#node.metadata.id,
-      version: this.#node.metadata.version,
-    };
+
     const generator = this.#node.execute(context, input);
     const output = {};
     for await (const partialOutput of generator) {
       this.#stream.sendOutput({
         session,
-        node,
+        node: self.node,
         output: partialOutput,
       });
       Object.assign(output, partialOutput);
@@ -630,7 +648,7 @@ class GraphNode<
     this.#stream.next({
       type: AgentEventType.RunCompleted,
       session,
-      node,
+      node: self.node,
     });
     return output as Output;
   }
@@ -646,11 +664,7 @@ class GraphNode<
       sendOutput(output: Output) {
         self.#stream.sendOutput({
           session,
-          node: {
-            id: self.#nodeId,
-            type: self.#node.metadata.id,
-            version: self.#node.metadata.version,
-          },
+          node: self.node,
           output,
         });
       },
