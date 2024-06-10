@@ -49,6 +49,7 @@ npm install @reagentai/reagent @reagentai/cli
 Here's a very simple AI chat application.
 
 ```typescript
+import 'dotenv/config'; 
 import { GraphAgent } from "@reagentai/reagent/agent";
 import {
   ChatCompletion,
@@ -98,7 +99,7 @@ export const nodes = [];
 export const __reagentai_exports__ = true;
 ```
 
-To run this chat agent, copy the above code to a `agent.ts` and run the following command:
+To run this chat agent, copy the above code to a `agent.ts`, add `.env` file with `GROQ_API_KEY={groq_api_key}`, and run the following command:
 
 ```bash
 pnpm reagent dev agent.ts
