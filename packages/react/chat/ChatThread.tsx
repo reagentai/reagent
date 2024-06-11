@@ -77,7 +77,6 @@ const ChatThread = (props: {
                 );
               })}
               {sendNewMessage.isPending && !sendNewMessage.isIdle && (
-                // !sendNewMessage.input.regenerate() &&
                 <div>
                   <ChatMessage
                     // state={state}
@@ -89,11 +88,6 @@ const ChatThread = (props: {
               )}
             </div>
           )}
-          {/* <Show when={error()}>
-                        <div class="py-4 text-center bg-red-50 text-red-700">
-                            {error()?.message}
-                        </div>
-                    </Show> */}
         </div>
       </div>
     </div>
@@ -114,7 +108,6 @@ const ChatMessage = (props: {
     };
   }, [props.message.role]);
 
-  const isPending = false;
   return (
     <div
       className={clsx("chat-message flex flex-row w-full space-x-5", {
@@ -148,101 +141,30 @@ const ChatMessage = (props: {
             />
           </div>
         )}
-        {props.message.message.content && (
-          <div
-            ref={markdownRef}
-            className={clsx(
-              "message prose px-4 py-3 rounded-lg leading-6 select-text space-y-2",
-              {
-                "bg-[hsl(60_28%_95%)]": role.id == "user",
-                "text-gray-800": role.id == "ai",
-              }
-            )}
-            style={{ letterSpacing: "0.1px", wordSpacing: "1px" }}
-          >
-            <Markdown remarkPlugins={[]}>
-              {props.message.message.content}
-            </Markdown>
-          </div>
-        )}
-        {/* <Show when={props.message.metadata.error!()}>
-                    <div className="py-2 text-red-700">
-                        <b>Error: </b>
-                        {props.message.metadata.error!()}
-                    </div>
-                </Show> */}
-        {/* <Show when={props.showLoadingBar || isPending()}>
-                    <InProgressBar />
-                </Show> */}
+        {
+          // node isn't set for user message
+          (!Boolean(props.message.node) ||
+            props.message.node?.type == "@core/chat-completion") && (
+            <div
+              ref={markdownRef}
+              className={clsx(
+                "message prose px-4 py-3 rounded-lg leading-6 select-text space-y-2",
+                {
+                  "bg-[hsl(60_28%_95%)]": role.id == "user",
+                  "text-gray-800": role.id == "ai",
+                }
+              )}
+              style={{ letterSpacing: "0.1px", wordSpacing: "1px" }}
+            >
+              <Markdown remarkPlugins={[]}>
+                {props.message.message.content}
+              </Markdown>
+            </div>
+          )
+        }
       </div>
     </div>
   );
 };
-
-// const SearchResults = (props: { searchResults: Chat.SearchResult[] }) => {
-//     const [showSearchResults, setShowSearchResults] = useState(true);
-//     return (
-//         <div className="search-results">
-//             <div
-//                 className="px-2 py-1 flex font-semibold bg-gray-100 text-gray-600 rounded cursor-pointer space-x-2"
-//                 onClick={() => {
-//                     setShowSearchResults((prev) => !prev);
-//                 }}
-//             >
-//                 <div className="py-1">
-//                     <HiOutlinePaperClip size={12} />
-//                 </div>
-//                 <div className="flex-1">Found data related to your query</div>
-//                 <div className="py-0.5">
-//                     {showSearchResults ? <HiChevronUp size={14} /> : <HiChevronDown size={14} />}
-//                 </div>
-//             </div>
-//             {showSearchResults &&
-//                 <div className="py-1 bg-gray-100">
-//                     {props.searchResults.map((result, index) => {
-//                         return (
-//                             <div key={index} className="px-8">
-//                                 {result.files.length > 0 &&
-//                                     <>
-//                                         <div className="text-gray-700">Files</div>
-//                                         <div className="ml-4">
-//                                             <ul className="list-disc text-gray-600">
-//                                                 {result.files.map((file, index) => {
-//                                                     return (
-//                                                         <li key={index} className="underline cursor-pointer">
-//                                                             {file.name}
-//                                                         </li>
-//                                                     );
-//                                                 })}
-//                                             </ul>
-//                                         </div>
-//                                     </>
-//                                 }
-//                             </div>
-//                         );
-//                     })}
-//                 </div>
-//             }
-//         </div>
-//     );
-// };
-
-// const InProgressBar = () => {
-//     return (
-//         <div className="px-4 py-2 text-gray-800 space-y-1">
-//             <div className="flex py-0 justify-center items-center space-x-4">
-//                 <div className="flex-[0.2] h-1 bg-gray-300 rounded animate-pulse"></div>
-//                 <div className="h-1 basis-1"></div>
-//                 <div className="flex-1 h-1 bg-gray-300 rounded animate-pulse"></div>
-//             </div>
-//             <div className="flex py-0 justify-center items-center space-x-4">
-//                 <div className="flex-1 h-1 bg-gray-300 rounded animate-pulse"></div>
-//                 <div className="h-1 basis-2"></div>
-//                 <div className="flex-[0.3] h-1 bg-gray-300 rounded animate-pulse"></div>
-//             </div>
-//             <div className="h-1 bg-gray-300 rounded animate-pulse"></div>
-//         </div>
-//     );
-// };
 
 export { ChatThread };
