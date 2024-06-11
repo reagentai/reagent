@@ -101,7 +101,7 @@ const ChatThread = (props: {
 };
 
 const ChatMessage = (props: {
-  message: Pick<Chat.Message, "id" | "message" | "role">;
+  message: Pick<Chat.Message, "id" | "message" | "role" | "node">;
   showRole: boolean;
   showLoadingBar?: boolean;
 }) => {
@@ -142,7 +142,10 @@ const ChatMessage = (props: {
       >
         {props.message.message.ui && (
           <div className="px-4 py-2">
-            <AgentNodeUI {...props.message.message.ui!} />
+            <AgentNodeUI
+              node={props.message.node}
+              render={props.message.message.ui!}
+            />
           </div>
         )}
         {props.message.message.content && (

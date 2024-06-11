@@ -11,7 +11,7 @@ import {
 } from "rxjs";
 
 import { AgentEvent, AgentEventType } from "../stream.js";
-import type { OutputValueProvider } from "./types";
+import type { OutputValueEvent, OutputValueProvider } from "./types";
 
 export const VALUE_PROVIDER = Symbol("___RENDER_VALUE_PROVIDER__");
 
@@ -43,7 +43,7 @@ const mergeRenderStreams = <O>(
     return provider.dependencies;
   });
   // @ts-expect-error
-  const stream = merge<OutputValueProvider<any>["_event"][]>(...renders)
+  const stream = merge<OutputValueEvent<any>[]>(...renders)
     .pipe(groupBy((e) => e.session!.id))
     .pipe(
       map((group: any) => {
@@ -133,8 +133,8 @@ function mergeMapOutputs<Output>(
   const stream = firstOutputProvider
     .pipe(take(1))
     .pipe(
-      mergeMap((e1: OutputValueProvider<any>["_event"]) => {
-        return merge<OutputValueProvider<any>["_event"][]>(
+      mergeMap((e1: OutputValueEvent<any>) => {
+        return merge<OutputValueEvent<any>[]>(
           ...providers.map((node: any) => {
             // must be a value then
             if (!node[VALUE_PROVIDER]) {
@@ -144,7 +144,7 @@ function mergeMapOutputs<Output>(
               node
                 .pipe(
                   filter(
-                    (e: OutputValueProvider<any>["_event"]) =>
+                    (e: OutputValueEvent<any>) =>
                       e.session!.id == e1.session!.id
                   )
                 )

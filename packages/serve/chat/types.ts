@@ -1,14 +1,13 @@
 export namespace Chat {
-  type UI = {
-    node: {
-      id: string;
-      type: string;
-      version: string;
-    };
-    render: {
-      step: string;
-      data: any;
-    };
+  type AgentNode = {
+    id: string;
+    type: string;
+    version: string;
+  };
+
+  export type UIRenderData = {
+    step: string;
+    data: any;
   };
 
   export type Message = {
@@ -18,10 +17,11 @@ export namespace Chat {
     // under
     // are render
     // groupId: string;
+    node?: AgentNode;
     message: {
       content?: string;
       // type id of the tool that renders the UI
-      ui?: UI;
+      ui?: UIRenderData;
     };
     role: string;
     createdAt: string;
@@ -33,6 +33,7 @@ export namespace Chat {
       data: {
         // message id
         id: string;
+        node: AgentNode;
         message: {
           content: string;
         };
@@ -46,11 +47,12 @@ export namespace Chat {
       data: {
         // message id
         id: string;
+        node: AgentNode;
         message: {
-          content: {
-            delta: string;
-          };
+          content: string;
         };
+        role: string;
+        createdAt: string;
       };
     };
 
@@ -59,8 +61,9 @@ export namespace Chat {
       data: {
         // message id
         id: string;
+        node: AgentNode;
         message: {
-          ui: UI;
+          ui: UIRenderData;
         };
         role: string;
         createdAt: string;
@@ -72,9 +75,12 @@ export namespace Chat {
       data: {
         // message id
         id: string;
+        node: AgentNode;
         message: {
-          ui: UI;
+          ui: UIRenderData;
         };
+        role: string;
+        createdAt: string;
       };
     };
   }

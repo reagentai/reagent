@@ -1,8 +1,7 @@
 import dedent from "dedent";
-import { GraphAgent, mergeRenderStreams } from "@reagentai/reagent/agent";
+import { GraphAgent } from "@reagentai/reagent/agent";
 import {
   ChatCompletionWithToolCalling,
-  User,
   ChatInput,
 } from "@reagentai/reagent/agent/nodes";
 
@@ -34,8 +33,6 @@ const generateQuery = agent.addNode(
 );
 
 const runQuery = agent.addNode("runQuery", new GenerateSQLQuery());
-
-const user = agent.addNode("user", new User());
 
 generateQuery.bind({
   model: input.output.model,
@@ -76,10 +73,10 @@ error.bind({
   error: runQuery.output.error,
 });
 
-user.bind({
-  markdown: generateQuery.output.markdown,
-  markdownStream: generateQuery.output.stream,
-  ui: mergeRenderStreams(runQuery.render, error.render),
+agent.bind({
+  markdown: [generateQuery.output.markdown],
+  markdownStream: [generateQuery.output.stream],
+  ui: [runQuery.render, error.render],
 });
 
 export default agent;

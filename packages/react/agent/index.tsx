@@ -3,11 +3,16 @@ import type { Chat } from "@reagentai/serve/chat";
 
 import { useAgentContext } from "./context.js";
 
-const AgentNodeUI = (props: {} & Chat.Message["message"]["ui"]) => {
+const AgentNodeUI = (
+  props: { render: Chat.UIRenderData } & Pick<Chat.Message, "node">
+) => {
   "use client";
+  if (!props.node) {
+    return null;
+  }
   const { nodesByTypeId } = useAgentContext();
   const components = useMemo(() => {
-    const node = nodesByTypeId[props.node.type];
+    const node = nodesByTypeId[props.node!.type];
     // ignore UI rendering if agent node not found
     if (!node) {
       return [];

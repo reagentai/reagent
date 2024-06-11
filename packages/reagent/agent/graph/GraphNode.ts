@@ -180,7 +180,10 @@ class GraphNode<
         .pipe(
           filter((e) => e.session.id == group.key && e.node.id == self.#nodeId)
         )
-        .pipe(take(1));
+        .pipe(take(1))
+        // add some buffer so that node isn't mark completed before events
+        // are received by other observables
+        .pipe(delay(500));
 
       const outputProvidersCompleted = this.#_nodeFinishedStream
         .pipe(
@@ -432,8 +435,10 @@ class GraphNode<
       node: self,
     };
 
-    return Object.defineProperty(stream, VALUE_PROVIDER, {
-      value: {
+    return Object.defineProperty(
+      stream,
+      VALUE_PROVIDER,
+      propertyWithValue({
         type: "schema",
         dependencies: [
           {
@@ -443,11 +448,8 @@ class GraphNode<
             field: "schema",
           },
         ],
-      },
-      enumerable: false,
-      writable: false,
-      configurable: false,
-    });
+      })
+    );
   }
 
   get output(): {
@@ -487,47 +489,47 @@ class GraphNode<
             },
           ]);
           Object.defineProperties(stream, {
-            [NODE_OUTPUT_FIELD]: {
-              value: {
-                node: self.node,
-                field,
-              },
-              configurable: false,
-              enumerable: false,
-              writable: false,
-            },
+            [NODE_OUTPUT_FIELD]: propertyWithValue({
+              node: self.node,
+              field,
+            }),
+            filter: propertyWithValue(
+              (options: { session: { id: string } }) => {
+                return stream
+                  .pipe(filter((e: any) => e.session.id == options.session.id))
+                  .pipe(
+                    takeUntil(
+                      self.#_nodeFinishedStream
+                        .pipe(
+                          filter(
+                            (e) =>
+                              e.session.id == options.session.id &&
+                              e.node.id == self.#nodeId
+                          )
+                        )
+                        .pipe(take(1))
+                        // add some buffer so that node isn't mark completed before events
+                        // are received by other observables
+                        .pipe(delay(500))
+                    )
+                  )
+                  .pipe(take(1));
+              }
+            ),
             select: {
               get value() {
                 return (options: { sessionId: string }) => {
                   return new Promise((resolve, reject) => {
-                    stream
-                      .pipe(
-                        filter((e: any) => e.session.id == options.sessionId)
-                      )
-                      .pipe(
-                        takeUntil(
-                          self.#_nodeFinishedStream
-                            .pipe(
-                              filter(
-                                (e) =>
-                                  e.session.id == options.sessionId &&
-                                  e.node.id == self.#nodeId
-                              )
-                            )
-                            .pipe(take(1))
-                        )
-                      )
-                      .pipe(take(1))
-                      .subscribe({
-                        next(e: any) {
-                          resolve(e.value);
-                        },
-                        complete() {
-                          reject(
-                            `Node [${self.#nodeId}] didn't output field: ${field}`
-                          );
-                        },
-                      });
+                    stream.filter(options).subscribe({
+                      next(e: any) {
+                        resolve(e.value);
+                      },
+                      complete() {
+                        reject(
+                          `Node [${self.#nodeId}] didn't output field: ${field}`
+                        );
+                      },
+                    });
                   });
                 };
               },
@@ -570,7 +572,11 @@ class GraphNode<
                 (e) => group.key == e.session.id && e.node.id == self.#nodeId
               )
             )
-            .pipe(take(1));
+            .pipe(take(1))
+            // add some buffer so that node isn't mark completed before events
+            // are received by other observables
+            .pipe(delay(500));
+
           // TODO: removing this doesn't stream render events; BUT WHY?
           group.subscribe(() => {});
           return {
@@ -582,39 +588,38 @@ class GraphNode<
               .pipe(takeUntil(runCompleted)),
           };
         })
-      )
-      .pipe(share());
+      );
 
     Object.defineProperties(stream, {
-      [VALUE_PROVIDER]: {
-        value: {
-          type: "render",
-          dependencies: [
-            {
-              id: self.#nodeId,
-              type: self.#node.metadata.id,
-              version: self.#node.metadata.version,
-              field: "__render__",
-            },
-          ],
-        },
-        configurable: false,
-        enumerable: false,
-        writable: false,
-      },
+      [NODE_OUTPUT_FIELD]: propertyWithValue({
+        node: self.node,
+      }),
+      [VALUE_PROVIDER]: propertyWithValue({
+        type: "render",
+        dependencies: [
+          {
+            ...self.node,
+            field: "__render__",
+          },
+        ],
+      }),
+      filter: propertyWithValue((options: { session: { id: string } }) => {
+        return stream
+          .pipe(filter((e: any) => e.session.id == options.session.id))
+          .pipe(take(1));
+      }),
       select: {
-        value: (options: { sessionId: string }) => {
+        value: (options: { session: { id: string } }) => {
           return new Promise((resolve, reject) => {
-            stream
-              .pipe(filter((e: any) => e.session.id == options.sessionId))
-              .subscribe({
-                next(e: any) {
-                  resolve(e.value);
-                },
-                complete() {
-                  reject(`Node [${self.#nodeId}] didn't render anythin`);
-                },
-              });
+            // @ts-expect-error
+            stream.filter(options).subscribe({
+              next(e: any) {
+                resolve(e.value);
+              },
+              complete() {
+                reject(`Node [${self.#nodeId}] didn't render anythin`);
+              },
+            });
           });
         },
         enumerable: false,
@@ -700,6 +705,15 @@ class GraphNode<
     };
   }
 }
+
+const propertyWithValue = <V>(value: V) => {
+  return {
+    value,
+    configurable: false,
+    enumerable: false,
+    writable: false,
+  };
+};
 
 const inputReducer = () =>
   reduce<MappedInputEvent, any>(

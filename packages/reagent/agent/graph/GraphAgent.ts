@@ -1,9 +1,20 @@
-import { Observer, Subscription } from "rxjs";
+import { Observable, Observer, Subscription, map, merge } from "rxjs";
 import { pick } from "lodash-es";
 
-import { GraphNode } from "./GraphNode.js";
+import { GraphNode, NODE_OUTPUT_FIELD } from "./GraphNode.js";
 import { AbstractAgentNode } from "../node.js";
 import { EventStream } from "../stream.js";
+import type {
+  OutputValueEvent,
+  OutputValueProvider,
+  RenderUpdate,
+} from "./types";
+
+type OutputBindings = {
+  markdown?: OutputValueProvider<any>[];
+  markdownStream?: OutputValueProvider<any>[];
+  ui?: OutputValueProvider<Observable<RenderUpdate>>[];
+};
 
 type AgentConfig = {
   name: string;
@@ -27,6 +38,7 @@ class GraphAgent {
     }
   >;
   #stream: EventStream<any>;
+  #outputBindings?: OutputBindings;
   constructor(config: AgentConfig) {
     this.#config = config;
     this.#stream = new EventStream({
@@ -44,6 +56,47 @@ class GraphAgent {
 
   get description() {
     return this.#config.description;
+  }
+
+  bind(bindings: OutputBindings) {
+    if (Boolean(this.#outputBindings)) {
+      throw new Error("Agent outputs already bound!");
+    }
+    this.#outputBindings = bindings;
+  }
+
+  get output() {
+    const self = this;
+    const createStream = (binding: keyof OutputBindings) => {
+      return {
+        filter(options: { session: { id: string } }) {
+          return merge(
+            ...(self.#outputBindings?.[binding] || []).map((obs) => {
+              return obs.filter(options).pipe(
+                map<any, OutputValueEvent<any>>((e: any) => {
+                  return {
+                    ...e,
+                    // @ts-expect-error
+                    node: obs[NODE_OUTPUT_FIELD].node,
+                  };
+                })
+              );
+            })
+          );
+        },
+      };
+    };
+    return {
+      get markdown() {
+        return createStream("markdown");
+      },
+      get markdownStream() {
+        return createStream("markdownStream");
+      },
+      get ui() {
+        return createStream("ui");
+      },
+    };
   }
 
   subscribe(

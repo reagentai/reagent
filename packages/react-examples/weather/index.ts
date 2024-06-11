@@ -1,10 +1,6 @@
-import {
-  GraphAgent,
-  mergeRenderStreams,
-} from "@reagentai/reagent/agent/index.js";
+import { GraphAgent } from "@reagentai/reagent/agent/index.js";
 import {
   ChatCompletionWithToolCalling,
-  User,
   ChatInput,
 } from "@reagentai/reagent/agent/nodes/index.js";
 
@@ -27,8 +23,6 @@ const chat1 = agent.addNode("chat-1", new ChatCompletionWithToolCalling(), {
   },
 });
 
-const user = agent.addNode("user", new User());
-
 const getWeather = agent.addNode("weather", new GetWeather());
 
 chat1.bind({
@@ -41,10 +35,10 @@ error.bind({
   error: chat1.output.error,
 });
 
-user.bind({
-  markdown: chat1.output.markdown,
-  markdownStream: chat1.output.stream,
-  ui: mergeRenderStreams(getWeather.render, error.render),
+agent.bind({
+  markdown: [chat1.output.markdown],
+  markdownStream: [chat1.output.stream],
+  ui: [getWeather.render, error.render],
 });
 
 export default agent;

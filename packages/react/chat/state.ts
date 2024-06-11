@@ -5,6 +5,7 @@ import type { Chat } from "@reagentai/serve/chat";
 
 type NewMessage = {
   id: string;
+  node: Chat.Message["node"];
   message: { content: string };
   regenerate: boolean;
 };
@@ -69,6 +70,7 @@ export const createChatStore = (
                 state.messages[message.id] = {
                   id: message.id,
                   message: message.message,
+                  node: message.node,
                   role: "user",
                   createdAt: new Date().toISOString(),
                 };
@@ -81,43 +83,40 @@ export const createChatStore = (
 
             const response = await init.invoke(nodeId, message, get());
             for await (const msg of response) {
-              if (msg.type == "message/content") {
-                const message = msg.data;
-                set((s) => {
-                  const state = produce(s, (state) => {
+              set((s) => {
+                let state: ChatState;
+                if (msg.type == "message/content") {
+                  const message = msg.data;
+                  state = produce(s, (state) => {
                     state.messages[message.id] = message;
                   });
-                  return produce(state, (state) => {
-                    state.sortedMessageIds = sortMessages(state.messages);
-                  });
-                });
-              } else if (msg.type == "message/content/delta") {
-                set((s) => {
+                } else if (msg.type == "message/content/delta") {
                   const data = msg.data;
-                  return produce(s, (state) => {
-                    state.messages[data.id].message.content =
-                      (s.messages[data.id].message.content || "") +
-                      data.message.content.delta;
+                  state = produce(s, (state) => {
+                    if (s.messages[data.id]) {
+                      state.messages[data.id].message.content =
+                        (s.messages[data.id].message.content || "") +
+                        data.message.content;
+                    } else {
+                      state.messages[data.id] = data;
+                    }
                   });
-                });
-              } else if (msg.type == "message/ui") {
-                const message = msg.data;
-                set((s) => {
-                  const state = produce(s, (state) => {
-                    state.messages[message.id] = message;
+                } else if (msg.type == "message/ui") {
+                  state = produce(s, (state) => {
+                    state.messages[message.id] = msg.data;
                   });
-                  return produce(state, (state) => {
-                    state.sortedMessageIds = sortMessages(state.messages);
-                  });
-                });
-              } else if (msg.type == "message/ui/update") {
-                set((s) => {
+                } else if (msg.type == "message/ui/update") {
                   const data = msg.data;
-                  return produce(s, (state) => {
-                    state.messages[data.id].message.ui = data.message.ui;
+                  state = produce(s, (state) => {
+                    state.messages[data.id] = data;
                   });
+                } else {
+                  throw new Error("unknown message type:" + (msg as any).type);
+                }
+                return produce(state, (state: any) => {
+                  state.sortedMessageIds = sortMessages(state.messages);
                 });
-              }
+              });
             }
           },
         };

@@ -1,7 +1,6 @@
 import { GraphAgent } from "@reagentai/reagent/agent/index.js";
 import {
   ChatCompletion,
-  User,
   ChatInput,
 } from "@reagentai/reagent/agent/nodes/index.js";
 
@@ -20,16 +19,14 @@ const chat1 = agent.addNode("chat-1", new ChatCompletion(), {
   },
 });
 
-const user = agent.addNode("user", new User());
-
 chat1.bind({
   model: input.output.model,
   query: input.output.query,
 });
 
-user.bind({
-  markdown: chat1.output.markdown,
-  markdownStream: chat1.output.stream,
+agent.bind({
+  markdown: [chat1.output.markdown],
+  markdownStream: [chat1.output.stream],
 });
 
 export default agent;

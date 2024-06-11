@@ -7,11 +7,12 @@ export type NodeMetadata = {
   version: string;
 };
 
-type OutputValueEvent<Output> = {
+export type OutputValueEvent<Output> = {
   // session is null for session independent global values
   session: {
     id: string;
   } | null;
+  node: NodeMetadata;
   value: Output;
 };
 
@@ -19,6 +20,9 @@ export type OutputValueProvider<Output> = Pick<
   Observable<OutputValueEvent<Output>>,
   "subscribe" | "pipe"
 > & {
+  filter<O>(options: {
+    session: { id: string };
+  }): Pick<Observable<OutputValueEvent<Output>>, "subscribe" | "pipe">;
   map<O>(
     cb: (value: Output, session: { id: string }) => O
   ): OutputValueProvider<O>;
