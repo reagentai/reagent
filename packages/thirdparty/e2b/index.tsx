@@ -4,7 +4,10 @@ import {
   Execution,
 } from "@e2b/code-interpreter";
 
-import { CodeInterpreterComponent } from "./CodeInterpreter";
+import {
+  CodeInterpreterComponent,
+  CodeInterpreterData,
+} from "./CodeInterpreter";
 
 const outputSchema = z.object({});
 
@@ -20,13 +23,16 @@ const CodeInterpreter = createAgentNode({
   async *execute(context, input) {
     const render = context.render(
       (props) => <CodeInterpreterComponent {...props} />,
-      undefined as Pick<Execution, "results" | "logs" | "error"> | undefined
+      {
+        code: input.code,
+      } as CodeInterpreterData
     );
 
     const codeInterpreter = await E2BCodeInterpreter.create();
     const exec = await codeInterpreter.notebook.execCell(input.code);
 
     render.update({
+      code: input.code,
       results: exec.results,
       logs: exec.logs,
       error: exec.error,
