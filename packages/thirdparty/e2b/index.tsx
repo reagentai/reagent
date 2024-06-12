@@ -1,4 +1,4 @@
-import { createAgentNode, z } from "@reagentai/reagent/agent/index.js";
+import { createReagentNode, z } from "@reagentai/reagent/agent/index.js";
 import {
   CodeInterpreter as E2BCodeInterpreter,
   Execution,
@@ -11,7 +11,7 @@ import {
 
 const outputSchema = z.object({});
 
-const CodeInterpreter = createAgentNode({
+const CodeInterpreter = createReagentNode({
   id: "@e2b/execute_python",
   name: "E2B - Code interpreter",
   description: `Execute python code in a Jupyter notebook cell and returns any result, stdout, stderr, display_data, and error.`,

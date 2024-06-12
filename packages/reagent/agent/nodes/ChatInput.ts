@@ -1,4 +1,4 @@
-import { z, Context, createAgentNode } from "../index.js";
+import { z, Context, createReagentNode } from "../index.js";
 import { BaseModelProvider } from "../../llm/models/index.js";
 
 const inputSchema = z.object({});
@@ -8,7 +8,7 @@ const outputSchema = z.object({
   model: z.instanceof(BaseModelProvider).label("Model"),
 });
 
-const ChatInputNode = createAgentNode({
+const ChatInputNode = createReagentNode({
   id: "@core/input",
   name: "Chat Input",
   version: "0.0.1",

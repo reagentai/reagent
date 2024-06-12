@@ -13,8 +13,8 @@ const plugin = createBabelPlugin({
 test("skip transpile if directive '@reagent-skip-transform' is found", () => {
   const codeToTransform = `
     "@reagent-skip-transform";
-    import { createAgentNode, z } from "@reagentai/reagent/agent";
-    const GetWeather = createAgentNode({
+    import { createReagentNode, z } from "@reagentai/reagent/agent";
+    const GetWeather = createReagentNode({
       id: "@reagentai/demo-agents/getWeather",
       name: "Get weather",
       description: "",
@@ -33,7 +33,7 @@ test("skip transpile if directive '@reagent-skip-transform' is found", () => {
   expect(transformedCode).to.equal(cleanUpCode(codeToTransform));
 });
 
-test("dont transpile createAgentNode if it's not imported", () => {
+test("dont transpile createReagentNode if it's not imported", () => {
   const expected = cleanUpCode(`
     const GetWeather = {
       id: "@reagentai/demo-agents/getWeather",
@@ -44,7 +44,7 @@ test("dont transpile createAgentNode if it's not imported", () => {
   `);
 
   const { code: transformedCode } = transform(`
-    const GetWeather = createAgentNode({
+    const GetWeather = createReagentNode({
       id: "@reagentai/demo-agents/getWeather",
       name: "Get weather",
       description: "",
@@ -61,9 +61,9 @@ test("dont transpile createAgentNode if it's not imported", () => {
   expect(transformedCode).not.to.equal(expected);
 });
 
-test("dont transpile createAgentNode if import doesn't match", () => {
-  const codeToTransform = `import { createAgentNode, z } from "whatever";
-  const GetWeather = createAgentNode({
+test("dont transpile createReagentNode if import doesn't match", () => {
+  const codeToTransform = `import { createReagentNode, z } from "whatever";
+  const GetWeather = createReagentNode({
     id: "@reagentai/demo-agents/getWeather",
     name: "Get weather",
     description: "",
@@ -82,9 +82,9 @@ test("dont transpile createAgentNode if import doesn't match", () => {
   expect(transformedCode).equal(cleanUpCode(codeToTransform));
 });
 
-test("transpile createAgentNode if import matches", () => {
+test("transpile createReagentNode if import matches", () => {
   const expected = cleanUpCode(`
-    import { createAgentNode, z } from "@reagentai/reagent/agent";
+    import { createReagentNode, z } from "@reagentai/reagent/agent";
     const GetWeather = {
       id: "@reagentai/demo-agents/getWeather",
       name: "Get weather",
@@ -94,8 +94,8 @@ test("transpile createAgentNode if import matches", () => {
   `);
 
   const { code: transformedCode } = transform(`
-    import { createAgentNode, z } from "@reagentai/reagent/agent";
-    const GetWeather = createAgentNode({
+    import { createReagentNode, z } from "@reagentai/reagent/agent";
+    const GetWeather = createReagentNode({
       id: "@reagentai/demo-agents/getWeather",
       name: "Get weather",
       description: "",
@@ -112,9 +112,9 @@ test("transpile createAgentNode if import matches", () => {
   expect(transformedCode).toBe(expected);
 });
 
-test("extract only render calls from createAgentNode", () => {
+test("extract only render calls from createReagentNode", () => {
   const expected = cleanUpCode(`
-    import { createAgentNode, z } from "@reagentai/reagent/agent";
+    import { createReagentNode, z } from "@reagentai/reagent/agent";
     const GetWeather = {
       id: "@reagentai/demo-agents/getWeather",
       name: "Get weather",
@@ -131,8 +131,8 @@ test("extract only render calls from createAgentNode", () => {
   `);
 
   const { code: transformedCode } = transform(`
-    import { createAgentNode, z } from "@reagentai/reagent/agent";
-    const GetWeather = createAgentNode({
+    import { createReagentNode, z } from "@reagentai/reagent/agent";
+    const GetWeather = createReagentNode({
       id: "@reagentai/demo-agents/getWeather",
       name: "Get weather",
       description: "",
@@ -164,9 +164,9 @@ test("extract only render calls from createAgentNode", () => {
   expect(transformedCode).toBe(expected);
 });
 
-test.only("extract only render calls from createAgentNode when using variable", () => {
+test.only("extract only render calls from createReagentNode when using variable", () => {
   const expected = cleanUpCode(`
-    import { createAgentNode, z } from "@reagentai/reagent/agent";
+    import { createReagentNode, z } from "@reagentai/reagent/agent";
     const GetWeather = {
       id: "@reagentai/demo-agents/getWeather",
       name: "Get weather",
@@ -178,8 +178,8 @@ test.only("extract only render calls from createAgentNode when using variable", 
   `);
 
   const { code: transformedCode } = transform(`
-    import { createAgentNode, z } from "@reagentai/reagent/agent";
-    const GetWeather = createAgentNode({
+    import { createReagentNode, z } from "@reagentai/reagent/agent";
+    const GetWeather = createReagentNode({
       id: "@reagentai/demo-agents/getWeather",
       name: "Get weather",
       description: "",
@@ -200,9 +200,9 @@ test.only("extract only render calls from createAgentNode when using variable", 
   expect(transformedCode).toBe(expected);
 });
 
-test("transpile createAgentNode if import matches even if it's renamed", () => {
+test("transpile createReagentNode if import matches even if it's renamed", () => {
   const expected = cleanUpCode(`
-    import { createAgentNode as createNode, z } from "@reagentai/reagent/agent";
+    import { createReagentNode as createNode, z } from "@reagentai/reagent/agent";
     const GetWeather = {
       id: "@reagentai/demo-agents/getWeather",
       name: "Get weather",
@@ -212,7 +212,7 @@ test("transpile createAgentNode if import matches even if it's renamed", () => {
   `);
 
   const { code: transformedCode } = transform(`
-    import { createAgentNode as createNode, z } from "@reagentai/reagent/agent";
+    import { createReagentNode as createNode, z } from "@reagentai/reagent/agent";
     const GetWeather = createNode({
       id: "@reagentai/demo-agents/getWeather",
       name: "Get weather",
@@ -230,12 +230,12 @@ test("transpile createAgentNode if import matches even if it's renamed", () => {
   expect(transformedCode).toBe(expected);
 });
 
-test("don't transpile createAgentNode if imported scope doesn't match", () => {
+test("don't transpile createReagentNode if imported scope doesn't match", () => {
   const codeToTransform = `
-    import { createAgentNode, z } from "@reagentai/reagent/agent";
+    import { createReagentNode, z } from "@reagentai/reagent/agent";
     const createGetWeather = () => {
-      const createAgentNode = () => {};
-      return createAgentNode({
+      const createReagentNode = () => {};
+      return createReagentNode({
         id: "@reagentai/demo-agents/getWeather",
         name: "Get weather",
         description: "",

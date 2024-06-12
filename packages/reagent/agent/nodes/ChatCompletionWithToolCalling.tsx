@@ -17,7 +17,7 @@ import {
   parseStringResponse,
   parseToolCallsResponse,
 } from "../../llm/plugins/response.js";
-import { z, Context, createAgentNode } from "../index.js";
+import { z, Context, createReagentNode } from "../index.js";
 import { Runnable } from "../../llm/core/index.js";
 import { agentToolSchema } from "../tool.js";
 import { BaseModelProvider } from "../../llm/models/index.js";
@@ -59,7 +59,7 @@ const outputSchema = z.object({
   tools: z.any().array().label("Tool calls"),
 });
 
-const ChatCompletionWithToolCalling = createAgentNode({
+const ChatCompletionWithToolCalling = createReagentNode({
   id: "@core/chat-completion",
   version: "0.0.1",
   name: "Chat completion",

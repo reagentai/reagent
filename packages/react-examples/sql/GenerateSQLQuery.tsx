@@ -1,4 +1,4 @@
-import { createAgentNode, z } from "@reagentai/reagent/agent";
+import { createReagentNode, z } from "@reagentai/reagent/agent";
 import { faker } from "@faker-js/faker";
 import { format as formatSql } from "sql-formatter";
 import Markdown from "react-markdown";
@@ -12,7 +12,7 @@ const outputSchema = z.object({
   error: z.string().describe("Error when running the query"),
 });
 
-const GenerateSQLQuery = createAgentNode({
+const GenerateSQLQuery = createReagentNode({
   id: "@reagentai/react-examples/generate-sql-query",
   name: "Generate SQL query",
   description: `Generate SQL query for provided tables and columns`,

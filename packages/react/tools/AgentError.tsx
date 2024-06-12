@@ -1,6 +1,6 @@
-import { createAgentNode, z } from "@reagentai/reagent/agent/index.js";
+import { createReagentNode, z } from "@reagentai/reagent/agent/index.js";
 
-const AgentError = createAgentNode({
+const AgentError = createReagentNode({
   id: "@reagentai/react/agent-error",
   name: "Show Agent Error",
   version: "0.0.1",

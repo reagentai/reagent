@@ -10,10 +10,10 @@ const plugin = createBabelPlugin({
   ssr: true,
 });
 
-test("dont transpile createAgentNode in server if no render is used", () => {
+test("dont transpile createReagentNode in server if no render is used", () => {
   const codeToTransform = `
-    import { createAgentNode, z } from "@reagentai/reagent/agent";
-    const GetWeather = createAgentNode({
+    import { createReagentNode, z } from "@reagentai/reagent/agent";
+    const GetWeather = createReagentNode({
       id: "@reagentai/demo-agents/getWeather",
       name: "Get weather",
       description: "",
@@ -33,8 +33,8 @@ test("dont transpile createAgentNode in server if no render is used", () => {
 
 test("add render-id to nested render calls", () => {
   const expected = cleanUpCode(`
-    import { createAgentNode, z } from "@reagentai/reagent/agent";
-    const GetWeather = createAgentNode({
+    import { createReagentNode, z } from "@reagentai/reagent/agent";
+    const GetWeather = createReagentNode({
       id: "@reagentai/demo-agents/getWeather",
       name: "Get weather",
       description: "",
@@ -58,8 +58,8 @@ test("add render-id to nested render calls", () => {
   `);
 
   const { code: transformedCode } = transform(`
-    import { createAgentNode, z } from "@reagentai/reagent/agent";
-    const GetWeather = createAgentNode({
+    import { createReagentNode, z } from "@reagentai/reagent/agent";
+    const GetWeather = createReagentNode({
       id: "@reagentai/demo-agents/getWeather",
       name: "Get weather",
       description: "",

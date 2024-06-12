@@ -32,37 +32,37 @@ function createPlugin(options) {
         ImportDeclaration(path, state) {
           if (path.node.source.value.startsWith("@reagentai/reagent")) {
             const specifiers = path.get("specifiers");
-            const createAgentNodeSpecifier = specifiers.find((specifier) => {
+            const createReagentNodeSpecifier = specifiers.find((specifier) => {
               return (
                 // skip default import
                 specifier.node.imported &&
-                specifier.node.imported.name == "createAgentNode"
+                specifier.node.imported.name == "createReagentNode"
               );
             });
 
-            if (createAgentNodeSpecifier && createAgentNodeSpecifier) {
-              state._createAgentNode = {
-                local: createAgentNodeSpecifier.get("local"),
+            if (createReagentNodeSpecifier && createReagentNodeSpecifier) {
+              state._createReagentNode = {
+                local: createReagentNodeSpecifier.get("local"),
               };
             }
           }
         },
         ExpressionStatement(path, state) {
-          if (!state._createAgentNode) {
+          if (!state._createReagentNode) {
             path.skip();
             return;
           }
         },
         CallExpression(path, state) {
-          if (!state._createAgentNode) {
+          if (!state._createReagentNode) {
             path.skip();
             return;
           }
           const { node } = path;
-          if (node.callee.name == state._createAgentNode.local.node.name) {
+          if (node.callee.name == state._createReagentNode.local.node.name) {
             const callee = path.get("callee");
             // make sure the scope matches
-            if (callee.scope != state._createAgentNode.local.scope) {
+            if (callee.scope != state._createReagentNode.local.scope) {
               return;
             }
             path.skip();

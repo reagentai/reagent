@@ -93,7 +93,7 @@ type AgentNode<
   ): RunResult<AtLeastOne<Output>>;
 };
 
-export const createAgentNode = <
+export const createReagentNode = <
   Config extends Record<string, unknown> | void,
   Input extends Record<string, unknown> | void,
   Output extends Record<string, unknown>,

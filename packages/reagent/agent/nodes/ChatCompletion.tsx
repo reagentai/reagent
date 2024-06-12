@@ -12,7 +12,7 @@ import {
   parseStringErrorMessage,
   parseStringResponse,
 } from "../../llm/plugins/response.js";
-import { z, Context, createAgentNode } from "../index.js";
+import { z, Context, createReagentNode } from "../index.js";
 import { BaseModelProvider } from "../../llm/models/index.js";
 
 const ICON = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
@@ -53,7 +53,7 @@ const outputSchema = z.object({
   error: z.string().label("Error"),
 });
 
-const ChatCompletion = createAgentNode({
+const ChatCompletion = createReagentNode({
   id: "@core/chat-completion",
   version: "0.0.1",
   name: "Chat completion",

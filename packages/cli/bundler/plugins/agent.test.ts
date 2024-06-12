@@ -37,7 +37,7 @@ test("keep `nodes` export and used import", () => {
 
 test("only keep `nodes` export and used varaible", () => {
   const expected = `
-  const GetWeather = createAgentNode({
+  const GetWeather = createReagentNode({
     id: "@reagentai/demo-agents/getWeather",
     name: "Get weather",
     description: "",
@@ -61,7 +61,7 @@ test("only keep `nodes` export and used varaible", () => {
     ChatInput
   } from "@reagentai/reagent/agent/nodes";
 
-  const GetWeather = createAgentNode({
+  const GetWeather = createReagentNode({
     id: "@reagentai/demo-agents/getWeather",
     name: "Get weather",
     description: "",
@@ -92,7 +92,7 @@ test("only keep `nodes` export and used varaible", () => {
 test("only keep used imports", () => {
   const expected = `
   import React from "react";
-  const GetWeather = createAgentNode({
+  const GetWeather = createReagentNode({
     async *execute(context, input) {
       React.test();
       yield { msg: "Hello" };
@@ -109,7 +109,7 @@ test("only keep used imports", () => {
   import { ChatInput } from "@reagentai/reagent/agent/nodes";
   import React from "react";
 
-  const GetWeather = createAgentNode({
+  const GetWeather = createReagentNode({
     async *execute(context, input) {
       React.test();
       yield { msg: "Hello" };
