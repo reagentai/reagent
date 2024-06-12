@@ -1,0 +1,25 @@
+{
+  "name": "@reagentai/thirdparty",
+  "version": "0.2.10",
+  "description": "Thirdparty integrations for Reagent AI",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "prepublish": "rm -rf dist && pnpm build && cp package.json dist"
+  },
+  "publishConfig": {
+    "directory": "dist",
+    "linkDirectory": false
+  },
+  "license": "MIT",
+  "keywords": [],
+  "dependencies": {
+    "@e2b/code-interpreter": "^0.0.8",
+    "@reagentai/react": "workspace:^",
+    "@reagentai/reagent": "workspace:^",
+    "react": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.2"
+  }
+}
