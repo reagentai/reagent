@@ -11,7 +11,7 @@
   "license": "MIT",
   "publishConfig": {
     "directory": "dist",
-    "linkDirectory": false
+    "linkDirectory": true
   },
   "dependencies": {
     "@radix-ui/react-collapsible": "^1.0.3",

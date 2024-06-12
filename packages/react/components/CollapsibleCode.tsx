@@ -1,6 +1,5 @@
 import React from "react";
 import Markdown from "react-markdown";
-// @ts-expect-error
 import * as Collapsible from "@radix-ui/react-collapsible";
 import { ChevronDownIcon, ChevronUpIcon } from "@radix-ui/react-icons";
 

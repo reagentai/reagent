@@ -7,15 +7,9 @@
     "build": "pnpm tsc",
     "prepublish": "rm -rf dist && pnpm build && cp package.json dist"
   },
-  "exports": {
-    "./*": "./dist/*"
-  },
   "publishConfig": {
     "directory": "dist",
-    "linkDirectory": false,
-    "exports": {
-      "./*": "./*"
-    }
+    "linkDirectory": true
   },
   "license": "MIT",
   "dependencies": {

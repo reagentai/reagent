@@ -3,9 +3,16 @@
   "version": "0.2.17",
   "description": "React examples of Reagent AI agent",
   "type": "module",
-  "scripts": {},
+  "scripts": {
+    "build": "tsc",
+    "prepublish": "rm -rf dist && pnpm build && cp package.json dist"
+  },
   "license": "MIT",
   "keywords": [],
+  "publishConfig": {
+    "directory": "dist",
+    "linkDirectory": true
+  },
   "dependencies": {
     "@anatine/zod-mock": "^3.13.4",
     "@faker-js/faker": "^8.4.1",
@@ -21,6 +28,7 @@
     "zustand": "^4.5.2"
   },
   "devDependencies": {
-    "@types/react": "^18.3.2"
+    "@types/react": "^18.3.2",
+    "typescript": "5.4.5"
   }
 }
