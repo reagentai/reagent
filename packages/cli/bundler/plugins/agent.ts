@@ -1,6 +1,8 @@
 import { transformSync, DEFAULT_EXTENSIONS } from "@babel/core";
 // @ts-expect-error
 import picomatch from "picomatch";
+// @ts-expect-error
+import babelSyntaxJsx from "@babel/plugin-syntax-jsx";
 
 function cleanUrl(url: string) {
   const queryRE = /\?.*$/s;
@@ -48,9 +50,10 @@ const createPlugin = (options: Options = {}) => {
         filename: id,
         sourceFileName: filepath,
         plugins: [
-          createBabelPlugin({
+          createRemoveExportsPlugin({
             preserveExports: ["nodes"],
           }),
+          babelSyntaxJsx,
         ],
         sourceMaps: true,
       })!;
@@ -59,31 +62,32 @@ const createPlugin = (options: Options = {}) => {
   };
 };
 
-const findExportedIdentifiers = {
-  ExportNamedDeclaration(path: any, state: any) {
-    path.traverse(
-      {
-        VariableDeclarator(path: any, state: any) {
-          if (!state.preserveExports.includes(path.node.id.name)) {
-            path.skip();
-          }
-        },
-        Identifier(path: any, state: any) {
-          if (path.node.name == "__reagentai_exports__") {
-            state.isReagentaiAgentModule = true;
-          }
-          state.exportedIdentifiers.push(path.node.name);
-        },
-      },
-      state
-    );
-  },
+const createFindExportedIdentifiers = () => {
+  const visitor = {
+    VariableDeclarator(path: any, state: any) {
+      if (!state.preserveExports.includes(path.node.id.name)) {
+        path.skip();
+      }
+    },
+    Identifier(path: any, state: any) {
+      if (path.node.name == "__reagentai_exports__") {
+        state.isReagentaiAgentModule = true;
+      }
+      state.exportedIdentifiers.push(path.node.name);
+    },
+  };
+  return {
+    ExportNamedDeclaration(path: any, state: any) {
+      path.traverse(visitor, state);
+    },
+  };
 };
 
-function createBabelPlugin(options: {
+function createRemoveExportsPlugin(options: {
   disable?: boolean;
   preserveExports: string[];
 }) {
+  const findExportedIdentifiers = createFindExportedIdentifiers();
   return ({ types: t }: any) => {
     return {
       visitor: {
@@ -101,6 +105,8 @@ function createBabelPlugin(options: {
               exportedIdentifiers: [],
               isReagentaiAgentModule: false,
             };
+            // @ts-expect-error
+            this.removedIdentifiers = [];
             path.traverse(findExportedIdentifiers, state);
             // @ts-expect-error
             this.state = state;
@@ -108,22 +114,43 @@ function createBabelPlugin(options: {
               path.stop();
             }
           },
-          exit(path: any) {},
-        },
-        ImportDeclaration(path: any) {
-          const specifiers = path.get("specifiers");
-          const filtered = specifiers.filter((s: any) => {
-            // @ts-expect-error
-            return this.state.exportedIdentifiers.includes(s.node.local.name);
-          });
-          if (filtered.length == 0) {
-            path.remove();
-          } else {
-            path.node.specifiers = filtered.map((p: any) => p.node);
-          }
+          exit(path: any) {
+            const self = this;
+            // remove all unused imports
+            // TODO: remove default export
+            path.traverse({
+              ImportDeclaration(path: any) {
+                const specifiers = path.get("specifiers");
+                const filtered = specifiers.filter((specifier: any) => {
+                  const localName = specifier.node.local.name;
+                  const binding = path.scope.getBinding(localName);
+
+                  const allReferencesRemoved = binding.referencePaths.every(
+                    (p: any) => {
+                      // @ts-expect-error
+                      return self.removedIdentifiers.find(
+                        (ri: any) => ri === p
+                      );
+                    }
+                  );
+                  return !allReferencesRemoved;
+                });
+                if (filtered.length == 0) {
+                  path.remove();
+                } else {
+                  path.node.specifiers = filtered.map((p: any) => p.node);
+                }
+              },
+            });
+          },
         },
         ExportDefaultDeclaration(path: any) {
-          path.remove();
+          path.skip();
+          path.replaceWith(
+            t.exportDefaultDeclaration(
+              t.stringLiteral("__removed_by_reagent__")
+            )
+          );
         },
         CallExpression(path: any) {
           if (
@@ -138,12 +165,34 @@ function createBabelPlugin(options: {
             // @ts-expect-error
             !this.state.exportedIdentifiers.includes(callee.node.name)
           ) {
+            path.traverse(
+              {
+                Identifier(path: any) {
+                  this.removedIdentifiers.push(path);
+                },
+              },
+              {
+                // @ts-expect-error
+                removedIdentifiers: this.removedIdentifiers,
+              }
+            );
             path.remove();
           } else if (
             t.isMemberExpression(callee) &&
             // @ts-expect-error
             !this.state.exportedIdentifiers.includes(callee.node.object.name)
           ) {
+            path.traverse(
+              {
+                Identifier(path: any) {
+                  this.removedIdentifiers.push(path);
+                },
+              },
+              {
+                // @ts-expect-error
+                removedIdentifiers: this.removedIdentifiers,
+              }
+            );
             path.remove();
           }
         },
@@ -154,6 +203,17 @@ function createBabelPlugin(options: {
             // @ts-expect-error
             !this.state.exportedIdentifiers.includes(path.node.id.name)
           ) {
+            path.traverse(
+              {
+                Identifier(path: any) {
+                  this.removedIdentifiers.push(path);
+                },
+              },
+              {
+                // @ts-expect-error
+                removedIdentifiers: this.removedIdentifiers,
+              }
+            );
             path.remove();
           } else {
             path.skip();
@@ -164,5 +224,5 @@ function createBabelPlugin(options: {
   };
 }
 
-export { createBabelPlugin };
+export { createRemoveExportsPlugin };
 export default createPlugin;

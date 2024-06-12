@@ -6,6 +6,7 @@ export default defineConfig({
   build: {
     emptyOutDir: false,
     target: "node18",
+    minify: false,
     lib: {
       entry: {
         reagent: path.join(__dirname, "index.ts"),
@@ -18,6 +19,7 @@ export default defineConfig({
       external: [
         "virtual:reagent-agent-module",
         /\@reagentai\/reagent*/,
+        /\@reagentai\/serve*/,
         ...builtins(),
         /^node:.+/,
         "vite",

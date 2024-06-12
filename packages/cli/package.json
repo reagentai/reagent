@@ -31,6 +31,7 @@
   "license": "MIT",
   "dependencies": {
     "@babel/core": "^7.24.5",
+    "@babel/plugin-syntax-jsx": "^7.24.6",
     "@hono/node-server": "^1.11.2",
     "@hono/vite-dev-server": "^0.12.1",
     "@radix-ui/react-toast": "^1.1.5",
@@ -54,6 +55,7 @@
   },
   "devDependencies": {
     "@babel/generator": "^7.24.5",
+    "@babel/preset-typescript": "^7.24.1",
     "@types/babel__core": "^7.20.5",
     "@types/babel__generator": "^7.6.8",
     "@types/dagre": "^0.7.52",
