@@ -1,10 +1,34 @@
 import { Hono } from "hono";
 import { handle } from "hono/vercel";
-import { createAgentRouter } from "@reagentai/react/server/chat";
-import { agents } from "@reagentai/react/demo-agents";
+import agent from "@reagentai/react-examples/chat";
+import { z } from "@reagentai/reagent/agent";
+import { invokeGraphAgent } from "@reagentai/serve";
+import { OpenAI } from "@reagentai/reagent/llm/integrations/models";
 
 const app = new Hono();
-app.route("/api/chat", createAgentRouter(agents));
+
+const invokeSchema = z.object({
+  id: z.string(),
+  message: z.object({
+    content: z.string(),
+  }),
+});
+
+app.post("/api/chat/invoke", async (ctx) => {
+  const body = invokeSchema.parse(await ctx.req.json());
+  const model = new OpenAI({
+    model: "gpt-3.5-turbo",
+  });
+
+  const agentOutputStream = invokeGraphAgent<any>(agent, {
+    nodeId: "input",
+    input: {
+      query: body.message.content,
+      model,
+    },
+  });
+  return agentOutputStream.toResponse();
+});
 
 export const GET = handle(app);
 export const POST = handle(app);
