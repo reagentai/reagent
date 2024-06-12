@@ -23,11 +23,6 @@ const CodeInterpreter = createAgentNode({
       undefined as Pick<Execution, "results" | "logs" | "error"> | undefined
     );
 
-    await new Promise((r) => {
-      setTimeout(() => {
-        r(null);
-      }, 10_000);
-    });
     const codeInterpreter = await E2BCodeInterpreter.create();
     const exec = await codeInterpreter.notebook.execCell(input.code);
 
