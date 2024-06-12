@@ -1,8 +1,7 @@
-import React from "react";
 import { createAgentNode, z } from "@reagentai/reagent/agent/index.js";
 
 const AgentError = createAgentNode({
-  id: "@reagentai/react-examples/agent-error",
+  id: "@reagentai/react/agent-error",
   name: "Show Agent Error",
   version: "0.0.1",
   input: z.object({

@@ -11,6 +11,7 @@
     "@faker-js/faker": "^8.4.1",
     "@reagentai/react": "workspace:^",
     "@reagentai/reagent": "workspace:^",
+    "@reagentai/thirdparty": "workspace:^",
     "dedent": "^1.5.3",
     "highlight.js": "^11.9.0",
     "react": "^18.3.1",

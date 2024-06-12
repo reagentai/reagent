@@ -5,7 +5,7 @@ import {
   ChatInput,
 } from "@reagentai/reagent/agent/nodes";
 
-import { AgentError } from "../tools/AgentError";
+import { AgentError } from "@reagentai/react/tools/AgentError";
 import { GenerateSQLQuery } from "./GenerateSQLQuery";
 
 const agent = new GraphAgent({
