@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { handle } from "hono/vercel";
-import agent from "@reagentai/react-examples/chat";
+import agent from "@reagentai/react-examples/weather";
 import { z } from "@reagentai/reagent/agent";
 import { invokeGraphAgent } from "@reagentai/serve";
 import { OpenAI } from "@reagentai/reagent/llm/integrations/models";
