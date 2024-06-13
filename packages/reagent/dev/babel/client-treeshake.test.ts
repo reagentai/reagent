@@ -1,10 +1,9 @@
 import { expect, test } from "vitest";
 import { transformSync } from "@babel/core";
 import generate from "@babel/generator";
-// @ts-expect-error
 import picomatch from "picomatch";
 
-import { createRemoveExportsPlugin } from "./agent";
+import { createRemoveExportsPlugin } from "./client-treeshake";
 
 test("keep `nodes` export and used import", () => {
   const expected = `
@@ -133,7 +132,7 @@ test("only keep used imports", () => {
 test("test node_modules picomatch", () => {
   const matches = picomatch(["**/*"], {
     dot: true,
-  });
+  })!;
   expect(matches("demo-cli/node_modules/.vite/rxjs.js")).toBe(true);
 });
 

@@ -3,7 +3,8 @@ import createVitePlugin from "../vite/plugin.js";
 export default function (source) {
   const options = this.getOptions();
   const vitePlugin = createVitePlugin({
-    tools: options.tools,
+    include: options.include,
+    exclude: options.exclude,
     plugins: ["@babel/plugin-syntax-jsx"],
     presets: [
       [

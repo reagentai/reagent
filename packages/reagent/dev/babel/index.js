@@ -47,15 +47,8 @@ function createPlugin(options) {
             }
           }
         },
-        ExpressionStatement(path, state) {
-          if (!state._createReagentNode) {
-            path.skip();
-            return;
-          }
-        },
         CallExpression(path, state) {
           if (!state._createReagentNode) {
-            path.skip();
             return;
           }
           const { node } = path;

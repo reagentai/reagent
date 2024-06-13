@@ -3,7 +3,6 @@ import * as t from "@babel/types";
 const tranformCreateAgentNode = {
   ObjectMethod(path) {
     if (path.node.key.name != "execute") {
-      path.skip();
       return;
     }
     // make sure run is non-async generator
