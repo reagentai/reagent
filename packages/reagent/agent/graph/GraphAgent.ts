@@ -1,5 +1,6 @@
 import { Observable, Observer, Subscription, map, merge } from "rxjs";
 import { pick } from "lodash-es";
+import zodToJsonSchema, { JsonSchema7ObjectType } from "zod-to-json-schema";
 
 import { GraphNode, NODE_OUTPUT_FIELD } from "./GraphNode.js";
 import { AbstractAgentNode } from "../node.js";
@@ -10,6 +11,7 @@ import type {
   OutputValueProvider,
   RenderUpdate,
 } from "./types";
+import { z } from "../zod.js";
 
 type OutputBindings = {
   markdown?: OutputValueProvider<any>[];
@@ -162,10 +164,50 @@ class GraphAgent {
 
   generateGraph() {
     const nodes = [...this.#nodesById.entries()].map((e) => {
+      const metadata = e[1].node.metadata;
+      const jsonSchema = zodToJsonSchema(
+        z.object({
+          config: metadata.config,
+          inputs: metadata.input,
+          outputs: metadata.output,
+        })
+      ) as JsonSchema7ObjectType;
+      const inputs = Object.entries(metadata.input._def.shape()).map(
+        ([key, shape]: any[]) => {
+          // @ts-expect-error
+          const schema = jsonSchema.properties.inputs.properties[key];
+          return {
+            key,
+            label: (shape._def.label as string) || key,
+            schema,
+            required:
+              // @ts-expect-error
+              jsonSchema.properties.inputs.required?.includes(key) || false,
+          };
+        }
+      );
+      const outputs = Object.entries(metadata.input._def.shape()).map(
+        ([key, shape]: any[]) => {
+          // @ts-expect-error
+          const schema = jsonSchema.properties.inputs.properties[key];
+          return {
+            key,
+            label: (shape._def.label as string) || key,
+            schema,
+            required:
+              // @ts-expect-error
+              jsonSchema.properties.inputs.required?.includes(key) || false,
+          };
+        }
+      );
+
       return {
         id: e[0],
-        label: e[1].options.label || e[1].node.metadata.name,
-        type: pick(e[1].node.metadata, "id", "name"),
+        label: e[1].options.label || metadata.name,
+        inputs,
+        outputs,
+        hasUI: metadata.hasUI,
+        type: pick(metadata, "id", "name"),
         dependencies: e[1].graphNode.dependencies,
       };
     });
@@ -173,6 +215,9 @@ class GraphAgent {
     nodes.push({
       id: "@core/output",
       label: "Agent Output",
+      inputs: [],
+      outputs: [],
+      hasUI: false,
       type: {
         id: "@core/output",
         name: "Agent output",
