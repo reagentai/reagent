@@ -22,14 +22,13 @@ const createFindExportedIdentifiers = () => {
  * @type {object}
  *
  * @property {boolean} [disable] - glob pattern to include files
- * @property {string[]} preserveExports - glob pattern to exclude files
  */
 
 /**
  *
  * @param {Options} options
  */
-function createRemoveExportsPlugin(options) {
+function createRemoveDefaultExportPlugin(options) {
   const findExportedIdentifiers = createFindExportedIdentifiers();
   return ({ types: t }) => {
     return {
@@ -41,19 +40,16 @@ function createRemoveExportsPlugin(options) {
             }
             const state = {
               scope: path.scope,
-              preserveExports: [
-                ...options.preserveExports,
-                "__reagentai_exports__",
-              ],
               exportedIdentifiers: new Set(),
               isReagentaiAgentModule: false,
             };
-            this.removedIdentifiers = [];
             path.traverse(findExportedIdentifiers, state);
             this.state = state;
           },
           exit(path) {
-            const self = this;
+            if (!this.state.isReagentaiAgentModule) {
+              return;
+            }
             // remove all unused imports
             // TODO: remove default export
             path.traverse({
@@ -65,7 +61,7 @@ function createRemoveExportsPlugin(options) {
 
                   const allReferencesRemoved = binding.referencePaths.every(
                     (p) => {
-                      return self.removedIdentifiers.find((ri) => ri === p);
+                      return p.__reagentNodeRemoved;
                     }
                   );
                   return !allReferencesRemoved;
@@ -102,31 +98,21 @@ function createRemoveExportsPlugin(options) {
             t.isIdentifier(callee.node) &&
             !this.state.exportedIdentifiers.has(callee.node.name)
           ) {
-            path.traverse(
-              {
-                Identifier(path) {
-                  this.removedIdentifiers.push(path);
-                },
+            path.traverse({
+              Identifier(path) {
+                path.__reagentNodeRemoved = true;
               },
-              {
-                removedIdentifiers: this.removedIdentifiers,
-              }
-            );
+            });
             path.remove();
           } else if (
             t.isMemberExpression(callee) &&
             !this.state.exportedIdentifiers.has(callee.node.object.name)
           ) {
-            path.traverse(
-              {
-                Identifier(path) {
-                  this.removedIdentifiers.push(path);
-                },
+            path.traverse({
+              Identifier(path) {
+                path.__reagentNodeRemoved = true;
               },
-              {
-                removedIdentifiers: this.removedIdentifiers,
-              }
-            );
+            });
             path.remove();
           }
         },
@@ -138,19 +124,12 @@ function createRemoveExportsPlugin(options) {
             path.scope == this.state.scope &&
             !this.state.exportedIdentifiers.has(path.node.id.name)
           ) {
-            path.traverse(
-              {
-                Identifier(path) {
-                  this.removedIdentifiers.push(path);
-                },
+            path.traverse({
+              Identifier(path) {
+                path.__reagentNodeRemoved = true;
               },
-              {
-                removedIdentifiers: this.removedIdentifiers,
-              }
-            );
+            });
             path.remove();
-          } else {
-            path.skip();
           }
         },
       },
@@ -158,4 +137,4 @@ function createRemoveExportsPlugin(options) {
   };
 }
 
-export { createRemoveExportsPlugin };
+export { createRemoveDefaultExportPlugin };

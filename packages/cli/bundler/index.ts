@@ -5,7 +5,6 @@ import tailwindcss from "tailwindcss";
 import { reagent } from "@reagentai/reagent/dev/vite/index.js";
 
 import { devServer } from "./plugins/server";
-import createAgentPlugin from "./plugins/agent";
 
 type Options = { file: string; open: boolean; port: number };
 const dev = async (options: Options) => {
@@ -52,10 +51,6 @@ const dev = async (options: Options) => {
         include: [process.cwd()],
       }),
       reagent({
-        include: ["**/@reagentai/**"],
-        exclude: ["**/node_modules/**"],
-      }),
-      createAgentPlugin({
         include: ["**/@reagentai/**"],
         exclude: ["**/node_modules/**"],
       }),

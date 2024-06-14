@@ -2,7 +2,7 @@ import { transformSync, DEFAULT_EXTENSIONS } from "@babel/core";
 import picomatch from "picomatch";
 
 import createBabelPlugin from "../babel/index.js";
-import { createRemoveExportsPlugin } from "../babel/client-treeshake.js";
+import { createRemoveDefaultExportPlugin } from "../babel/client-treeshake.js";
 
 function cleanUrl(url) {
   const queryRE = /\?.*$/s;
@@ -63,11 +63,7 @@ const createPlugin = (options = {}) => {
         ...(options.plugins || []),
       ];
       if (!ssr) {
-        plugins.push(
-          createRemoveExportsPlugin({
-            preserveExports: ["nodes"],
-          })
-        );
+        plugins.push(createRemoveDefaultExportPlugin({}));
       }
       const { code: transformedCode, map } = transformSync(code, {
         configFile: false,

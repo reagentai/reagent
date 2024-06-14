@@ -40,7 +40,7 @@ function createPlugin(options) {
               );
             });
 
-            if (createReagentNodeSpecifier && createReagentNodeSpecifier) {
+            if (createReagentNodeSpecifier) {
               state._createReagentNode = {
                 local: createReagentNodeSpecifier.get("local"),
               };
@@ -60,6 +60,11 @@ function createPlugin(options) {
             }
             path.skip();
             if (!options.ssr) {
+              path.traverse({
+                Identifier(path) {
+                  path.__reagentNodeRemoved = true;
+                },
+              });
               path.replaceWith(
                 t.objectExpression(
                   node.arguments[0].properties.filter((prop) => {

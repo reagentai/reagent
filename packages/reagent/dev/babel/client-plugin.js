@@ -35,6 +35,15 @@ const transformCreateAgentNodeExecuteMethod = {
           })
         )
       );
+      // all identifier nodes in createReagentNode is already marked
+      // as removed since it's being replaced with a new node.
+      // so, mark the nodes that replaced old nodes as not-removed
+      // TODO: there must be a better solution
+      path.traverse({
+        Identifier(path) {
+          path.__reagentNodeRemoved = undefined;
+        },
+      });
     },
   },
   CallExpression(path) {

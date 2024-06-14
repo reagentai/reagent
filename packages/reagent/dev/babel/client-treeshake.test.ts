@@ -3,9 +3,9 @@ import { transformSync } from "@babel/core";
 import generate from "@babel/generator";
 import picomatch from "picomatch";
 
-import { createRemoveExportsPlugin } from "./client-treeshake";
+import { createRemoveDefaultExportPlugin } from "./client-treeshake";
 
-test("keep `nodes` export and used import", () => {
+test("keep non default export and used import", () => {
   const expected = `
   import {GetWeather} from "@reagentai/reagent/agent/nodes";
   export default "__removed_by_reagent__";
@@ -34,7 +34,7 @@ test("keep `nodes` export and used import", () => {
   expect(transformedCode).to.equal(cleanUpCode(expected));
 });
 
-test("only keep `nodes` export and used varaible", () => {
+test("only keep non-default export and used varaible", () => {
   const expected = `
   const GetWeather = createReagentNode({
     id: "@reagentai/demo-agents/getWeather",
@@ -136,9 +136,7 @@ test("test node_modules picomatch", () => {
   expect(matches("demo-cli/node_modules/.vite/rxjs.js")).toBe(true);
 });
 
-const removeExportsPlugin = createRemoveExportsPlugin({
-  preserveExports: ["nodes"],
-});
+const removeExportsPlugin = createRemoveDefaultExportPlugin({});
 
 const transform = (code: string): { code: string } => {
   // @ts-expect-error

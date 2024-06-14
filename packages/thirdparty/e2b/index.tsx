@@ -7,7 +7,7 @@ import {
 import {
   CodeInterpreterComponent,
   CodeInterpreterData,
-} from "./CodeInterpreter";
+} from "./CodeInterpreter.js";
 
 const outputSchema = z.object({});
 

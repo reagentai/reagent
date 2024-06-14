@@ -1,6 +1,6 @@
 import { Execution } from "@e2b/code-interpreter";
 import { Spinner } from "@reagentai/react/components/Spinner.js";
-import { CollapsibleCode } from "@reagentai/react/components/CollapsibleCode";
+import { CollapsibleCode } from "@reagentai/react/components/CollapsibleCode.js";
 
 export type CodeInterpreterData = Partial<
   Pick<Execution, "results" | "logs" | "error">

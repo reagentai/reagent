@@ -19,3 +19,4 @@ const AgentError = createReagentNode({
 });
 
 export { AgentError };
+export const __reagentai_exports__ = true;
