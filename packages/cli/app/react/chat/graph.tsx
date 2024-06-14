@@ -60,7 +60,7 @@ const NodeComponent = (props: any) => {
           "flex max-w-52 px-3 py-2 justify-center rounded border border-gray-400",
           props.data.type.id == "@core/input"
             ? "bg-indigo-300"
-            : props.data.type.id == "@core/user"
+            : props.data.type.id == "@core/output"
               ? "bg-slate-300"
               : "bg-gray-50"
         )}

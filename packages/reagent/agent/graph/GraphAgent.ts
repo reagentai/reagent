@@ -4,6 +4,7 @@ import { pick } from "lodash-es";
 import { GraphNode, NODE_OUTPUT_FIELD } from "./GraphNode.js";
 import { AbstractAgentNode } from "../node.js";
 import { EventStream } from "../stream.js";
+import { VALUE_PROVIDER } from "./operators.js";
 import type {
   OutputValueEvent,
   OutputValueProvider,
@@ -160,15 +161,30 @@ class GraphAgent {
   }
 
   generateGraph() {
+    const nodes = [...this.#nodesById.entries()].map((e) => {
+      return {
+        id: e[0],
+        label: e[1].options.label || e[1].node.metadata.name,
+        type: pick(e[1].node.metadata, "id", "name"),
+        dependencies: e[1].graphNode.dependencies,
+      };
+    });
+
+    nodes.push({
+      id: "@core/output",
+      label: "Agent Output",
+      type: {
+        id: "@core/output",
+        name: "Agent output",
+      },
+      dependencies: Object.values(this.#outputBindings || {}).flatMap(
+        (outputs) =>
+          outputs.flatMap((o: any) => o[VALUE_PROVIDER]?.dependencies || [])
+      ),
+    });
+
     return {
-      nodes: [...this.#nodesById.entries()].map((e) => {
-        return {
-          id: e[0],
-          label: e[1].options.label || e[1].node.metadata.name,
-          type: pick(e[1].node.metadata, "id", "name"),
-          dependencies: e[1].graphNode.dependencies,
-        };
-      }),
+      nodes,
     };
   }
 }
