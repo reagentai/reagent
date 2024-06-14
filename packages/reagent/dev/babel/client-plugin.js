@@ -1,7 +1,7 @@
 import * as t from "@babel/types";
 
 const tranformCreateAgentNode = {
-  ObjectMethod(path) {
+  ObjectMethod(path, state) {
     if (path.node.key.name != "execute") {
       return;
     }
@@ -9,13 +9,14 @@ const tranformCreateAgentNode = {
     path.node.generator = true;
     path.node.async = false;
     const context = path.get("params")[0];
-    path.traverse(transformCreateAgentNodeExecuteMethod, {
+    const executeState = {
       method: path.node,
       contextName: context.node.name,
       context,
       renderCalls: [],
       renderCallCount: 0,
-    });
+    };
+    path.traverse(transformCreateAgentNodeExecuteMethod, executeState);
     path.skip();
   },
 };
@@ -46,7 +47,7 @@ const transformCreateAgentNodeExecuteMethod = {
       });
     },
   },
-  CallExpression(path) {
+  CallExpression(path, state) {
     const callee = path.get("callee");
     const isContextRender =
       t.isMemberExpression(callee.node) &&

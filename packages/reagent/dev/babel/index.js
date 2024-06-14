@@ -65,12 +65,14 @@ function createPlugin(options) {
                   path.__reagentNodeRemoved = true;
                 },
               });
+              node.arguments[0].properties.forEach((prop) => {
+                if (prop.key.name == "execute") {
+                  path.traverse(tranformCreateAgentNode, state);
+                }
+              });
               path.replaceWith(
                 t.objectExpression(
                   node.arguments[0].properties.filter((prop) => {
-                    if (prop.key.name == "execute") {
-                      path.traverse(tranformCreateAgentNode);
-                    }
                     return (
                       options.ssr ||
                       ["id", "version", "name", "execute"].includes(
@@ -81,11 +83,22 @@ function createPlugin(options) {
                 )
               );
             } else {
+              const state = {
+                hasUI: false,
+              };
               node.arguments[0].properties.forEach((prop) => {
                 if (prop.key.name == "execute") {
-                  path.traverse(tranformCreateAgentNode);
+                  path.traverse(tranformCreateAgentNode, state);
                 }
               });
+              if (state.hasUI) {
+                node.arguments[0].properties.push(
+                  t.objectProperty(
+                    t.identifier("hasUI"),
+                    t.booleanLiteral(state.hasUI)
+                  )
+                );
+              }
             }
           }
         },

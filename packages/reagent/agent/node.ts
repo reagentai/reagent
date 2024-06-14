@@ -24,6 +24,10 @@ export type Metadata<
   config: ZodObjectSchema<Config>;
   input: ZodObjectSchema<Input>;
   output: ZodObjectSchema<Output>;
+  // whether this node renders UI components
+  // this doesn't have to be passed when creating a node since
+  // babel plugin will set this during build time
+  hasUI?: boolean;
   state?: ZodObjectSchema<State>;
 };
 
@@ -107,6 +111,7 @@ export const createReagentNode = <
   config?: ZodObjectSchema<Config>;
   input?: ZodObjectSchema<Input>;
   output: ZodObjectSchema<Output>;
+  hasUI?: boolean;
   execute: AgentNode<Config, WithDefaultEmpty<Input>, Output>["run"];
 }) => {
   const config = (options.config || z.object({})) as ZodObjectSchema<
@@ -131,6 +136,7 @@ export const createReagentNode = <
         config,
         input: inputSchema,
         output: options.output,
+        hasUI: options.hasUI,
       };
     }
   };
