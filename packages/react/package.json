@@ -1,6 +1,6 @@
 {
   "name": "@reagentai/react",
-  "version": "0.2.17",
+  "version": "0.2.18",
   "description": "React UI for Reagent agents",
   "type": "module",
   "scripts": {
