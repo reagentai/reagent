@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import type { Chat } from "@reagentai/serve/chat";
+import type { Chat } from "@reagentai/reagent/chat";
 
 import { useAgentContext } from "./context.js";
 

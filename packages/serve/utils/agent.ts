@@ -9,8 +9,7 @@ import {
 } from "rxjs";
 import { GraphAgent } from "@reagentai/reagent/agent/index.js";
 import { uniqueId } from "@reagentai/reagent/utils/uniqueId.js";
-
-import { Chat } from "../chat";
+import type { Chat } from "@reagentai/reagent/chat";
 
 type OutputStream = Observable<any> & {
   toResponse(): Response;

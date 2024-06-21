@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import clsx from "clsx";
 import Markdown from "react-markdown";
-import type { Chat } from "@reagentai/serve/chat";
+import type { Chat } from "@reagentai/reagent/chat";
 
 import { AgentNodeUI } from "../agent/index.js";
 
