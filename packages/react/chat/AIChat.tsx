@@ -6,7 +6,11 @@ const AIChat = (props: { store: ChatStore }) => {
   const messages = props.store((s) => s.messages);
   const sortedMessageIds = props.store((s) => s.sortedMessageIds);
   const sendNewMessage = props.store(
-    (s) => (msg: any) => s.invoke("input", msg)
+    (s) => (input: any) =>
+      s.invoke({
+        nodeId: "input",
+        input,
+      })
   );
   const sendNewMessageMutation = {
     mutate(input: any) {

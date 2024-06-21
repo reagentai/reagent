@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { produce } from "immer";
 import type { Chat } from "@reagentai/reagent/chat";
+import { jsonStreamToAsyncIterator } from "@reagentai/reagent/llm/stream/index.js";
 
 type NewMessage = {
   id: string;
@@ -9,26 +10,64 @@ type NewMessage = {
   message: { content: string };
   regenerate: boolean;
 };
+
 export type ChatState = {
   messages: Record<string, Chat.Message>;
   sortedMessageIds: string[];
   setMessages: (messages: Record<string, Chat.Message>) => void;
-  invoke: (nodeId: string, message: NewMessage) => void;
+  invoke: (options: { nodeId: string; input: NewMessage }) => void;
+};
+
+export type InvokeOptions = {
+  nodeId: string;
+  input: NewMessage;
+  state: ChatState;
+};
+
+type StoreInit = {
+  messages: Record<string, Chat.Message>;
+  invokeUrl: string;
+  middleware?: {
+    request: (options: InvokeOptions) => { nodeId: string; input: any };
+  };
+  onInvokeError?: (res: Response) => void | Promise<void>;
 };
 
 export const createChatStore = (
-  init: {
-    messages: Record<string, Chat.Message>;
-    invoke: (
-      nodeId: string,
-      message: NewMessage,
-      state: ChatState
-    ) => Promise<Chat.ResponseStream>;
-  },
+  init: StoreInit,
   options?: {
     persistKey?: string;
   }
 ) => {
+  const invoke = async (options: {
+    nodeId: string;
+    input: NewMessage;
+    state: any;
+  }) => {
+    const body = init.middleware?.request?.(options) || {
+      nodeId: options.nodeId,
+      input: options.input,
+    };
+    const res = await fetch(init.invokeUrl!, {
+      method: "POST",
+      body: JSON.stringify(body),
+      headers: {
+        "content-type": "application/json",
+      },
+    });
+    if (res.status != 200) {
+      init.onInvokeError?.(res);
+      return (async function* asyncGenerator() {})();
+    }
+    const iterator = jsonStreamToAsyncIterator(res.body!);
+    async function* asyncGenerator() {
+      for await (const { json } of iterator) {
+        yield json;
+      }
+    }
+    return asyncGenerator();
+  };
+
   const withPerisist: typeof persist = options?.persistKey
     ? persist
     : (x: any) => {
@@ -64,8 +103,9 @@ export const createChatStore = (
               })
             );
           },
-          async invoke(nodeId: string, message) {
+          async invoke(options: { nodeId: string; input: NewMessage }) {
             set((s) => {
+              const message = options.input;
               const state = produce(s, (state) => {
                 state.messages[message.id] = {
                   id: message.id,
@@ -81,7 +121,11 @@ export const createChatStore = (
               });
             });
 
-            const response = await init.invoke(nodeId, message, get());
+            const response = await invoke({
+              nodeId: options.nodeId,
+              input: options.input,
+              state: get(),
+            });
             for await (const msg of response) {
               set((s) => {
                 let state: ChatState;
@@ -103,7 +147,7 @@ export const createChatStore = (
                   });
                 } else if (msg.type == "message/ui") {
                   state = produce(s, (state) => {
-                    state.messages[message.id] = msg.data;
+                    state.messages[options.input.id] = msg.data;
                   });
                 } else if (msg.type == "message/ui/update") {
                   const data = msg.data;

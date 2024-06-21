@@ -1,47 +1,34 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import { jsonStreamToAsyncIterator } from "@reagentai/reagent/llm/stream/index.js";
 import { AIChat, createChatStore } from "@reagentai/react/chat";
 import { AgentContextProvider } from "@reagentai/react/agent";
 import * as agent from "@reagentai/react-examples/weather";
 
 const ChatAgent = () => {
   const [invokeError, setInvokeError] = useState<string | null>(null);
-  const store = useMemo(
-    () =>
-      createChatStore(
-        {
-          messages: {},
-          async invoke(nodeId, input, state) {
-            const res = await fetch(`/api/chat/invoke`, {
-              method: "POST",
-              body: JSON.stringify({
-                ...input,
-              }),
-              headers: {
-                "content-type": "application/json",
-              },
-            });
-            if (res.status != 200) {
-              setInvokeError((await res.text()) || res.statusText);
-              return (async function* asyncGenerator() {})();
-            }
-            const iterator = jsonStreamToAsyncIterator(res.body!);
-            async function* asyncGenerator() {
-              for await (const { json } of iterator) {
-                yield json;
-              }
-            }
-            return asyncGenerator();
-          },
+  const store = createChatStore(
+    {
+      messages: {},
+      invokeUrl: "/api/chat/invoke",
+      middleware: {
+        request(options) {
+          setInvokeError(null);
+          return {
+            nodeId: options.nodeId,
+            input: options.input,
+          };
         },
-        {
-          persistKey: `reagent-dev-chat-app`,
-        }
-      ),
-    []
+      },
+      async onInvokeError(res) {
+        setInvokeError((await res.text()) || res.statusText);
+      },
+    },
+    {
+      persistKey: `reagent-dev-chat-app`,
+    }
   );
+
   return (
     <div className="flex">
       <div className="flex-1 h-screen">

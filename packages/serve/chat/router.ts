@@ -42,17 +42,20 @@ const createChatAgentRouter = (agents: Map<string, GraphAgent>) => {
   });
 
   const invokeSchema = z.object({
-    id: z.string(),
     agentId: z.string().default("default"),
-    message: z.object({
-      content: z.string(),
+    nodeId: z.string(),
+    input: z.object({
+      id: z.string(),
+      message: z.object({
+        content: z.string(),
+      }),
+      model: z
+        .object({
+          provider: z.enum(["openai", "anthropic", "groq"]),
+          name: z.string(),
+        })
+        .optional(),
     }),
-    model: z
-      .object({
-        provider: z.enum(["openai", "anthropic", "groq"]),
-        name: z.string(),
-      })
-      .optional(),
   });
 
   router.post("/invoke", async (ctx) => {
@@ -66,19 +69,18 @@ const createChatAgentRouter = (agents: Map<string, GraphAgent>) => {
       response: "Please select a AI model provider.",
     });
 
-    if (body.model?.provider == "openai") {
+    if (body.input.model?.provider == "openai") {
       model = new OpenAI({
         // @ts-expect-error
         model: body.model.name,
-        contextLength: 8000,
       });
-    } else if (body.model?.provider == "anthropic") {
+    } else if (body.input.model?.provider == "anthropic") {
       model = new AnthropicChat({
-        model: body.model.name,
+        model: body.input.model.name,
         version: "2023-06-01",
         contextLength: 8000,
       });
-    } else if (body.model?.provider == "groq") {
+    } else if (body.input.model?.provider == "groq") {
       model = new Groq({
         // @ts-expect-error
         model: body.model.name || "mixtral-8x7b-32768",
@@ -88,7 +90,7 @@ const createChatAgentRouter = (agents: Map<string, GraphAgent>) => {
     const agentOutputStream = invokeGraphAgent<ChatInput>(agent, {
       nodeId: "input",
       input: {
-        query: body.message.content,
+        query: body.input.message.content,
         model,
       },
     });

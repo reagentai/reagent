@@ -8,14 +8,22 @@ import { OpenAI } from "@reagentai/reagent/llm/integrations/models";
 const app = new Hono();
 
 const invokeSchema = z.object({
-  id: z.string(),
-  message: z.object({
-    content: z.string(),
+  input: z.object({
+    id: z.string(),
+    message: z.object({
+      content: z.string(),
+    }),
+    model: z
+      .object({
+        provider: z.enum(["openai", "anthropic", "groq"]),
+        name: z.string(),
+      })
+      .optional(),
   }),
 });
 
 app.post("/api/chat/invoke", async (ctx) => {
-  const body = invokeSchema.parse(await ctx.req.json());
+  const { input } = invokeSchema.parse(await ctx.req.json());
   const model = new OpenAI({
     model: "gpt-3.5-turbo",
   });
@@ -23,7 +31,7 @@ app.post("/api/chat/invoke", async (ctx) => {
   const agentOutputStream = invokeGraphAgent<any>(agent, {
     nodeId: "input",
     input: {
-      query: body.message.content,
+      query: input.message.content,
       model,
     },
   });
