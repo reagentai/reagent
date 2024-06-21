@@ -1,5 +1,5 @@
 import React from "react";
-import Markdown from "react-markdown";
+import { Markdown } from "./Markdown";
 import * as Collapsible from "@radix-ui/react-collapsible";
 import { ChevronDownIcon, ChevronUpIcon } from "@radix-ui/react-icons";
 
@@ -27,11 +27,11 @@ const CollapsibleCode = (props: {
       </div>
 
       <Collapsible.Content>
-        <div className="text-[15px] leading-[25px] rounded bg-slate-600 text-gray-50 my-[10px] p-[10px]">
-          {/* TODO: use syntax highlighting */}
-          <Markdown remarkPlugins={[]}>
-            {"```" + props.language + `\n${props.code}\n`}
-          </Markdown>
+        <div className="text-[15px] leading-[25px] rounded bg-slate-600 text-gray-50 my-[10px] p-[10px] overflow-x-auto">
+          <Markdown
+            remarkPlugins={[]}
+            markdown={"```" + props.language + `\n${props.code}\n`}
+          />
         </div>
       </Collapsible.Content>
     </Collapsible.Root>
