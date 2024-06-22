@@ -144,5 +144,5 @@ To see `E2B` code intrepreter in action, you can ask AI to: `show a distribution
 
 ### TODO
 
-[ ] Visualize agent graph
-[ ] Chat history
+- [ ] Visualize agent graph
+- [ ] Chat history
