@@ -1,5 +1,3 @@
-import path from "path";
-
 export default {
   webpack: (config, { isServer }) => {
     config.module.rules.push({

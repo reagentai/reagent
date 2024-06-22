@@ -10,7 +10,7 @@ const ChatAgent = () => {
   const store = createChatStore(
     {
       messages: {},
-      invokeUrl: "/api/chat/invoke",
+      invokeUrl: "/api/chat",
       middleware: {
         request(options) {
           setInvokeError(null);

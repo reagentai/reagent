@@ -1,11 +1,7 @@
-import { Hono } from "hono";
-import { handle } from "hono/vercel";
-import agent from "@reagentai/react-examples/weather";
 import { z } from "@reagentai/reagent/agent";
-import { invokeGraphAgent } from "@reagentai/serve";
 import { OpenAI } from "@reagentai/reagent/llm/integrations/models";
-
-const app = new Hono();
+import { invokeGraphAgent } from "@reagentai/serve";
+import agent from "@reagentai/react-examples/e2b";
 
 const invokeSchema = z.object({
   input: z.object({
@@ -22,8 +18,8 @@ const invokeSchema = z.object({
   }),
 });
 
-app.post("/api/chat/invoke", async (ctx) => {
-  const { input } = invokeSchema.parse(await ctx.req.json());
+export async function POST(request: Request) {
+  const { input } = invokeSchema.parse(await request.json());
   const model = new OpenAI({
     model: "gpt-3.5-turbo",
   });
@@ -36,7 +32,4 @@ app.post("/api/chat/invoke", async (ctx) => {
     },
   });
   return agentOutputStream.toResponse();
-});
-
-export const GET = handle(app);
-export const POST = handle(app);
+}

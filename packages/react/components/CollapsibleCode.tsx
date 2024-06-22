@@ -1,3 +1,4 @@
+"use client";
 import React from "react";
 import { Markdown } from "./Markdown";
 import * as Collapsible from "@radix-ui/react-collapsible";
