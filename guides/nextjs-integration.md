@@ -136,7 +136,11 @@ Now, start your `Next.js` application using `pnpm next dev` and open `http://loc
 
 To see `E2B` code intrepreter in action, you can ask AI to: `show a distribution of US demographics`
 
-![Agent screenshot](../assets/data-analysis-agent-screenshot.png)
+### Screenshot
+
+<p align="center">
+  <img style="" width="50%" src="../assets/data-analysis-agent-screenshot.png" alt="Agent screenshot" />
+</p>
 
 ### TODO
 
