@@ -41,6 +41,7 @@ It supports rendering custom UI components directly from the workflow nodes and 
 
 - **OpenAI**
 - **Anthropic**
+- **Groq**
 - **Ollama**
 - **LMStudio**
 - Any other OpenAI compatible model providers
