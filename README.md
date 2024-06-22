@@ -25,6 +25,7 @@ It supports rendering custom UI components directly from the workflow nodes and 
 
 ## Features
 
+- **Generative UI**: Render UI components directly from workflow node and use it as LLM tool
 - **Auto generate workflow graph**: Generate the agent graph automatically
 - **Supports Any AI Model**: Use OpenAI, Anthropic, Mistral, Groq or any other model provider
 - **Framework Agnostic**: Works with any modern JavaScript framework: React, Solid, Svelte and Vue
