@@ -5,6 +5,7 @@
 </p>
 <br/>
 <p align="center">
+<a href="https://discord.gg/AkUgQ4KZye"><img src="https://img.shields.io/discord/1215815085377716305" alt="Discord"></a>
   <a href="https://x.com/reagent_ai"><img src="https://img.shields.io/twitter/follow/reagent_ai.svg" alt="Reagentai twitter"></a>
   <a href="https://npmjs.com/package/@reagentai/reagent"><img src="https://img.shields.io/npm/v/@reagentai/reagent.svg" alt="npm package"></a>
   <img src="https://img.shields.io/github/license/useportal/reagent" alt="MIT">
@@ -35,6 +36,14 @@ It supports rendering custom UI components directly from the workflow nodes and 
 - **AI Chat**: Build custom AI chat applications
 - **Workflows**: Easily build custom AI powered workflows
 - **AI Agent**: Build custom AI agents with backend/frontend `tool` calling
+
+## Supported Model Providers
+
+- **OpenAI**
+- **Anthropic**
+- **Ollama**
+- **LMStudio**
+- Any other OpenAI compatible model providers
 
 ## Getting Started
 
