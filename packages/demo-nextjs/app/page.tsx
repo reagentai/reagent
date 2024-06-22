@@ -3,7 +3,7 @@ import { useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { AIChat, createChatStore } from "@reagentai/react/chat";
 import { AgentContextProvider } from "@reagentai/react/agent";
-import * as agent from "@reagentai/react-examples/weather";
+import * as agent from "@reagentai/react-examples/e2b";
 
 const ChatAgent = () => {
   const [invokeError, setInvokeError] = useState<string | null>(null);

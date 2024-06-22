@@ -40,7 +40,7 @@ error.bind({
 agent.bind({
   markdown: [chat1.output.markdown],
   markdownStream: [chat1.output.stream],
-  ui: [codeInterpreter.render, error.render],
+  ui: [codeInterpreter.renderOutput, error.renderOutput],
 });
 
 export default agent;

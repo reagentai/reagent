@@ -38,7 +38,7 @@ error.bind({
 agent.bind({
   markdown: [chat1.output.markdown],
   markdownStream: [chat1.output.stream],
-  ui: [getWeather.render, error.render],
+  ui: [getWeather.renderOutput, error.renderOutput],
 });
 
 export default agent;

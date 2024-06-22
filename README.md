@@ -10,9 +10,9 @@
   <img src="https://img.shields.io/github/license/useportal/reagent" alt="MIT">
 </p>
 
-# Reagent
+# Reagent AI
 
-> Graph based AI agent framework
+> Graph based framework for building full-stack AI agents
 
 Reagent is an open-source Javascript framework to build AI agents. It allows you to build AI agents with multi-step workflows by combining nodes into an agent graph.
 
@@ -41,7 +41,7 @@ It supports rendering custom UI components directly from the workflow nodes and 
 ### Installation
 
 ```bash
-npm install @reagentai/reagent @reagentai/cli
+pnpm install @reagentai/reagent @reagentai/cli
 ```
 
 ### Example: Simple chat application
@@ -51,13 +51,7 @@ Here's a very simple AI chat application.
 ```typescript
 import "dotenv/config";
 import { GraphAgent } from "@reagentai/reagent/agent";
-import {
-  ChatCompletion,
-  ChatInput,
-  User,
-} from "@reagentai/reagent/agent/nodes";
-import { Groq } from "@reagentai/reagent/llm/integrations/models";
-import { DummyModel } from "@reagentai/reagent/llm/models/dummy";
+import { ChatCompletion, ChatInput } from "@reagentai/reagent/agent/nodes";
 
 // create a new agent
 const agent = new GraphAgent({
@@ -77,20 +71,18 @@ const chat1 = agent.addNode("chat-1", new ChatCompletion(), {
   },
 });
 
-// add user node; this is a mandatory node for output
-const user = agent.addNode("user", new User());
-
 // bind chat completion node's inputs
 chat1.bind({
-  // TODO: replace model with an actual model
-  model: new Groq({ model: "llama3-8b-8192" }),
+  // TODO: replace model with a specific model
+  model: input.output.model,
   query: input.output.query,
 });
 
-// bind user node's inputs
-user.bind({
-  markdown: chat1.output.markdown,
-  markdownStream: chat1.output.stream,
+// bind output of different nodes to agent so that those
+// outputs are shown in the frontend
+agent.bind({
+  markdown: [chat1.output.markdown],
+  markdownStream: [chat1.output.stream],
 });
 
 // export agent as default to run this agent with reagentai cli
@@ -99,11 +91,17 @@ export const nodes = [];
 export const __reagentai_exports__ = true;
 ```
 
-To run this chat agent, copy the above code to a `agent.ts`, add `.env` file with `GROQ_API_KEY={groq_api_key}`, and run the following command:
+To run this chat agent, copy the above code to a `agent.ts` and run the following command:
 
 ```bash
 pnpm reagent dev agent.ts
 ```
+
+> Note: You need to add the API keys in `.env` file.
+>
+> For Groq: `GROQ_API_KEY={groq_api_key}`.
+>
+> For OpenAI: `OPENAI_API_KEY={api_Key}`.
 
 The following agent graph is auto generated for the above chat agent:
 

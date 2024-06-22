@@ -36,6 +36,15 @@ type MappedInputEvent = {
   value: any;
 };
 
+type EdgeBindings<Input> = {
+  [K in keyof Input]: Input[K] extends OutputValueProvider<Input[K]>
+    ? OutputValueProvider<Input[K]>
+    :
+        | Required<Input>[K]
+        | OutputValueProvider<Required<Input>[K]>
+        | Required<Input>[K];
+};
+
 export const NODE_OUTPUT_FIELD = Symbol("___NODE_OUTPUT_FIELD__");
 
 class GraphNode<
@@ -100,14 +109,7 @@ class GraphNode<
     return this.#dependencies;
   }
 
-  bind(edges: {
-    [K in keyof Input]: Input[K] extends OutputValueProvider<Input[K]>
-      ? OutputValueProvider<Input[K]>
-      :
-          | Required<Input>[K]
-          | OutputValueProvider<Required<Input>[K]>
-          | Required<Input>[K];
-  }) {
+  bind(edges: EdgeBindings<Input>) {
     const self = this;
     const allProviders = Object.entries(edges);
     const providers: {
@@ -549,7 +551,7 @@ class GraphNode<
    */
   // TODO: if render stream is used, make sure the node's schema
   // is also bound; otherwise, the render stream won't close
-  get render(): OutputValueProvider<Observable<RenderUpdate>> {
+  get renderOutput(): OutputValueProvider<Observable<RenderUpdate>> {
     const self = this;
     if (self.#_renderStream) {
       return self.#_renderStream;

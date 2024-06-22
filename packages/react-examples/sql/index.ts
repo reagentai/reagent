@@ -76,7 +76,7 @@ error.bind({
 agent.bind({
   markdown: [generateQuery.output.markdown],
   markdownStream: [generateQuery.output.stream],
-  ui: [runQuery.render, error.render],
+  ui: [runQuery.renderOutput, error.renderOutput],
 });
 
 export default agent;
