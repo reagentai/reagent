@@ -1,8 +1,11 @@
 "use client";
 import { useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import { ReagentChat, createChatStore } from "@reagentai/react/chat";
-import { ReagentContextProvider } from "@reagentai/react/agent";
+import {
+  ReagentContextProvider,
+  ReagentChat,
+  createChatStore,
+} from "@reagentai/react/chat";
 import * as agent from "@reagentai/react-examples/e2b";
 
 const ChatAgent = () => {
