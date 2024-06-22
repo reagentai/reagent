@@ -107,6 +107,10 @@ The following agent graph is auto generated for the above chat agent:
 
 ![Agent UI demo](assets/chat-agent-graph.png)
 
+## Guides
+
+[Integrating Reagent with Next.js](guides/nextjs-integration.md)
+
 ## LICENSE
 
 [MIT](LICENSE)
