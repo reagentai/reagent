@@ -5,16 +5,16 @@ import tailwindcss from "tailwindcss";
 import { reagent } from "@reagentai/reagent/dev/vite/index.js";
 
 import { devServer } from "./plugins/server";
+import { virtualFiles } from "./plugins/virtual";
 
 type Options = { file: string; open: boolean; port: number };
 const dev = async (options: Options) => {
-  const inputFile = path.join(process.cwd(), options.file);
   const server = await createServer({
     configFile: false,
     build: {
       lib: {
         entry: {
-          reagent: inputFile,
+          reagent: "virtual:reagent-agent-module",
         },
         fileName: "out.js",
         name: "out.js",
@@ -44,6 +44,10 @@ const dev = async (options: Options) => {
       exclude: ["virtual:reagent-agent-module"],
     },
     plugins: [
+      virtualFiles({
+        "virtual:reagent-agent-module": `export * from "${options.file}";
+        export { default } from "${options.file}";`,
+      }),
       devServer(),
       react({
         // for now, only include current dir here to avoid
@@ -63,7 +67,6 @@ const dev = async (options: Options) => {
     resolve: {
       alias: {
         "/virtual:reagent-entry-client": "@reagentai/cli/entry-client",
-        "virtual:reagent-agent-module": inputFile,
       },
     },
   });
