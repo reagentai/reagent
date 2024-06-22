@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import type { Chat } from "@reagentai/reagent/chat";
 
-import { useAgentContext } from "./context.js";
+import { useReagentContext } from "./context.js";
 
 const AgentNodeUI = (
   props: { render: Chat.UIRenderData } & Pick<Chat.Message, "node">
@@ -10,7 +10,7 @@ const AgentNodeUI = (
   if (!props.node) {
     return null;
   }
-  const { nodesByTypeId } = useAgentContext();
+  const { nodesByTypeId } = useReagentContext();
   const components = useMemo(() => {
     const node = nodesByTypeId[props.node!.type];
     // ignore UI rendering if agent node not found
@@ -38,4 +38,4 @@ const AgentNodeUI = (
 };
 
 export { AgentNodeUI };
-export { useAgentContext, AgentContextProvider } from "./context";
+export { useReagentContext, ReagentContextProvider } from "./context";

@@ -1,8 +1,8 @@
 "use client";
 import { useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import { AIChat, createChatStore } from "@reagentai/react/chat";
-import { AgentContextProvider } from "@reagentai/react/agent";
+import { ReagentChat, createChatStore } from "@reagentai/react/chat";
+import { ReagentContextProvider } from "@reagentai/react/agent";
 import * as agent from "@reagentai/react-examples/e2b";
 
 const ChatAgent = () => {
@@ -40,9 +40,9 @@ const ChatAgent = () => {
               </div>
             )}
             <div className="h-full">
-              <AgentContextProvider nodes={agent.nodes || []}>
-                <AIChat store={store} />
-              </AgentContextProvider>
+              <ReagentContextProvider nodes={agent.nodes || []}>
+                <ReagentChat store={store} />
+              </ReagentContextProvider>
             </div>
           </ErrorBoundary>
         </div>

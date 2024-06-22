@@ -7,9 +7,9 @@ type Context = {
 const AgentContext = createContext<Context>({
   nodesByTypeId: {},
 });
-const useAgentContext = () => useContext(AgentContext)!;
+const useReagentContext = () => useContext(AgentContext)!;
 
-const AgentContextProvider = (props: {
+const ReagentContextProvider = (props: {
   nodes: AgentNode<any, any, any>[];
   children: any;
 }) => {
@@ -28,4 +28,4 @@ const AgentContextProvider = (props: {
   );
 };
 
-export { useAgentContext, AgentContextProvider };
+export { useReagentContext, ReagentContextProvider };
