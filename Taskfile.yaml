@@ -1,0 +1,32 @@
+version: "3"
+
+tasks:
+  validate-new-version:
+    cmds:
+      - label: check version
+        summary: test
+        silent: true
+        cmd: |
+          pattern="^[0-9]+.[0-9]+.[0-9]+$"
+          if [[ ! $REAGENT_RELEASE_VERSION =~ $pattern ]]; then
+            echo "Please set valiad REAGENT_RELEASE_VERSION"
+            exit -1
+          fi
+  update-release-version:
+    deps:
+      - validate-new-version
+    vars:
+      reagent_pkg: "{{.ROOT_DIR}}/packages/reagent/package.json"
+      serve_pkg: "{{.ROOT_DIR}}/packages/serve/package.json"
+      react_pkg: "{{.ROOT_DIR}}/packages/react/package.json"
+      cli_pkg: "{{.ROOT_DIR}}/packages/cli/package.json"
+      thirdparty_pkg: "{{.ROOT_DIR}}/packages/thirdparty/package.json"
+      react_examples_pkg: "{{.ROOT_DIR}}/packages/react-examples/package.json"
+    cmds:
+      - echo {{.reagent_pkg}}
+      - cat <<< $(jq --arg version "$REAGENT_RELEASE_VERSION" '.version = $version' {{.reagent_pkg}}) > {{.reagent_pkg}}
+      - cat <<< $(jq --arg version "$REAGENT_RELEASE_VERSION" '.version = $version' {{.serve_pkg}}) > {{.serve_pkg}}
+      - cat <<< $(jq --arg version "$REAGENT_RELEASE_VERSION" '.version = $version' {{.react_pkg}}) > {{.react_pkg}}
+      - cat <<< $(jq --arg version "$REAGENT_RELEASE_VERSION" '.version = $version' {{.cli_pkg}}) > {{.cli_pkg}}
+      - cat <<< $(jq --arg version "$REAGENT_RELEASE_VERSION" '.version = $version' {{.thirdparty_pkg}}) > {{.thirdparty_pkg}}
+      - cat <<< $(jq --arg version "$REAGENT_RELEASE_VERSION" '.version = $version' {{.react_examples_pkg}}) > {{.react_examples_pkg}}
