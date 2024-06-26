@@ -3,18 +3,21 @@ import clsx from "clsx";
 import Markdown from "react-markdown";
 import type { Chat } from "@reagentai/reagent/chat";
 
-import { AgentNodeUI } from "../agent/index.js";
+import { AgentNodeRenderer } from "./node.js";
+import { ChatStore } from "./state.js";
 
 const ChatThread = (props: {
-  messages: Record<string, Chat.Message>;
-  sortedMessageIds: string[];
+  store: ChatStore;
   removeBottomPadding?: boolean;
 }) => {
+  const messages = props.store((s) => s.messages);
+  const sortedMessageIds = props.store((s) => s.sortedMessageIds);
+  const sortedMessages = useMemo(() => {
+    return sortedMessageIds.map((id) => messages[id]);
+  }, [messages, sortedMessageIds]);
+
   let chatMessagesContainerRef = useRef<HTMLDivElement>(null);
   let chatMessagesRef = useRef<HTMLDivElement>(null);
-  const sortedMessages = useMemo(() => {
-    return props.sortedMessageIds.map((id) => props.messages[id]);
-  }, [props.messages, props.sortedMessageIds]);
 
   const sendNewMessage = {
     isIdle: false,
@@ -47,7 +50,7 @@ const ChatThread = (props: {
     >
       <div className="flex justify-center items-center">
         <div className="px-4 flex-1 min-w-[350px] max-w-[750px]">
-          {props?.messages && (
+          {messages && (
             <div
               ref={chatMessagesRef}
               className={clsx(
@@ -68,6 +71,7 @@ const ChatThread = (props: {
                   <ChatMessage
                     key={index}
                     message={message}
+                    store={props.store}
                     showLoadingBar={sendNewMessage.isStreaming && isLastMessage}
                     showRole={
                       index == 0 ||
@@ -79,9 +83,9 @@ const ChatThread = (props: {
               {sendNewMessage.isPending && !sendNewMessage.isIdle && (
                 <div>
                   <ChatMessage
-                    // state={state}
                     // @ts-expect-error
                     message={sendNewMessage.input}
+                    store={props.store}
                     showRole={false}
                   />
                 </div>
@@ -95,7 +99,8 @@ const ChatThread = (props: {
 };
 
 const ChatMessage = (props: {
-  message: Pick<Chat.Message, "id" | "message" | "role" | "node">;
+  message: Pick<Chat.Message, "id" | "message" | "ui" | "role" | "node">;
+  store: ChatStore;
   showRole: boolean;
   showLoadingBar?: boolean;
 }) => {
@@ -133,17 +138,19 @@ const ChatMessage = (props: {
         className="flex-1 space-y-2 overflow-x-hidden"
         data-message-id={props.message.id}
       >
-        {props.message.message.ui && (
+        {props.message.ui && (
           <div className="px-4 py-2">
-            <AgentNodeUI
+            <AgentNodeRenderer
+              messageId={props.message.id}
+              store={props.store}
               node={props.message.node}
-              render={props.message.message.ui!}
+              render={props.message.ui!}
             />
           </div>
         )}
         {
           // node isn't set for user message
-          (!Boolean(props.message.node) ||
+          (Boolean(props.message.message) ||
             props.message.node?.type == "@core/chat-completion") && (
             <div
               ref={markdownRef}
@@ -157,7 +164,7 @@ const ChatMessage = (props: {
               style={{ letterSpacing: "0.1px", wordSpacing: "1px" }}
             >
               <Markdown remarkPlugins={[]}>
-                {props.message.message.content}
+                {props.message.message!.content}
               </Markdown>
             </div>
           )

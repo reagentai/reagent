@@ -12,17 +12,11 @@ export namespace Chat {
 
   export type Message = {
     id: string;
-    // message group id
-    // this can be used to render all messages in a group
-    // under
-    // are render
-    // groupId: string;
     node?: AgentNode;
-    message: {
-      content?: string;
-      // type id of the tool that renders the UI
-      ui?: UIRenderData;
+    message?: {
+      content: string;
     };
+    ui?: UIRenderData;
     role: string;
     createdAt: string;
   };
@@ -56,29 +50,25 @@ export namespace Chat {
       };
     };
 
-    export type Tool = {
+    export type ToolUI = {
       type: "message/ui";
       data: {
         // message id
         id: string;
         node: AgentNode;
-        message: {
-          ui: UIRenderData;
-        };
+        ui: UIRenderData;
         role: string;
         createdAt: string;
       };
     };
 
-    export type ToolUpdate = {
+    export type ToolUIUpdate = {
       type: "message/ui/update";
       data: {
         // message id
         id: string;
         node: AgentNode;
-        message: {
-          ui: UIRenderData;
-        };
+        ui: UIRenderData;
         role: string;
         createdAt: string;
       };
@@ -88,7 +78,7 @@ export namespace Chat {
   export type Response =
     | StreamResponse.Message
     | StreamResponse.ContentDelta
-    | StreamResponse.Tool
-    | StreamResponse.ToolUpdate;
+    | StreamResponse.ToolUI
+    | StreamResponse.ToolUIUpdate;
   export type ResponseStream = AsyncIterable<Response>;
 }

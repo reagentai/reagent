@@ -38,7 +38,7 @@ const createPlugin = (options = {}) => {
     dot: true,
   });
   return {
-    name: "vite-plugin-portal-reagent",
+    name: "vite-plugin-reagent",
     transform(code, id, transformOptions) {
       if (!transformOptions && options.ssr == undefined) {
         throw new Error(

@@ -46,9 +46,7 @@ const invokeGraphAgent = <I extends Record<string, unknown>>(
               data: {
                 id: messageId,
                 node: stream.node,
-                message: {
-                  ui: update.render,
-                },
+                ui: update.render,
                 role: "ai",
                 createdAt: createdAt.toISOString(),
               },

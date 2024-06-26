@@ -2,6 +2,7 @@
   "compilerOptions": {
     "outDir": "dist",
     "strict": true,
+    "declaration": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "target": "ESNext",

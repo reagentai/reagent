@@ -1,4 +1,3 @@
-import path from "path";
 import { createServer } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "tailwindcss";

@@ -11,7 +11,13 @@ export type Context<
   config: Config;
   sendOutput(output: Partial<Output>): void;
   render<Data>(
-    Component: (props: { data: Data }) => JSX.Element,
+    Component: (props: {
+      data: Data;
+      useAgentNode<State = any>(): {
+        state: State | undefined;
+        setState(state: ((prev: State | undefined) => State) | State): void;
+      };
+    }) => JSX.Element,
     // additional props that's passed directly to component
     // props is evaludated on the server and only value is sent
     // to the client

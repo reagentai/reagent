@@ -13,8 +13,10 @@ type NewMessage = {
 
 export type ChatState = {
   messages: Record<string, Chat.Message>;
+  persistentStateByMessageId: Record<string, any>;
   sortedMessageIds: string[];
   setMessages: (messages: Record<string, Chat.Message>) => void;
+  setPersistentState(options: { messageId: string; state: any }): void;
   invoke: (options: { nodeId: string; input: NewMessage }) => void;
 };
 
@@ -94,6 +96,12 @@ export const createChatStore = (
 
         return {
           messages: init.messages,
+          // persistent state of a node
+          // since each message can have only one UI node, store
+          // state by message id
+          persistentStateByMessageId: {
+            // [messageId]: state
+          },
           sortedMessageIds: sortMessages(init.messages),
           setMessages(messages: Record<string, Chat.Message>) {
             set(
@@ -102,6 +110,15 @@ export const createChatStore = (
                 state.sortedMessageIds = sortMessages(messages);
               })
             );
+          },
+          setPersistentState(options: { messageId: string; state: any }) {
+            set((s) => {
+              // TODO: pass the state to server since the state is persistent
+              return produce(s, (draft) => {
+                draft.persistentStateByMessageId[options.messageId] =
+                  options.state;
+              });
+            });
           },
           async invoke(options: { nodeId: string; input: NewMessage }) {
             set((s) => {
@@ -138,8 +155,8 @@ export const createChatStore = (
                   const data = msg.data;
                   state = produce(s, (state) => {
                     if (s.messages[data.id]) {
-                      state.messages[data.id].message.content =
-                        (s.messages[data.id].message.content || "") +
+                      state.messages[data.id].message!.content =
+                        (s.messages[data.id].message?.content || "") +
                         data.message.content;
                     } else {
                       state.messages[data.id] = data;

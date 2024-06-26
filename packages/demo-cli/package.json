@@ -4,7 +4,7 @@
   "description": "Reagent cli demo",
   "type": "module",
   "scripts": {
-    "dev": "reagent dev data-agent.ts"
+    "dev": "reagent dev ./data-agent.ts"
   },
   "dependencies": {
     "@reagentai/cli": "workspace:^",
