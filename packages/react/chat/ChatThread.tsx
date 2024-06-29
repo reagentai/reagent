@@ -5,11 +5,10 @@ import type { Chat } from "@reagentai/reagent/chat";
 
 import { AgentNodeRenderer } from "./node.js";
 import { ChatStore } from "./state.js";
+import { useChatTheme } from "./theme.js";
 
-const ChatThread = (props: {
-  store: ChatStore;
-  removeBottomPadding?: boolean;
-}) => {
+const ChatThread = (props: { store: ChatStore }) => {
+  const theme = useChatTheme();
   const messages = props.store((s) => s.messages);
   const sortedMessageIds = props.store((s) => s.sortedMessageIds);
   const sortedMessages = useMemo(() => {
@@ -22,7 +21,6 @@ const ChatThread = (props: {
   const sendNewMessage = {
     isIdle: false,
     isPending: false,
-    isStreaming: false,
   };
 
   const [lastMessage, setLastMessage] = useState(null);
@@ -46,19 +44,19 @@ const ChatThread = (props: {
   return (
     <div
       ref={chatMessagesContainerRef}
-      className="h-full overflow-y-auto scroll:w-1 thumb:rounded thumb:bg-gray-400 space-y-6"
+      className={clsx("chat-thread overflow-y-auto", theme.thread)}
     >
       <div className="flex justify-center items-center">
-        <div className="px-4 flex-1 min-w-[350px] max-w-[750px]">
+        <div
+          className={clsx(
+            "chat-messages-container flex-1",
+            theme.messagesContainer
+          )}
+        >
           {messages && (
             <div
               ref={chatMessagesRef}
-              className={clsx(
-                "chat-messages pt-2 text-sm text-accent-12/80 space-y-5",
-                {
-                  "pb-24": !Boolean(props.removeBottomPadding),
-                }
-              )}
+              className={clsx("chat-messages", theme.messages)}
             >
               {sortedMessages.map((message, index) => {
                 const isLastMessage = index == sortedMessages.length - 1;
@@ -72,11 +70,11 @@ const ChatThread = (props: {
                     key={index}
                     message={message}
                     store={props.store}
-                    showLoadingBar={sendNewMessage.isStreaming && isLastMessage}
                     showRole={
                       index == 0 ||
                       sortedMessages[index - 1].role != message.role
                     }
+                    theme={theme}
                   />
                 );
               })}
@@ -87,6 +85,7 @@ const ChatThread = (props: {
                     message={sendNewMessage.input}
                     store={props.store}
                     showRole={false}
+                    theme={theme}
                   />
                 </div>
               )}
@@ -102,8 +101,9 @@ const ChatMessage = (props: {
   message: Pick<Chat.Message, "id" | "message" | "ui" | "role" | "node">;
   store: ChatStore;
   showRole: boolean;
-  showLoadingBar?: boolean;
+  theme: ReturnType<typeof useChatTheme>;
 }) => {
+  const theme = props.theme;
   const markdownRef = useRef<HTMLDivElement>(null);
   const role = useMemo(() => {
     const id = props.message.role || "user";
@@ -115,31 +115,32 @@ const ChatMessage = (props: {
 
   return (
     <div
-      className={clsx("chat-message flex flex-row w-full space-x-5", {
-        "!mt-0": !props.showRole,
-      })}
+      className={clsx(
+        "chat-message-container group flex flex-row",
+        theme.messageContainer,
+        {
+          "!mt-0": !props.showRole,
+        }
+      )}
+      data-role={role.id}
     >
-      <div className="w-8">
+      <div
+        className={clsx("role-container", role.id, theme.roleContainer)}
+        data-role={role.id}
+      >
         {props.showRole && role.name && (
-          <div
-            className={clsx(
-              "mt-2 text-[0.6rem] font-medium leading-8 rounded-xl border select-none text-center text-gray-600",
-              {
-                "bg-[hsl(60_28%_95%)]": role.id == "user",
-                "bg-brand-3": role.id == "ai",
-              }
-            )}
-          >
+          <div className={clsx("role select-none text-center", theme.role)}>
             {role.name}
           </div>
         )}
       </div>
       <div
-        className="flex-1 space-y-2 overflow-x-hidden"
+        className={clsx("chat-message flex-1 overflow-x-hidden", theme.message)}
         data-message-id={props.message.id}
+        data-role={role.id}
       >
         {props.message.ui && (
-          <div className="px-4 py-2">
+          <div className={clsx("chat-message-ui", theme.messageUI)}>
             <AgentNodeRenderer
               messageId={props.message.id}
               store={props.store}
@@ -155,13 +156,10 @@ const ChatMessage = (props: {
             <div
               ref={markdownRef}
               className={clsx(
-                "message prose px-4 py-3 rounded-lg leading-6 select-text space-y-2",
-                {
-                  "bg-[hsl(60_28%_95%)]": role.id == "user",
-                  "text-gray-800": role.id == "ai",
-                }
+                "chat-message-content prose select-text",
+                theme.messageContent
               )}
-              style={{ letterSpacing: "0.1px", wordSpacing: "1px" }}
+              data-role={role.id}
             >
               <Markdown remarkPlugins={[]}>
                 {props.message.message!.content}

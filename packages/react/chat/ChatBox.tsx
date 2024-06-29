@@ -4,6 +4,7 @@ import { HiOutlinePaperAirplane } from "react-icons/hi";
 import { uniqueId } from "@reagentai/reagent/utils/uniqueId";
 
 import { adjustTextareaHeight } from "../utils/textarea.js";
+import { useChatTheme } from "./theme.js";
 
 const Chatbox = (props: {
   isChatLocked: boolean;
@@ -55,9 +56,10 @@ const Chatbox = (props: {
     }
   }, [textareaRef.current, message]);
 
+  const theme = useChatTheme();
   return (
-    <div className="chat-box min-w-[200px] max-w-[750px] space-y-1 rounded-md">
-      <div className="relative px-2 py-2 rounded-lg bg-gray-50 border border-gray-200 shadow-sm">
+    <div className={clsx("chatbox-container", theme.chatboxContainer)}>
+      <div className={clsx("chatbox relative", theme.chatbox)}>
         <form
           className="flex p-0 m-0"
           onSubmit={(e) => {
@@ -68,13 +70,10 @@ const Chatbox = (props: {
           <textarea
             ref={textareaRef}
             placeholder="Send a message"
-            className="flex-1 py-1 max-h-[180px] px-2 text-sm text-gray-800 bg-transparent outline-none focus:outline-none resize-none placeholder:text-gray-500"
-            style={{
-              // @ts-expect-error
-              "--uikit-scrollbar-w": "3px",
-              "--uikit-scrollbar-track-bg": "transparent",
-              "--uikit-scrollbar-track-thumb": "rgb(210, 210, 210)",
-            }}
+            className={clsx(
+              "chatbox-textarea flex-1 resize-none",
+              theme.chatboxTextarea
+            )}
             value={message}
             onInput={(e: any) => setMessage(e.target.value)}
             onKeyDown={keydownHandler}
@@ -82,12 +81,13 @@ const Chatbox = (props: {
               props.onFocus?.();
             }}
           ></textarea>
-          <div className="px-2 pt-1">
+          <div className={theme.chatboxButtonContainer}>
             <button
-              className={clsx("p-1  rounded outline-none", {
-                "text-white bg-indigo-500": message.trim().length > 0,
-                "text-gray-500 bg-indigo-200": message.trim().length == 0,
-              })}
+              className={clsx(
+                "chatbox-button outline-none",
+                theme.chatboxButton
+              )}
+              data-empty={message.trim().length == 0}
             >
               <HiOutlinePaperAirplane size="14px" className="rotate-90" />
             </button>

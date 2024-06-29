@@ -31,7 +31,7 @@ const dev = async (options: Options) => {
             config: {
               darkMode: "class",
               content: [
-                "**/*.{jsx,tsx,html,css}",
+                "**/*.{js,ts,jsx,tsx,html,css}",
                 "**/@reagentai/cli/**/*.{js,jsx,css}",
               ],
             },
