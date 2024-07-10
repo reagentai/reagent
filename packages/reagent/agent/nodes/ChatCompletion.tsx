@@ -111,7 +111,14 @@ const ChatCompletion = createReagentNode({
     const res = executor.invoke(completionOptions);
 
     yield { stream };
-    const invokeContext = await res.catch((e) => e.context);
+    const invokeContext = await res.catch((e) => {
+      // if the error has context, return context
+      // else propagate error
+      if (e.context) {
+        return e.context;
+      }
+      throw e;
+    });
 
     const response = parseStringResponse(invokeContext);
     const error = parseStringErrorMessage(invokeContext);
