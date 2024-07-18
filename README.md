@@ -15,7 +15,7 @@
 
 > Graph based framework for building full-stack AI agents
 
-Reagent is an open-source Javascript framework to build AI agents. It allows you to build AI agents with multi-step workflows by combining nodes into an agent graph.
+Reagent is an open-source Javascript framework to build AI workflows. It enables you to build multi-step workflows by combining nodes into an agentic graph.
 
 It supports rendering custom UI components directly from the workflow nodes and seamlessly integrates with any frontend frameworks like NextJs, Remix, Solid-start, Svelte Kit, etc.
 
