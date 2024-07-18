@@ -34,8 +34,8 @@ It supports rendering custom UI components directly from the workflow nodes and 
 
 ## Use cases
 
-- **AI Chat**: Build custom AI chat applications
 - **Workflows**: Easily build custom AI powered workflows
+- **AI Chat**: Build custom AI chat applications
 - **AI Agent**: Build custom AI agents with backend/frontend `tool` calling
 
 ## Supported Model Providers
