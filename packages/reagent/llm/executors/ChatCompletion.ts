@@ -7,7 +7,7 @@ import {
   InvokeOptions,
   RunInfo,
 } from "../core/executor.js";
-import type { Metadata as ModelMetadata } from "../models/schema.js";
+import type { Metadata as ModelMetadata } from "../models/index.js";
 import { FormattedChatMessage } from "../prompt/index.js";
 import { uniqueId } from "../../utils/uniqueId.js";
 

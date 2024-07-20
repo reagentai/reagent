@@ -3,4 +3,4 @@ export { ReagentChat } from "./Chat.js";
 export { ChatThemeProvider } from "./theme.js";
 export { Chatbox } from "./ChatBox.js";
 export { ChatThread } from "./ChatThread.js";
-export { ReagentContextProvider } from "../agent/index.js";
+export { ReagentContextProvider } from "../workflow/index.js";

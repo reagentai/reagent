@@ -30,11 +30,6 @@ export type InvokeConfig = Partial<{
   temperature: number;
 }>;
 
-export type ModelInvokeOptions = InvokeConfig & {
-  messages: FormattedChatMessage[];
-  tools: any[];
-};
-
 export type RunInfo = {
   id?: string;
   metadata: any;

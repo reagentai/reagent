@@ -1,20 +1,20 @@
-import { GraphAgent } from "@reagentai/reagent/agent/index.js";
+import { Workflow } from "@reagentai/reagent/workflow";
 import {
   ChatCompletionWithToolCalling,
   ChatInput,
-} from "@reagentai/reagent/agent/nodes/index.js";
+} from "@reagentai/reagent/nodes";
 import { AgentError } from "@reagentai/react/tools/AgentError.js";
 import { CodeInterpreter } from "@reagentai/thirdparty/e2b/index.js";
 
-const agent = new GraphAgent({
+const workflow = new Workflow({
   name: "E2B data analysis agent",
   description: "This is a demo code interpreter agent using E2B",
 });
 
-const input = agent.addNode("input", new ChatInput());
-const error = agent.addNode("error", new AgentError());
+const input = workflow.addNode("input", new ChatInput());
+const error = workflow.addNode("error", new AgentError());
 
-const chat1 = agent.addNode("chat-1", new ChatCompletionWithToolCalling(), {
+const chat1 = workflow.addNode("chat-1", new ChatCompletionWithToolCalling(), {
   config: {
     systemPrompt: "You are an amazing AI assistant",
     temperature: 0.9,
@@ -22,7 +22,7 @@ const chat1 = agent.addNode("chat-1", new ChatCompletionWithToolCalling(), {
   },
 });
 
-const codeInterpreter = agent.addNode(
+const codeInterpreter = workflow.addNode(
   "code-interpreter",
   new CodeInterpreter()
 );
@@ -30,19 +30,25 @@ const codeInterpreter = agent.addNode(
 chat1.bind({
   model: input.output.model,
   query: input.output.query,
-  tools: [codeInterpreter.schema],
+  tools: [
+    codeInterpreter.asTool({
+      bind: {},
+      parameters: ["code"],
+      output: [],
+    }),
+  ],
 });
 
 error.bind({
   error: chat1.output.error,
 });
 
-agent.bind({
+workflow.bind({
   markdown: [chat1.output.markdown],
   markdownStream: [chat1.output.stream],
   ui: [codeInterpreter.renderOutput, error.renderOutput],
 });
 
-export default agent;
+export default workflow;
 export const nodes = [CodeInterpreter, AgentError];
 export const __reagentai_exports__ = true;

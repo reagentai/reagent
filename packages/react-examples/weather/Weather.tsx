@@ -1,4 +1,4 @@
-import { createReagentNode, z } from "@reagentai/reagent/agent/index.js";
+import { createReagentNode, z } from "@reagentai/reagent/workflow.js";
 import { generateMock } from "@anatine/zod-mock";
 
 const outputSchema = z.object({
@@ -19,7 +19,7 @@ const outputSchema = z.object({
 const GetWeather = createReagentNode({
   id: "@reagentai/react-examples/getWeather",
   name: "Get weather",
-  description: `Get the weather info of a city at any given time. Current date time is ${new Date().toISOString()}`,
+  description: `Get the weather info of a city at any given time`,
   version: "0.0.1",
   input: z.object({
     date: z.string().datetime().optional().describe("Date time in ISO string"),

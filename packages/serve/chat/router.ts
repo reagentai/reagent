@@ -1,6 +1,6 @@
 import { Hono } from "hono";
-import { GraphAgent, z } from "@reagentai/reagent/agent/index.js";
-import { ChatInput as ChatInputNode } from "@reagentai/reagent/agent/nodes/index.js";
+import { Workflow, z } from "@reagentai/reagent/workflow/index.js";
+import { ChatInput as ChatInputNode } from "@reagentai/reagent/nodes.js";
 import {
   AnthropicChat,
   Groq,
@@ -8,11 +8,11 @@ import {
 } from "@reagentai/reagent/llm/integrations/models/index.js";
 import { DummyModel } from "@reagentai/reagent/llm/models/dummy.js";
 
-import { invokeGraphAgent } from "../utils/agent.js";
+import { runReagentWorkflow } from "../workflow.js";
 
 type ChatInput = z.infer<(typeof ChatInputNode)["metadata"]["output"]>;
 
-const createChatAgentRouter = (agents: Map<string, GraphAgent>) => {
+const createChatAgentRouter = (agents: Map<string, Workflow>) => {
   const router = new Hono();
 
   router.get("/_healthy", (c) => c.text("OK"));
@@ -66,7 +66,9 @@ const createChatAgentRouter = (agents: Map<string, GraphAgent>) => {
     }
 
     let model: any = new DummyModel({
-      response: "Please select a AI model provider.",
+      response: {
+        content: "Please select a AI model provider.",
+      },
     });
 
     if (body.model?.provider == "openai") {
@@ -87,7 +89,7 @@ const createChatAgentRouter = (agents: Map<string, GraphAgent>) => {
       });
     }
 
-    const agentOutputStream = invokeGraphAgent<ChatInput>(agent, {
+    const agentOutputStream = runReagentWorkflow<ChatInput>(agent, {
       nodeId: "input",
       input: {
         query: body.input.message.content,

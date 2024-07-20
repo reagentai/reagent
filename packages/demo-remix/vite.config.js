@@ -4,10 +4,5 @@ import { defineConfig } from "vite";
 import { reagent } from "@reagentai/reagent/dev/vite";
 
 export default defineConfig({
-  plugins: [
-    remix(),
-    reagent({
-      tools: [path.join("/")],
-    }),
-  ],
+  plugins: [remix(), reagent({})],
 });

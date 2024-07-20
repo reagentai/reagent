@@ -1,20 +1,20 @@
 import dedent from "dedent";
-import { GraphAgent } from "@reagentai/reagent/agent";
+import { Workflow } from "@reagentai/reagent";
 import {
   ChatCompletionWithToolCalling,
   ChatInput,
-} from "@reagentai/reagent/agent/nodes";
+} from "@reagentai/reagent/nodes";
 
 import { AgentError } from "@reagentai/react/tools/AgentError";
 import { GenerateSQLQuery } from "./GenerateSQLQuery";
 
-const agent = new GraphAgent({
+const workflow = new Workflow({
   name: "SQL agent",
   description: "This agent generates and executes SQL queries",
 });
 
-const input = agent.addNode("input", new ChatInput());
-const error = agent.addNode("error", new AgentError());
+const input = workflow.addNode("input", new ChatInput());
+const error = workflow.addNode("error", new AgentError());
 
 const storyGeneratorConfig = {
   systemPrompt:
@@ -23,7 +23,7 @@ const storyGeneratorConfig = {
   stream: true,
 };
 
-const generateQuery = agent.addNode(
+const generateQuery = workflow.addNode(
   "generateQuery",
   new ChatCompletionWithToolCalling(),
   {
@@ -32,7 +32,7 @@ const generateQuery = agent.addNode(
   }
 );
 
-const runQuery = agent.addNode("runQuery", new GenerateSQLQuery());
+const runQuery = workflow.addNode("runQuery", new GenerateSQLQuery());
 
 generateQuery.bind({
   model: input.output.model,
@@ -66,19 +66,23 @@ generateQuery.bind({
         - workspace_id: id of the workspace from "workspaces" table
         - user_id: id of the user from "users" table
   `),
-  tools: [runQuery.schema],
+  tools: [
+    runQuery.asTool({
+      parameters: ["sql"],
+    }),
+  ],
 });
 
 error.bind({
   error: runQuery.output.error,
 });
 
-agent.bind({
+workflow.bind({
   markdown: [generateQuery.output.markdown],
   markdownStream: [generateQuery.output.stream],
   ui: [runQuery.renderOutput, error.renderOutput],
 });
 
-export default agent;
+export default workflow;
 export const nodes = [GenerateSQLQuery];
 export const __reagentai_exports__ = true;

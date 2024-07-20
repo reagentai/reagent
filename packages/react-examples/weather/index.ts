@@ -1,46 +1,52 @@
-import { GraphAgent } from "@reagentai/reagent/agent/index.js";
+import { Workflow } from "@reagentai/reagent";
 import {
   ChatCompletionWithToolCalling,
   ChatInput,
-} from "@reagentai/reagent/agent/nodes/index.js";
+} from "@reagentai/reagent/nodes";
 import { AgentError } from "@reagentai/react/tools/AgentError.js";
 
 import { GetWeather } from "./Weather.js";
 
-const agent = new GraphAgent({
+const workflow = new Workflow({
   name: "Weather app",
   description: "This agent shows random weather in Weather Widget",
 });
 
-const input = agent.addNode("input", new ChatInput());
-const error = agent.addNode("error", new AgentError());
+const input = workflow.addNode("input", new ChatInput());
+const error = workflow.addNode("error", new AgentError());
 
-const chat1 = agent.addNode("chat-1", new ChatCompletionWithToolCalling(), {
+const chat1 = workflow.addNode("chat-1", new ChatCompletionWithToolCalling(), {
   config: {
-    systemPrompt: "You are an amazing AI assistant called Jarvis",
+    systemPrompt:
+      "You are an amazing AI assistant called Jarvis who is very good at giving weather info.",
     temperature: 0.9,
     stream: true,
   },
 });
 
-const getWeather = agent.addNode("weather", new GetWeather());
+const getWeather = workflow.addNode("weather", new GetWeather());
 
 chat1.bind({
   model: input.output.model,
   query: input.output.query,
-  tools: [getWeather.schema],
+  tools: [
+    getWeather.asTool({
+      bind: {},
+      parameters: ["city", "country", "unit"],
+    }),
+  ],
 });
 
 error.bind({
   error: chat1.output.error,
 });
 
-agent.bind({
+workflow.bind({
   markdown: [chat1.output.markdown],
   markdownStream: [chat1.output.stream],
   ui: [getWeather.renderOutput, error.renderOutput],
 });
 
-export default agent;
+export default workflow;
 export const nodes = [GetWeather, AgentError];
 export const __reagentai_exports__ = true;
