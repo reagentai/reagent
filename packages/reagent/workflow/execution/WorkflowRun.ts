@@ -1,4 +1,4 @@
-import { ReplaySubject } from "rxjs";
+import { merge, ReplaySubject } from "rxjs";
 import { runSaga, stdChannel } from "redux-saga";
 import { all, fork } from "redux-saga/effects";
 
@@ -27,6 +27,7 @@ class WorkflowRun {
     >;
     ui: ReplaySubject<OutputEvent<RenderUpdate["render"]>>;
   };
+  task: ReturnType<typeof runSaga>;
 
   constructor(
     nodesById: Map<string, WorkflowStepRef<any, any, any>>,
@@ -41,20 +42,35 @@ class WorkflowRun {
       ui: new ReplaySubject(),
     };
     this.#channel = stdChannel();
+    this.task = this.#createTask();
   }
 
   get id() {
     return this.#id;
   }
 
-  start() {
+  #createTask() {
     const self = this;
-    const sagas = [...this.#nodesById.values()].map((ref) => {
-      return ref.saga();
+
+    const subscriptions = [];
+    Object.entries(self.#outputBindings!).forEach(([key, outputs]) => {
+      // @ts-expect-error
+      self.#streams[key] = merge(
+        ...outputs.map((o) => {
+          // @ts-expect-error
+          const [observable, unsubscribe] = o.observable();
+          subscriptions.push(unsubscribe);
+          return observable;
+        })
+      );
     });
+
     function* root() {
-      yield fork(self.saga.bind(self));
-      yield all(sagas);
+      yield all(
+        [...self.#nodesById.values()].map((ref) => {
+          return ref.saga();
+        })
+      );
     }
 
     const state = {
@@ -97,6 +113,7 @@ class WorkflowRun {
       },
       root
     );
+    return task;
   }
 
   invoke(options: { nodeId: string; input: any }) {
@@ -111,27 +128,6 @@ class WorkflowRun {
         self.#channel.put(event);
       },
     });
-  }
-
-  *saga() {
-    const self = this;
-    const streams = self.#streams;
-    const sagas = Object.fromEntries(
-      Object.entries(self.#outputBindings!).flatMap(([key, outputs]) => {
-        return outputs.map((o: any) => [
-          key,
-          (function* saga(): any {
-            while (1) {
-              // TODO: since new generator is initialized in a while loop
-              // test whether outputs/renders will be dropped under load
-              const res = yield o.saga();
-              streams[key as keyof typeof streams].next(res);
-            }
-          })(),
-        ]);
-      })
-    );
-    yield all(sagas);
   }
 
   get output() {

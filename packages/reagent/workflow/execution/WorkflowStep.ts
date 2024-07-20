@@ -34,7 +34,7 @@ class WorkflowStepRef<
   options: WorkflowStepOptions;
   step: WorkflowStep<Config, Input, Output>;
   bindings?: EdgeBindingWithToolCall<Input>;
-  subscriptions: any[];
+  subscriptions: Set<any>;
   constructor(
     nodeId: string,
     node: AbstractWorkflowNode<Config, Input, Output>,
@@ -47,7 +47,7 @@ class WorkflowStepRef<
     this.config = config;
     this.options = options;
     this.step = step;
-    this.subscriptions = [];
+    this.subscriptions = new Set();
   }
 
   setBindings(bindings: EdgeBindingWithToolCall<Input>) {
@@ -74,7 +74,7 @@ class WorkflowStepRef<
 
   *saga() {
     const self = this;
-    const subscriptions = self.subscriptions.map((sub) => sub());
+    const subscriptions = [...self.subscriptions].map((sub) => sub());
     yield all([
       self.bindingsSaga(),
       self.invokeListenerSaga(),
@@ -280,7 +280,7 @@ class WorkflowStep<
     );
   }
 
-  get renderOutput(): RenderOutputProvider<RenderUpdate> {
+  get renderOutput(): ValueProvider<RenderUpdate> {
     return new RenderOutputProvider(this.#ref);
   }
 }

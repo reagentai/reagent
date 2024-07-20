@@ -143,7 +143,6 @@ class Workflow {
       this.#ref.nodesById,
       this.#outputBindings as any
     );
-    run.start();
     run.invoke(options);
     return run;
   }

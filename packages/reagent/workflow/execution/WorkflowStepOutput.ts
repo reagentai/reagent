@@ -40,13 +40,12 @@ abstract class AbstractValueProvider<Value>
 {
   #ref: AnyWorkflowStepRef;
   #stream: Subject<SubscribedValue<Value>>;
-  #subscribed: boolean;
+  #subscription?: any;
   __isValueProvider__: boolean;
 
   constructor(node: AnyWorkflowStepRef) {
     this.#ref = node;
     this.#stream = new ReplaySubject();
-    this.#subscribed = false;
     this.__isValueProvider__ = true;
   }
 
@@ -54,21 +53,29 @@ abstract class AbstractValueProvider<Value>
     return provider.__isValueProvider__;
   }
 
-  static getSaga(provider: AbstractValueProvider<any>) {
-    return provider.saga();
+  observable() {
+    const self = this;
+    if (!this.#subscription) {
+      this.#subscription = this.saga.bind(this);
+      this.#ref.subscriptions.add(this.#subscription);
+    }
+    return [
+      self.#stream,
+      () => {
+        self.#ref.subscriptions.delete(self.#subscription);
+      },
+    ];
+  }
+
+  protected next(value: SubscribedValue<Value>) {
+    if (this.#subscription) {
+      this.#stream.next(value);
+    }
   }
 
   abstract get dependencies(): NodeDependency[];
 
   abstract saga(): () => Generator<any, Value, any>;
-
-  protected next(value: SubscribedValue<Value>) {
-    this.#stream.next(value);
-  }
-
-  protected get subscribed() {
-    return this.#subscribed;
-  }
 
   abstract map<Output>(mapper: any): InternalValueProvider<Output>;
 
@@ -84,11 +91,20 @@ abstract class AbstractValueProvider<Value>
     complete?: (() => void) | null | undefined
   ): Subscription;
   subscribe(...args: any): Subscription {
-    if (!this.#subscribed) {
-      this.#ref.subscriptions.push(this.saga.bind(this));
-      this.#subscribed = true;
+    const self = this;
+    if (!this.#subscription) {
+      this.#subscription = this.saga.bind(this);
+      this.#ref.subscriptions.add(this.#subscription);
     }
-    return this.#stream.subscribe(...args);
+    const subscription = this.#stream.subscribe(...args);
+    const unsubscribe = subscription.unsubscribe.bind(subscription);
+    Object.assign(subscription, {
+      unsubscribe() {
+        self.#ref.subscriptions.delete(self.#subscription);
+        unsubscribe();
+      },
+    });
+    return subscription;
   }
 }
 
@@ -200,13 +216,12 @@ class OutputValueProvider<Output> extends AbstractValueProvider<Output> {
     for (const cb of self.#mapCallbacks) {
       value = cb(value);
     }
-    if (self.subscribed) {
-      self.next({
-        session: action.session,
-        node: action.node,
-        value,
-      });
-    }
+
+    self.next({
+      session: action.session,
+      node: action.node,
+      value,
+    });
     return {
       session: action.session,
       node: action.node,
@@ -243,25 +258,23 @@ class RenderOutputProvider<Value> extends AbstractValueProvider<Value> {
   }
 
   *saga(): any {
-    const self = this;
-    const action = yield take((e: any) => {
-      return e.type == "RENDER" && e.node.id == self.#ref.nodeId;
-    });
+    while (1) {
+      const self = this;
+      const action = yield take((e: any) => {
+        return e.type == "RENDER" && e.node.id == self.#ref.nodeId;
+      });
 
-    let value = action.render;
-    for (const cb of self.#mapCallbacks) {
-      value = cb(value);
+      let value = action.render;
+      for (const cb of self.#mapCallbacks) {
+        value = cb(value);
+      }
+
+      self.next({
+        session: action.session,
+        node: action.node,
+        value,
+      });
     }
-    self.next({
-      session: action.session,
-      node: action.node,
-      value,
-    });
-    return {
-      session: action.session,
-      node: action.node,
-      value,
-    };
   }
 
   map<Output>(mapper: any): InternalValueProvider<Output> {
