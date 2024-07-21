@@ -23,6 +23,7 @@ import {
   ValueProvider,
 } from "./WorkflowStepOutput.js";
 import type { EdgeBindings, RenderUpdate } from "./types.js";
+import { EventType } from "./event.js";
 
 const TOOL_CALL_INPUT_SAGA = Symbol("TOOL_CALL_INPUT_SAGA");
 const NO_BINDING_RETURN = Symbol("NO_BINDING_RETURN");
@@ -83,7 +84,7 @@ class WorkflowStepRef<
     }
 
     options.dispatch({
-      type: "RUN_COMPLETED",
+      type: EventType.RUN_COMPLETED,
       session: options.session,
       node: { id: self.nodeId },
       success: true,
@@ -93,52 +94,75 @@ class WorkflowStepRef<
 
   *saga(): any {
     const self = this;
-    const subscriptions = yield fork(function* saga() {
-      yield all([...self.subscriptions].map((sub) => sub()));
+    const subscriptions = yield fork(function* saga(): any {
+      const subs = [...self.subscriptions].map((sub) => sub());
+      if (subs.length == 0) {
+        return;
+      }
+      const action = yield take((e: any) => {
+        return (
+          e.node.id == self.nodeId &&
+          (e.type == EventType.OUTPUT || e.type == EventType.RUN_SKIPPED)
+        );
+      });
+      if (action.type == EventType.RUN_SKIPPED) {
+        return;
+      }
+      yield all(subs);
     });
 
     const invokeListener = function* saga(): any {
-      const bindings = yield spawn(self.bindingsResolver.bind(self));
-      const invoke = yield spawn(self.invokeListenerSaga.bind(self));
+      const bindings = yield fork(self.bindingsResolver.bind(self));
+      const invoke = yield fork(self.invokeListenerSaga.bind(self));
       try {
         yield join([bindings, invoke]);
       } finally {
         if (yield cancelled()) {
-          console.log(`[invokeListener] TASK CANCELLED [${self.nodeId}]`);
           yield cancel(invoke);
           yield cancel(subscriptions);
-          // yield join([bindings, invoke]);
         }
       }
     };
+
+    // Note: idk why when using fork, the node that's not bound
+    // doesn't get properly cancelled
     yield spawn(invokeListener);
     yield join(subscriptions);
   }
 
   *invokeListenerSaga(): any {
     const self = this;
-    // return function* inputListener(): any {
     const action = yield take(
       (e: any) => e.type == "INVOKE" && e.node.id == self.nodeId
     );
 
     const dispatch = yield getContext("dispatch");
     const session = yield getContext("session");
-    // console.log("INVOKED: ", action);
     yield call(self.execute.bind(self), {
       input: action.input,
       dispatch,
       session,
     });
-    // };
   }
 
   *bindingsResolver(): any {
+    const self = this;
+    if (!self.bindings) {
+      // TODO: handle nodes that have no input. do those nodes need
+      // to be bound? if not, when to invoke them?
+      yield put({
+        type: EventType.RUN_SKIPPED,
+        node: {
+          id: self.nodeId,
+        },
+      });
+      return NO_BINDING_RETURN;
+    }
+    const toolCallInputSaga = self.bindings![TOOL_CALL_INPUT_SAGA]
+      ? yield fork(self.bindings![TOOL_CALL_INPUT_SAGA])
+      : undefined;
+    const cleanups: any[] = [];
     try {
-      const self = this;
-      if (!self.bindings) {
-        return NO_BINDING_RETURN;
-      }
       const session = yield getContext("session");
       const dispatch = yield getContext("dispatch");
       const context = self.#buildContext(session, dispatch);
@@ -154,6 +178,9 @@ class WorkflowStepRef<
                     return (function* valueSaga(): any {
                       if (AbstractValueProvider.isValueProvider(v)) {
                         const res = yield v.saga();
+                        if (res.onSkipped) {
+                          cleanups.push(res.onSkipped);
+                        }
                         return res.value;
                       } else {
                         return v;
@@ -166,6 +193,9 @@ class WorkflowStepRef<
                   const res = yield (
                     value as InternalValueProvider<any>
                   ).saga.bind(value)();
+                  if (res.onSkipped) {
+                    cleanups.push(res.onSkipped);
+                  }
                   output = res.value;
                 } else {
                   output = value;
@@ -181,8 +211,8 @@ class WorkflowStepRef<
       );
 
       const input = yield all(sagas);
-      if (self.bindings![TOOL_CALL_INPUT_SAGA]) {
-        const toolCallInput = yield self.bindings![TOOL_CALL_INPUT_SAGA]();
+      if (toolCallInputSaga) {
+        const toolCallInput = yield join(toolCallInputSaga!);
         Object.assign(input, toolCallInput);
       }
 
@@ -193,10 +223,11 @@ class WorkflowStepRef<
         },
         input,
       });
+      cleanups.forEach((cleanup) => cleanup());
       return input;
     } finally {
       if (yield cancelled()) {
-        // yield cancel();
+        cleanups.forEach((cleanup) => cleanup());
       }
     }
   }
@@ -294,8 +325,13 @@ class WorkflowStep<
     const bindings = options.bind as any;
     bindings[TOOL_CALL_INPUT_SAGA] = function* saga(): any {
       const action = yield take(
-        (e: any) => e.type == "TOOL_CALL_INPUT" && e.node.id == self.#ref.nodeId
+        (e: any) =>
+          e.node.id == self.#ref.nodeId &&
+          (e.type == "TOOL_CALL_INPUT" || e.type == EventType.RUN_SKIPPED)
       );
+      if (action.type == EventType.RUN_SKIPPED) {
+        yield cancel();
+      }
       return action.input;
     };
     this.#ref.setBindings(bindings);

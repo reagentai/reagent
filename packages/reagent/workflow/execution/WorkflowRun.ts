@@ -69,7 +69,7 @@ class WorkflowRun {
     function* root() {
       yield all(
         [...self.#nodesById.values()].map((ref) => {
-          return fork(ref.saga.bind(ref));//();
+          return fork(ref.saga.bind(ref));
         })
       );
     }
@@ -95,34 +95,9 @@ class WorkflowRun {
         dispatch(output) {
           self.#channel.put(output);
         },
-        sagaMonitor: {
-          rootSagaStarted(options) {
-            console.log("ROOT STARTED:", options);
-          },
-          actionDispatched(action) {},
-          effectCancelled(effectId) {},
-          effectRejected(effectId, error) {},
-          effectResolved(effectId, result) {},
-          effectTriggered(options) {
-            // console.log("EFFECT TRIGGERED:", options);
-          },
-        },
         // TODO: store inputs and outputs in state and use it
         // instead of using events so that workflow can be resumed
         // from any step
-        // effectMiddlewares: [
-        //   function middleware(next) {
-        //     return (effect) => {
-        //       if (effect.type == "CALL") {
-        //         const action = effect.payload.args[0];
-        //         if (action.type == "INPUT") {
-        //           dsetMerge(state.inputsByNodeId, action.node.id, action.input);
-        //         }
-        //       }
-        //       next(effect);
-        //     };
-        //   },
-        // ],
       },
       root
     );

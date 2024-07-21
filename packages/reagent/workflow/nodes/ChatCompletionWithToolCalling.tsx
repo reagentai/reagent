@@ -230,7 +230,9 @@ class ToolsProvider extends Runnable {
           return tool.function.name == toolCall.function.name;
         });
         if (!tool) {
-          throw new Error(`unexpected error: tool in tool call not found`);
+          throw new Error(
+            `unexpected error: tool [${toolCall.function.name}] in tool call not found`
+          );
         }
         const output = await tool[TOOL].execute(toolCall.function.arguments);
         if (typeof output == "object" && isEmpty(output)) {

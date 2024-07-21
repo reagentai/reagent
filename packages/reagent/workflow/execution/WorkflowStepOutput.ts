@@ -174,6 +174,14 @@ class ToolProvider<Input> extends AbstractValueProvider<Tool<Input, any>> {
           return output;
         },
       },
+      onSkipped() {
+        dispatch({
+          type: EventType.RUN_SKIPPED,
+          node: {
+            id: self.#ref.nodeId,
+          },
+        });
+      },
     };
   }
 
@@ -207,20 +215,16 @@ class OutputValueProvider<Output> extends AbstractValueProvider<Output> {
 
   *saga(): any {
     const self = this;
-    const action = yield take(
-      (e: any) =>
+    const action = yield take((e: any) => {
+      return (
         e.node.id == self.#ref.nodeId &&
         ((e.type == EventType.OUTPUT && e.output[self.#field] != undefined) ||
           e.type == EventType.RUN_COMPLETED)
-    );
+      );
+    });
     if (action.type == EventType.RUN_COMPLETED) {
       yield cancel();
-      // return {
-      //   session: action.session,
-      //   node: action.node,
-      //   value: undefined,
-      // };
-      return {};
+      return;
     }
     let value = action.output[self.#field];
     for (const cb of self.#mapCallbacks) {
@@ -271,8 +275,15 @@ class RenderOutputProvider<Value> extends AbstractValueProvider<Value> {
     while (1) {
       const self = this;
       const action = yield take((e: any) => {
-        return e.type == "RENDER" && e.node.id == self.#ref.nodeId;
+        return (
+          e.node.id == self.#ref.nodeId &&
+          (e.type == EventType.RENDER || e.type == EventType.RUN_COMPLETED)
+        );
       });
+      if (action.type == EventType.RUN_SKIPPED) {
+        yield cancel();
+        return;
+      }
 
       let value = action.render;
       for (const cb of self.#mapCallbacks) {
