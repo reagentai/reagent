@@ -9,9 +9,9 @@ import { cancel, getContext, spawn, take } from "redux-saga/effects";
 import slugify, { slugifyWithCounter } from "@sindresorhus/slugify";
 import { pick } from "lodash-es";
 
-import { WorkflowStepRef } from "./WorkflowStep";
-import { NodeDependency, NodeMetadata, Session, Tool } from "./types";
-import { EventType } from "./event";
+import { WorkflowStepRef } from "./WorkflowStep.js";
+import { NodeDependency, NodeMetadata, Session, Tool } from "./types.js";
+import { EventType } from "./event.js";
 
 const slugifyCounter = slugifyWithCounter();
 
