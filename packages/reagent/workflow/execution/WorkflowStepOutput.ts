@@ -42,28 +42,34 @@ abstract class AbstractValueProvider<Value>
   #ref: AnyWorkflowStepRef;
   #stream: Subject<SubscribedValue<Value>>;
   #subscription?: any;
+  #subscriptionCount: number;
   __isValueProvider__: boolean;
 
   constructor(node: AnyWorkflowStepRef) {
     this.#ref = node;
     this.#stream = new ReplaySubject();
+    this.#subscriptionCount = 0;
     this.__isValueProvider__ = true;
   }
 
-  static isValueProvider(provider: AbstractValueProvider<any>) {
-    return provider.__isValueProvider__;
+  static isValueProvider(provider: InternalValueProvider<any>) {
+    return (provider as any).__isValueProvider__;
   }
 
   observable() {
     const self = this;
-    if (!this.#subscription) {
-      this.#subscription = this.saga.bind(this);
-      this.#ref.subscriptions.add(this.#subscription);
+    if (!self.#subscription) {
+      self.#subscription = self.saga.bind(self);
+      self.#ref.subscriptions.add(self.#subscription);
     }
+    self.#subscriptionCount += 1;
     return [
       self.#stream,
       () => {
-        self.#ref.subscriptions.delete(self.#subscription);
+        self.#subscriptionCount -= 1;
+        if (self.#subscriptionCount == 0) {
+          self.#ref.subscriptions.delete(self.#subscription);
+        }
       },
     ];
   }
@@ -93,15 +99,19 @@ abstract class AbstractValueProvider<Value>
   ): Subscription;
   subscribe(...args: any): Subscription {
     const self = this;
-    if (!this.#subscription) {
-      this.#subscription = this.saga.bind(this);
-      this.#ref.subscriptions.add(this.#subscription);
+    if (!self.#subscription) {
+      self.#subscription = self.saga.bind(this);
+      self.#ref.subscriptions.add(self.#subscription);
     }
-    const subscription = this.#stream.subscribe(...args);
+    self.#subscriptionCount += 1;
+    const subscription = self.#stream.subscribe(...args);
     const unsubscribe = subscription.unsubscribe.bind(subscription);
     Object.assign(subscription, {
       unsubscribe() {
-        self.#ref.subscriptions.delete(self.#subscription);
+        self.#subscriptionCount -= 1;
+        if (self.#subscriptionCount == 0) {
+          self.#ref.subscriptions.delete(self.#subscription);
+        }
         unsubscribe();
       },
     });
@@ -160,7 +170,7 @@ class ToolProvider<Input> extends AbstractValueProvider<Tool<Input, any>> {
         ...self.#tool,
         execute: async (args: any[]) => {
           dispatch({
-            type: "TOOL_CALL_INPUT",
+            type: EventType.TOOL_CALL,
             session,
             node: {
               id: self.#ref.nodeId,
@@ -219,10 +229,14 @@ class OutputValueProvider<Output> extends AbstractValueProvider<Output> {
       return (
         e.node.id == self.#ref.nodeId &&
         ((e.type == EventType.OUTPUT && e.output[self.#field] != undefined) ||
-          e.type == EventType.RUN_COMPLETED)
+          e.type == EventType.RUN_COMPLETED ||
+          e.type == EventType.RUN_SKIPPED)
       );
     });
-    if (action.type == EventType.RUN_COMPLETED) {
+    if (
+      action.type == EventType.RUN_COMPLETED ||
+      action.type == EventType.RUN_SKIPPED
+    ) {
       yield cancel();
       return;
     }
@@ -275,15 +289,8 @@ class RenderOutputProvider<Value> extends AbstractValueProvider<Value> {
     while (1) {
       const self = this;
       const action = yield take((e: any) => {
-        return (
-          e.node.id == self.#ref.nodeId &&
-          (e.type == EventType.RENDER || e.type == EventType.RUN_COMPLETED)
-        );
+        return e.node.id == self.#ref.nodeId && e.type == EventType.RENDER;
       });
-      if (action.type == EventType.RUN_SKIPPED) {
-        yield cancel();
-        return;
-      }
 
       let value = action.render;
       for (const cb of self.#mapCallbacks) {

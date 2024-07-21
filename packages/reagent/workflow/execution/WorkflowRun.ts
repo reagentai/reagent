@@ -1,6 +1,6 @@
 import { merge, ReplaySubject } from "rxjs";
-import { runSaga, stdChannel } from "redux-saga";
-import { all, fork } from "redux-saga/effects";
+import { END, runSaga, stdChannel } from "redux-saga";
+import { all, fork, take } from "redux-saga/effects";
 
 import { WorkflowStepRef } from "./WorkflowStep.js";
 import { NodeMetadata, WorkflowOutputBindings, RenderUpdate } from "./types.js";
@@ -53,7 +53,7 @@ class WorkflowRun {
   #createTask() {
     const self = this;
 
-    const subscriptions = [];
+    const subscriptions: any[] = [];
     Object.entries(self.#outputBindings!).forEach(([key, outputs]) => {
       // @ts-expect-error
       self.#streams[key] = merge(
@@ -66,12 +66,30 @@ class WorkflowRun {
       );
     });
 
+    const nodesRef = [...self.#nodesById.values()];
+    function* allNodesRunCompletion(): any {
+      const nodesCompleted = new Set();
+      while (1) {
+        const action = yield take((e: any) => {
+          return (
+            e.type == EventType.NO_BINDINGS ||
+            e.type == EventType.RUN_SKIPPED ||
+            e.type == EventType.RUN_COMPLETED
+          );
+        });
+        nodesCompleted.add(action.node.id);
+        if (nodesCompleted.size == nodesRef.length) {
+          self.#channel.put(END);
+        }
+      }
+    }
     function* root() {
-      yield all(
-        [...self.#nodesById.values()].map((ref) => {
-          return fork(ref.saga.bind(ref));
-        })
-      );
+      yield fork(allNodesRunCompletion);
+      yield all([
+        ...nodesRef.map((ref) => {
+          return ref.saga.bind(ref)();
+        }),
+      ]);
     }
 
     const state = {
@@ -115,6 +133,12 @@ class WorkflowRun {
       dispatch(event: any) {
         self.#channel.put(event);
       },
+    });
+
+    // start workflow execution
+    self.#channel.put({
+      type: EventType.START,
+      node: {},
     });
   }
 

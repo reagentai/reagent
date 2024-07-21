@@ -8,7 +8,6 @@ import {
   cancel,
   join,
   cancelled,
-  spawn,
 } from "redux-saga/effects";
 
 import { Context } from "../core/context.js";
@@ -25,7 +24,7 @@ import {
 import type { EdgeBindings, RenderUpdate } from "./types.js";
 import { EventType } from "./event.js";
 
-const TOOL_CALL_INPUT_SAGA = Symbol("TOOL_CALL_INPUT_SAGA");
+const TOOL_CALL_SAGA = Symbol("TOOL_CALL_SAGA");
 const NO_BINDING_RETURN = Symbol("NO_BINDING_RETURN");
 
 type WorkflowStepOptions = {
@@ -33,7 +32,7 @@ type WorkflowStepOptions = {
 };
 
 type EdgeBindingWithToolCall<Input> = EdgeBindings<Input> & {
-  [TOOL_CALL_INPUT_SAGA]?: any;
+  [TOOL_CALL_SAGA]?: any;
 };
 
 class WorkflowStepRef<
@@ -94,40 +93,31 @@ class WorkflowStepRef<
 
   *saga(): any {
     const self = this;
-    const subscriptions = yield fork(function* saga(): any {
-      const subs = [...self.subscriptions].map((sub) => sub());
+
+    const subs = [...self.subscriptions].map((sub) => sub());
+    yield fork(function* saga(): any {
       if (subs.length == 0) {
-        return;
-      }
-      const action = yield take((e: any) => {
-        return (
-          e.node.id == self.nodeId &&
-          (e.type == EventType.OUTPUT || e.type == EventType.RUN_SKIPPED)
-        );
-      });
-      if (action.type == EventType.RUN_SKIPPED) {
         return;
       }
       yield all(subs);
     });
 
-    const invokeListener = function* saga(): any {
+    yield fork(function* saga(): any {
       const bindings = yield fork(self.bindingsResolver.bind(self));
       const invoke = yield fork(self.invokeListenerSaga.bind(self));
       try {
         yield join([bindings, invoke]);
       } finally {
         if (yield cancelled()) {
-          yield cancel(invoke);
-          yield cancel(subscriptions);
+          yield put({
+            type: EventType.RUN_SKIPPED,
+            node: {
+              id: self.nodeId,
+            },
+          });
         }
       }
-    };
-
-    // Note: idk why when using fork, the node that's not bound
-    // doesn't get properly cancelled
-    yield spawn(invokeListener);
-    yield join(subscriptions);
+    });
   }
 
   *invokeListenerSaga(): any {
@@ -148,18 +138,19 @@ class WorkflowStepRef<
   *bindingsResolver(): any {
     const self = this;
     if (!self.bindings) {
+      yield take(EventType.START);
       // TODO: handle nodes that have no input. do those nodes need
       // to be bound? if not, when to invoke them?
       yield put({
-        type: EventType.RUN_SKIPPED,
+        type: EventType.NO_BINDINGS,
         node: {
           id: self.nodeId,
         },
       });
       return NO_BINDING_RETURN;
     }
-    const toolCallInputSaga = self.bindings![TOOL_CALL_INPUT_SAGA]
-      ? yield fork(self.bindings![TOOL_CALL_INPUT_SAGA])
+    const toolCallInputSaga = self.bindings![TOOL_CALL_SAGA]
+      ? yield fork(self.bindings![TOOL_CALL_SAGA])
       : undefined;
     const cleanups: any[] = [];
     try {
@@ -174,7 +165,7 @@ class WorkflowStepRef<
               let output;
               if (Array.isArray(value)) {
                 output = yield all(
-                  value.map((v) => {
+                  value.map((v: InternalValueProvider<any>) => {
                     return (function* valueSaga(): any {
                       if (AbstractValueProvider.isValueProvider(v)) {
                         const res = yield v.saga();
@@ -192,7 +183,7 @@ class WorkflowStepRef<
                 if (AbstractValueProvider.isValueProvider(value as any)) {
                   const res = yield (
                     value as InternalValueProvider<any>
-                  ).saga.bind(value)();
+                  ).saga();
                   if (res.onSkipped) {
                     cleanups.push(res.onSkipped);
                   }
@@ -323,11 +314,11 @@ class WorkflowStep<
       output: options.output as any,
     });
     const bindings = options.bind as any;
-    bindings[TOOL_CALL_INPUT_SAGA] = function* saga(): any {
+    bindings[TOOL_CALL_SAGA] = function* saga(): any {
       const action = yield take(
         (e: any) =>
           e.node.id == self.#ref.nodeId &&
-          (e.type == "TOOL_CALL_INPUT" || e.type == EventType.RUN_SKIPPED)
+          (e.type == EventType.TOOL_CALL || e.type == EventType.RUN_SKIPPED)
       );
       if (action.type == EventType.RUN_SKIPPED) {
         yield cancel();
