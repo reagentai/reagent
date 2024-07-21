@@ -5,6 +5,7 @@ import { all, fork } from "redux-saga/effects";
 import { WorkflowStepRef } from "./WorkflowStep.js";
 import { NodeMetadata, WorkflowOutputBindings, RenderUpdate } from "./types.js";
 import { uniqueId } from "../../utils/uniqueId.js";
+import { EventType } from "./event.js";
 
 type OutputEvent<Output> = {
   // session is null for session independent global values
@@ -68,7 +69,7 @@ class WorkflowRun {
     function* root() {
       yield all(
         [...self.#nodesById.values()].map((ref) => {
-          return ref.saga();
+          return fork(ref.saga.bind(ref));//();
         })
       );
     }
@@ -80,8 +81,8 @@ class WorkflowRun {
     const task = runSaga(
       {
         channel: self.#channel,
-        dispatch(output) {
-          self.#channel.put(output);
+        getState: () => {
+          return state;
         },
         context: {
           session: {
@@ -91,8 +92,20 @@ class WorkflowRun {
             self.#channel.put(output);
           },
         },
-        getState: () => {
-          return state;
+        dispatch(output) {
+          self.#channel.put(output);
+        },
+        sagaMonitor: {
+          rootSagaStarted(options) {
+            console.log("ROOT STARTED:", options);
+          },
+          actionDispatched(action) {},
+          effectCancelled(effectId) {},
+          effectRejected(effectId, error) {},
+          effectResolved(effectId, result) {},
+          effectTriggered(options) {
+            // console.log("EFFECT TRIGGERED:", options);
+          },
         },
         // TODO: store inputs and outputs in state and use it
         // instead of using events so that workflow can be resumed
@@ -119,7 +132,7 @@ class WorkflowRun {
   invoke(options: { nodeId: string; input: any }) {
     const self = this;
     self.#channel.put({
-      type: "INVOKE",
+      type: EventType.INVOKE,
       node: {
         id: options.nodeId,
       },

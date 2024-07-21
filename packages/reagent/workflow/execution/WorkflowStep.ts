@@ -1,4 +1,15 @@
-import { all, put, call, take, getContext } from "redux-saga/effects";
+import {
+  all,
+  put,
+  call,
+  take,
+  getContext,
+  fork,
+  cancel,
+  join,
+  cancelled,
+  spawn,
+} from "redux-saga/effects";
 
 import { Context } from "../core/context.js";
 import { AbstractWorkflowNode } from "../core/node.js";
@@ -14,6 +25,7 @@ import {
 import type { EdgeBindings, RenderUpdate } from "./types.js";
 
 const TOOL_CALL_INPUT_SAGA = Symbol("TOOL_CALL_INPUT_SAGA");
+const NO_BINDING_RETURN = Symbol("NO_BINDING_RETURN");
 
 type WorkflowStepOptions = {
   label?: string;
@@ -69,43 +81,64 @@ class WorkflowStepRef<
       context.sendOutput(partialOutput);
       Object.assign(output, partialOutput);
     }
+
+    options.dispatch({
+      type: "RUN_COMPLETED",
+      session: options.session,
+      node: { id: self.nodeId },
+      success: true,
+    });
     return output as Output;
   }
 
-  *saga() {
+  *saga(): any {
     const self = this;
-    const subscriptions = [...self.subscriptions].map((sub) => sub());
-    yield all([
-      self.bindingsSaga(),
-      self.invokeListenerSaga(),
-      ...subscriptions,
-    ]);
-  }
+    const subscriptions = yield fork(function* saga() {
+      yield all([...self.subscriptions].map((sub) => sub()));
+    });
 
-  get invokeListenerSaga() {
-    const self = this;
-    return function* inputListener(): any {
-      const action = yield take(
-        (e: any) => e.type == "INVOKE" && e.node.id == self.nodeId
-      );
-
-      const dispatch = yield getContext("dispatch");
-      const session = yield getContext("session");
-      yield call(self.execute.bind(self), {
-        input: action.input,
-        dispatch,
-        session,
-      });
+    const invokeListener = function* saga(): any {
+      const bindings = yield spawn(self.bindingsResolver.bind(self));
+      const invoke = yield spawn(self.invokeListenerSaga.bind(self));
+      try {
+        yield join([bindings, invoke]);
+      } finally {
+        if (yield cancelled()) {
+          console.log(`[invokeListener] TASK CANCELLED [${self.nodeId}]`);
+          yield cancel(invoke);
+          yield cancel(subscriptions);
+          // yield join([bindings, invoke]);
+        }
+      }
     };
+    yield spawn(invokeListener);
+    yield join(subscriptions);
   }
 
-  get bindingsSaga() {
+  *invokeListenerSaga(): any {
     const self = this;
-    if (!self.bindings) {
-      return function* reducer() {};
-    }
+    // return function* inputListener(): any {
+    const action = yield take(
+      (e: any) => e.type == "INVOKE" && e.node.id == self.nodeId
+    );
 
-    return function* reducer(): any {
+    const dispatch = yield getContext("dispatch");
+    const session = yield getContext("session");
+    // console.log("INVOKED: ", action);
+    yield call(self.execute.bind(self), {
+      input: action.input,
+      dispatch,
+      session,
+    });
+    // };
+  }
+
+  *bindingsResolver(): any {
+    try {
+      const self = this;
+      if (!self.bindings) {
+        return NO_BINDING_RETURN;
+      }
       const session = yield getContext("session");
       const dispatch = yield getContext("dispatch");
       const context = self.#buildContext(session, dispatch);
@@ -132,7 +165,7 @@ class WorkflowStepRef<
                 if (AbstractValueProvider.isValueProvider(value as any)) {
                   const res = yield (
                     value as InternalValueProvider<any>
-                  ).saga();
+                  ).saga.bind(value)();
                   output = res.value;
                 } else {
                   output = value;
@@ -160,7 +193,12 @@ class WorkflowStepRef<
         },
         input,
       });
-    };
+      return input;
+    } finally {
+      if (yield cancelled()) {
+        // yield cancel();
+      }
+    }
   }
 
   #buildContext(

@@ -5,12 +5,13 @@ import {
   Subject,
   Subscription,
 } from "rxjs";
-import { getContext, spawn, take } from "redux-saga/effects";
+import { cancel, getContext, spawn, take } from "redux-saga/effects";
 import slugify, { slugifyWithCounter } from "@sindresorhus/slugify";
 import { pick } from "lodash-es";
 
 import { WorkflowStepRef } from "./WorkflowStep";
 import { NodeDependency, NodeMetadata, Session, Tool } from "./types";
+import { EventType } from "./event";
 
 const slugifyCounter = slugifyWithCounter();
 
@@ -208,10 +209,19 @@ class OutputValueProvider<Output> extends AbstractValueProvider<Output> {
     const self = this;
     const action = yield take(
       (e: any) =>
-        e.type == "OUTPUT" &&
         e.node.id == self.#ref.nodeId &&
-        e.output[self.#field] != undefined
+        ((e.type == EventType.OUTPUT && e.output[self.#field] != undefined) ||
+          e.type == EventType.RUN_COMPLETED)
     );
+    if (action.type == EventType.RUN_COMPLETED) {
+      yield cancel();
+      // return {
+      //   session: action.session,
+      //   node: action.node,
+      //   value: undefined,
+      // };
+      return {};
+    }
     let value = action.output[self.#field];
     for (const cb of self.#mapCallbacks) {
       value = cb(value);

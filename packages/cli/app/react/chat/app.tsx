@@ -2,7 +2,11 @@ import { Suspense, lazy, useEffect, useMemo, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { ReagentChat, createChatStore } from "@reagentai/react/chat";
+import {
+  ChatThemeProvider,
+  ReagentChat,
+  createChatStore,
+} from "@reagentai/react/chat";
 import { ReagentContextProvider } from "@reagentai/react/agent";
 import {
   DropdownMenu,
