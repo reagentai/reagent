@@ -1,5 +1,5 @@
-import { merge, ReplaySubject } from "rxjs";
-import { END, runSaga, stdChannel } from "redux-saga";
+import { ReplaySubject } from "rxjs";
+import { channel, END, runSaga, stdChannel } from "redux-saga";
 import { all, fork, take } from "redux-saga/effects";
 
 import { WorkflowStepRef } from "./WorkflowStep.js";
@@ -53,18 +53,34 @@ class WorkflowRun {
   #createTask() {
     const self = this;
 
-    const subscriptions: any[] = [];
-    Object.entries(self.#outputBindings!).forEach(([key, outputs]) => {
-      // @ts-expect-error
-      self.#streams[key] = merge(
-        ...outputs.map((o) => {
-          // @ts-expect-error
-          const [observable, unsubscribe] = o.observable();
-          subscriptions.push(unsubscribe);
-          return observable;
-        })
+    const channels: Record<string, ReturnType<typeof channel>> = {
+      markdown: channel(),
+      markdownStream: channel(),
+      ui: channel(),
+    };
+    self.#streams["markdown"] = new ReplaySubject();
+    self.#streams["markdownStream"] = new ReplaySubject();
+    self.#streams["ui"] = new ReplaySubject();
+
+    function* outputSubscribers() {
+      const subscriptions = Object.entries(self.#outputBindings!).map(
+        ([key, outputs]) => {
+          const listener = channels[key];
+          return (function* saga() {
+            yield fork(function* saga() {
+              while (1) {
+                const value = yield take(listener);
+                // @ts-expect-error
+                self.#streams[key].next(value);
+              }
+            });
+
+            yield all(outputs.map((o) => (o as any).saga({ listener })));
+          })();
+        }
       );
-    });
+      yield all(subscriptions);
+    }
 
     const nodesRef = [...self.#nodesById.values()];
     function* allNodesRunCompletion(): any {
@@ -80,16 +96,20 @@ class WorkflowRun {
         nodesCompleted.add(action.node.id);
         if (nodesCompleted.size == nodesRef.length) {
           self.#channel.put(END);
+          Object.values(channels).forEach((channel) => {
+            channel.put(END);
+          });
         }
       }
     }
     function* root() {
       yield fork(allNodesRunCompletion);
-      yield all([
-        ...nodesRef.map((ref) => {
+      yield fork(outputSubscribers);
+      yield all(
+        nodesRef.map((ref) => {
           return ref.saga.bind(ref)();
-        }),
-      ]);
+        })
+      );
     }
 
     const state = {

@@ -1,21 +1,20 @@
-import {
-  Observable,
-  Observer,
-  ReplaySubject,
-  Subject,
-  Subscription,
-} from "rxjs";
-import { cancel, getContext, spawn, take } from "redux-saga/effects";
+import { Observable, Observer, ReplaySubject, Subscription } from "rxjs";
+import { EventType } from "./event.js";
+import { channel } from "redux-saga";
+import { cancel, getContext, put, spawn, take } from "redux-saga/effects";
 import slugify, { slugifyWithCounter } from "@sindresorhus/slugify";
 import { pick } from "lodash-es";
 
 import { WorkflowStepRef } from "./WorkflowStep.js";
 import { NodeDependency, NodeMetadata, Session, Tool } from "./types.js";
-import { EventType } from "./event.js";
 
 const slugifyCounter = slugifyWithCounter();
 
 type AnyWorkflowStepRef = WorkflowStepRef<any, any, any>;
+
+type SagaOptions = {
+  listener?: ReturnType<typeof channel>;
+};
 
 // this is the format in which the value is streamed
 // by ValueProvider
@@ -27,7 +26,7 @@ type SubscribedValue<Value> = {
 
 type InternalValueProvider<Value> = {
   dependencies: NodeDependency[];
-  saga(): () => Generator<any, Value, any>;
+  saga(options?: SagaOptions): () => Generator<any, Value, any>;
   map<Output>(mapper: (value: Value) => Output): ValueProvider<Output>;
 } & Pick<Observable<SubscribedValue<Value>>, "subscribe">;
 
@@ -40,7 +39,7 @@ abstract class AbstractValueProvider<Value>
   implements InternalValueProvider<Value>
 {
   #ref: AnyWorkflowStepRef;
-  #stream: Subject<SubscribedValue<Value>>;
+  #stream: ReplaySubject<SubscribedValue<Value>>;
   #subscription?: any;
   #subscriptionCount: number;
   __isValueProvider__: boolean;
@@ -56,24 +55,6 @@ abstract class AbstractValueProvider<Value>
     return (provider as any).__isValueProvider__;
   }
 
-  observable() {
-    const self = this;
-    if (!self.#subscription) {
-      self.#subscription = self.saga.bind(self);
-      self.#ref.subscriptions.add(self.#subscription);
-    }
-    self.#subscriptionCount += 1;
-    return [
-      self.#stream,
-      () => {
-        self.#subscriptionCount -= 1;
-        if (self.#subscriptionCount == 0) {
-          self.#ref.subscriptions.delete(self.#subscription);
-        }
-      },
-    ];
-  }
-
   protected next(value: SubscribedValue<Value>) {
     if (this.#subscription) {
       this.#stream.next(value);
@@ -82,7 +63,7 @@ abstract class AbstractValueProvider<Value>
 
   abstract get dependencies(): NodeDependency[];
 
-  abstract saga(): () => Generator<any, Value, any>;
+  abstract saga(options: SagaOptions): () => Generator<any, Value, any>;
 
   abstract map<Output>(mapper: any): InternalValueProvider<Output>;
 
@@ -151,7 +132,7 @@ class ToolProvider<Input> extends AbstractValueProvider<Tool<Input, any>> {
     return [];
   }
 
-  *saga(): any {
+  *saga(options: SagaOptions = {}): any {
     const self = this;
     const session = yield getContext("session");
     const dispatch = yield getContext("dispatch");
@@ -223,7 +204,7 @@ class OutputValueProvider<Output> extends AbstractValueProvider<Output> {
     ];
   }
 
-  *saga(): any {
+  *saga(options: SagaOptions = {}): any {
     const self = this;
     const action = yield take((e: any) => {
       return (
@@ -233,6 +214,7 @@ class OutputValueProvider<Output> extends AbstractValueProvider<Output> {
           e.type == EventType.RUN_SKIPPED)
       );
     });
+
     if (
       action.type == EventType.RUN_COMPLETED ||
       action.type == EventType.RUN_SKIPPED
@@ -245,6 +227,13 @@ class OutputValueProvider<Output> extends AbstractValueProvider<Output> {
       value = cb(value);
     }
 
+    if (options.listener) {
+      yield put(options.listener!, {
+        session: action.session,
+        node: action.node,
+        value,
+      });
+    }
     self.next({
       session: action.session,
       node: action.node,
@@ -285,7 +274,7 @@ class RenderOutputProvider<Value> extends AbstractValueProvider<Value> {
     ];
   }
 
-  *saga(): any {
+  *saga(options: SagaOptions = {}): any {
     while (1) {
       const self = this;
       const action = yield take((e: any) => {
@@ -297,6 +286,13 @@ class RenderOutputProvider<Value> extends AbstractValueProvider<Value> {
         value = cb(value);
       }
 
+      if (options.listener) {
+        yield put(options.listener!, {
+          session: action.session,
+          node: action.node,
+          value,
+        });
+      }
       self.next({
         session: action.session,
         node: action.node,
