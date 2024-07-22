@@ -214,7 +214,14 @@ class WorkflowStepRef<
         },
         input,
       });
-      cleanups.forEach((cleanup) => cleanup());
+      // if the node was invoked, wait for the run to complete
+      // before cleaning up
+      yield fork(function* saga() {
+        yield take((e: any) => {
+          return e.node.id == self.nodeId && e.type == EventType.RUN_COMPLETED;
+        });
+        cleanups.forEach((cleanup) => cleanup());
+      });
       return input;
     } finally {
       if (yield cancelled()) {
