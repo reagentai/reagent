@@ -13,7 +13,7 @@
 
 # Reagent AI
 
-> Graph based framework for building full-stack AI agents
+> Graph based full-stack framework for building AI workflows
 
 Reagent is an open-source Javascript framework to build AI workflows. It enables you to build multi-step workflows by combining nodes into an agentic graph.
 
@@ -61,20 +61,21 @@ Here's a very simple AI chat application.
 
 ```typescript
 import "dotenv/config";
-import { GraphAgent } from "@reagentai/reagent/agent";
-import { ChatCompletion, ChatInput } from "@reagentai/reagent/agent/nodes";
+import { Workflow } from "@reagentai/reagent/workflow";
+import { ChatCompletion, ChatInput } from "@reagentai/reagent/nodes";
 
-// create a new agent
-const agent = new GraphAgent({
+// create a new workflow
+const workflow = new Workflow({
   name: "Simple AI Chat",
   description: "A simple AI chat agent.",
 });
 
-// add an input node; each agent must have an input node and user node for final output
-const input = agent.addNode("input", new ChatInput());
+// add an input node
+// each workflow must have an input node and user node for final output
+const input = workflow.addNode("input", new ChatInput());
 
 // add a chat completion node
-const chat1 = agent.addNode("chat-1", new ChatCompletion(), {
+const chat1 = workflow.addNode("chat-1", new ChatCompletion(), {
   config: {
     systemPrompt: "You are an amazing AI assistant called Jarvis",
     temperature: 0.9,
@@ -89,23 +90,23 @@ chat1.bind({
   query: input.output.query,
 });
 
-// bind output of different nodes to agent so that those
+// bind output of different nodes to workflow so that those
 // outputs are shown in the frontend
-agent.bind({
+workflow.bind({
   markdown: [chat1.output.markdown],
   markdownStream: [chat1.output.stream],
 });
 
-// export agent as default to run this agent with reagentai cli
-export default agent;
+// export workflow as default to run this workflow with reagentai cli
+export default workflow;
 export const nodes = [];
 export const __reagentai_exports__ = true;
 ```
 
-To run this chat agent, copy the above code to a `agent.ts` and run the following command:
+To run this chat agent workflow, copy the above code to a `agent.ts` and run the following command:
 
 ```bash
-pnpm reagent dev agent.ts
+pnpm reagent dev ./agent.ts
 ```
 
 > Note: You need to add the API keys in `.env` file.
