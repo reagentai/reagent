@@ -1,4 +1,10 @@
-export { z, Workflow } from "./workflow/index.js";
+export {
+  z,
+  Workflow,
+  lazy,
+  createReagentNode,
+  AbstractWorkflowNode,
+} from "./workflow/index.js";
 
 export type {
   Context,

@@ -21,8 +21,9 @@ import {
   ToolProvider,
   ValueProvider,
 } from "./WorkflowStepOutput.js";
-import type { EdgeBindings, RenderUpdate } from "./types.js";
 import { EventType } from "./event.js";
+import { Lazy, lazy } from "./operators/index.js";
+import type { EdgeBindings, RenderUpdate } from "./types.js";
 
 const TOOL_CALL_SAGA = Symbol("TOOL_CALL_SAGA");
 const NO_BINDING_RETURN = Symbol("NO_BINDING_RETURN");
@@ -157,6 +158,30 @@ class WorkflowStepRef<
       const session = yield getContext("session");
       const dispatch = yield getContext("dispatch");
       const context = self.#buildContext(session, dispatch);
+
+      function createValueResolver(v: any) {
+        return function* resolveValueProvider(): any {
+          if (AbstractValueProvider.isValueProvider(v)) {
+            const res = yield v.saga();
+            if (res.onSkipped) {
+              cleanups.push(res.onSkipped);
+            }
+            return res.value;
+          } else {
+            if (lazy.isLazy(v)) {
+              if (toolCallInputSaga) {
+                yield take(
+                  (e: any) =>
+                    e.node.id == self.nodeId && e.type == EventType.TOOL_CALL
+                );
+              }
+              return (v as unknown as Lazy<any>)();
+            }
+            return v;
+          }
+        };
+      }
+
       const sagas = Object.fromEntries(
         Object.entries(self.bindings!).map(([key, value]) => {
           return [
@@ -166,31 +191,11 @@ class WorkflowStepRef<
               if (Array.isArray(value)) {
                 output = yield all(
                   value.map((v: InternalValueProvider<any>) => {
-                    return (function* valueSaga(): any {
-                      if (AbstractValueProvider.isValueProvider(v)) {
-                        const res = yield v.saga();
-                        if (res.onSkipped) {
-                          cleanups.push(res.onSkipped);
-                        }
-                        return res.value;
-                      } else {
-                        return v;
-                      }
-                    })();
+                    return createValueResolver(v)();
                   })
                 );
               } else {
-                if (AbstractValueProvider.isValueProvider(value as any)) {
-                  const res = yield (
-                    value as InternalValueProvider<any>
-                  ).saga();
-                  if (res.onSkipped) {
-                    cleanups.push(res.onSkipped);
-                  }
-                  output = res.value;
-                } else {
-                  output = value;
-                }
+                output = yield createValueResolver(value)();
               }
               self.node.onInputEvent(context, {
                 [key]: value,

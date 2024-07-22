@@ -5,6 +5,7 @@ export {
   createReagentNode,
 } from "./core/node.js";
 export { Workflow } from "./execution/Workflow.js";
+export { lazy } from "./execution/operators/index.js";
 
 export type { Context, RenderContext } from "./core/context.js";
 export type { WorkflowNode } from "./core/node.js";
