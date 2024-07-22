@@ -53,7 +53,7 @@ For this example, we are using a data analysis agent built using `E2B` code inte
 ```typescript
 "use client";
 import { ReagentChat, createChatStore } from "@reagentai/react/chat";
-import { ReagentContextProvider } from "@reagentai/react/agent";
+import { ReagentContextProvider } from "@reagentai/react/workflow";
 import * as agent from "@reagentai/react-examples/e2b";
 
 const ChatAgent = () => {

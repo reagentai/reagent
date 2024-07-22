@@ -96,7 +96,9 @@ class WorkflowRun {
         nodesCompleted.add(action.node.id);
         if (nodesCompleted.size == nodesRef.length) {
           self.#channel.put(END);
-          Object.values(channels).forEach((channel) => {
+          Object.entries(channels).forEach(([key, channel]) => {
+            // @ts-expect-error
+            self.#streams[key].complete();
             channel.put(END);
           });
         }

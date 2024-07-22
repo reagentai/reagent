@@ -7,7 +7,7 @@ import {
   ReagentChat,
   createChatStore,
 } from "@reagentai/react/chat";
-import { ReagentContextProvider } from "@reagentai/react/agent";
+import { ReagentContextProvider } from "@reagentai/react/workflow";
 import {
   DropdownMenu,
   DropdownMenuContent,
