@@ -27,7 +27,7 @@ export type Metadata<
   state?: ZodObjectSchema<State>;
 };
 
-type RunResult<T> = AsyncGeneratorWithField<T>;
+type ExecutionResult<T> = AsyncGeneratorWithField<T>;
 
 export const IS_AGENT_NODE = Symbol("_AGENT_NODE_");
 
@@ -49,7 +49,7 @@ export abstract class AbstractWorkflowNode<
   // Sub classes can override this if needed
   // For example, if a node needs to emits output without any input,
   // it can be done during init
-  // Note: init `context.run` could be different than node runs
+  // Note: init `context.execute` could be different than node runs
   init(context: Context<Config, Output>) {}
 
   // Returns the state of the agent node
@@ -64,7 +64,7 @@ export abstract class AbstractWorkflowNode<
   abstract execute(
     context: Context<Config, Output>,
     input: Input
-  ): RunResult<AtLeastOne<Output>>;
+  ): ExecutionResult<AtLeastOne<Output>>;
 
   async *render(context: RenderContext): any {}
 
@@ -80,10 +80,10 @@ type WorkflowNode<
   Output extends Record<string, unknown>,
 > = AbstractWorkflowNode<Config, Input, Output> & {
   new (): AbstractWorkflowNode<Config, Input, Output>;
-  run(
+  execute(
     context: Context<Config, Output>,
     input: Input
-  ): RunResult<AtLeastOne<Output>>;
+  ): ExecutionResult<AtLeastOne<Output>>;
 };
 
 export const createReagentNode = <
@@ -101,7 +101,7 @@ export const createReagentNode = <
   input?: ZodObjectSchema<Input>;
   output: ZodObjectSchema<Output>;
   hasUI?: boolean;
-  execute: WorkflowNode<Config, WithDefaultEmpty<Input>, Output>["run"];
+  execute: WorkflowNode<Config, WithDefaultEmpty<Input>, Output>["execute"];
 }) => {
   const config = (options.config || z.object({})) as ZodObjectSchema<
     WithDefaultEmpty<Config>
