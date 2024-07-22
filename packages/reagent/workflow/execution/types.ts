@@ -1,5 +1,6 @@
 import { OutputValueProvider, ValueProvider } from "./WorkflowStepOutput";
 import { ZodObjectSchema } from "../core/zod";
+import { Lazy } from "./operators";
 
 export type Session = {
   id: string;
@@ -30,6 +31,7 @@ export type Tool<Params, Result> = {
 type ValueOrProvider<Value> =
   | OutputValueProvider<Value>
   | ValueProvider<Value>
+  | Lazy<Value>
   | Value;
 
 export type EdgeBindings<Input> = {

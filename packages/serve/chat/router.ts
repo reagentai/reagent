@@ -5,8 +5,8 @@ import {
   AnthropicChat,
   Groq,
   OpenAI,
-} from "@reagentai/reagent/llm/integrations/models/index.js";
-import { DummyModel } from "@reagentai/reagent/llm/models/dummy.js";
+  DummyModel,
+} from "@reagentai/reagent/llm/models/index.js";
 
 import { runReagentWorkflow } from "../workflow.js";
 
