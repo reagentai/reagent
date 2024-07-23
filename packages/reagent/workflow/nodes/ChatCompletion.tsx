@@ -57,6 +57,7 @@ const ChatCompletion = createReagentNode({
   id: "@core/chat-completion",
   version: "0.0.1",
   name: "Chat completion",
+  description: "Generate chat response using AI",
   icon: ICON,
   config: configSchema,
   input: inputSchema,

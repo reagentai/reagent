@@ -122,6 +122,7 @@ export const createReagentNode = <
         name: options.name,
         description: options.description,
         type: options.type,
+        icon: options.icon,
         config,
         input: inputSchema,
         output: options.output,
