@@ -1,5 +1,4 @@
-import { z } from "./zod";
-import type { ZodObjectSchema } from "./zod";
+import { z, ZodObjectSchema } from "./zod.js";
 
 const node = z.object({
   id: z.string(),
