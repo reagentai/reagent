@@ -21,7 +21,6 @@ export default class Passthrough<
     };
   }
 
-  // @ts-expect-error
   async *execute(_context: Context<void, Output>, input: Output) {
     yield input;
   }
