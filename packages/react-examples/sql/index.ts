@@ -2,7 +2,7 @@ import dedent from "dedent";
 import { Workflow } from "@reagentai/reagent";
 import {
   ChatCompletionWithToolCalling,
-  ChatInput,
+  WorkflowInput,
 } from "@reagentai/reagent/nodes";
 
 import { AgentError } from "@reagentai/react/tools/AgentError";
@@ -13,7 +13,7 @@ const workflow = new Workflow({
   description: "This agent generates and executes SQL queries",
 });
 
-const input = workflow.addNode("input", new ChatInput());
+const input = workflow.addNode("input", new WorkflowInput());
 const error = workflow.addNode("error", new AgentError());
 
 const storyGeneratorConfig = {

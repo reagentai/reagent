@@ -32,7 +32,7 @@ const configSchema = z.object({
     .default("You are an AI assistant.")
     .optional()
     .label("System Prompt")
-    .uiSchema({
+    .ui({
       type: "textarea",
     }),
   temperature: z.number({ coerce: true }).default(0.9).label("Temperature"),
@@ -60,7 +60,7 @@ const outputSchema = z.object({
 });
 
 const ChatCompletionWithToolCalling = createReagentNode({
-  id: "@core/chat-completion",
+  id: "@core/chat-completion-with-tool-calling",
   version: "0.0.1",
   name: "Chat completion",
   icon: ICON,

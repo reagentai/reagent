@@ -1,7 +1,10 @@
 import z, { ZodObject, ZodRawShape } from "zod";
 
-type UISchema = {
+type FieldUI = {
   type?: "textarea";
+  // disabling the field hides the node handle for that field
+  // default: false
+  disabled?: boolean;
 };
 
 z.ZodType.prototype.label = function (label: string) {
@@ -9,15 +12,15 @@ z.ZodType.prototype.label = function (label: string) {
   return this;
 };
 
-z.ZodType.prototype.uiSchema = function (uiSchema: UISchema) {
-  this._def.uiSchema = uiSchema;
+z.ZodType.prototype.ui = function (ui: FieldUI) {
+  this._def.ui = ui;
   return this;
 };
 
 declare module "zod" {
   interface ZodTypeDef {
     label?: string;
-    uiSchema?: UISchema;
+    ui?: FieldUI;
   }
 
   interface ZodType<
@@ -33,7 +36,7 @@ declare module "zod" {
     Def extends ZodTypeDef = ZodTypeDef,
     Input = Output,
   > {
-    uiSchema<T extends z.ZodTypeAny>(this: T, uiSchema: UISchema): T;
+    ui<T extends z.ZodTypeAny>(this: T, ui: FieldUI): T;
   }
 }
 export type ZodObjectSchema<O = {}> =

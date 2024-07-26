@@ -1,7 +1,7 @@
 import { Workflow } from "@reagentai/reagent/workflow";
 import {
   ChatCompletionWithToolCalling,
-  ChatInput,
+  WorkflowInput,
 } from "@reagentai/reagent/nodes";
 import { AgentError } from "@reagentai/react/tools/AgentError.js";
 import { CodeInterpreter } from "@reagentai/thirdparty/e2b/index.js";
@@ -11,7 +11,7 @@ const workflow = new Workflow({
   description: "This is a demo code interpreter agent using E2B",
 });
 
-const input = workflow.addNode("input", new ChatInput());
+const input = workflow.addNode("input", new WorkflowInput());
 const error = workflow.addNode("error", new AgentError());
 
 const chat1 = workflow.addNode("chat-1", new ChatCompletionWithToolCalling(), {

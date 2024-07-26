@@ -1,6 +1,5 @@
 import { Hono } from "hono";
 import { Workflow, z } from "@reagentai/reagent/workflow/index.js";
-import { ChatInput as ChatInputNode } from "@reagentai/reagent/nodes.js";
 import {
   AnthropicChat,
   Groq,
@@ -9,8 +8,6 @@ import {
 } from "@reagentai/reagent/llm/models/index.js";
 
 import { runReagentWorkflow } from "../workflow.js";
-
-type ChatInput = z.infer<(typeof ChatInputNode)["metadata"]["output"]>;
 
 const createChatAgentRouter = (agents: Map<string, Workflow>) => {
   const router = new Hono();
@@ -89,7 +86,7 @@ const createChatAgentRouter = (agents: Map<string, Workflow>) => {
       });
     }
 
-    const agentOutputStream = runReagentWorkflow<ChatInput>(agent, {
+    const agentOutputStream = runReagentWorkflow(agent, {
       nodeId: "input",
       input: {
         query: body.input.message.content,

@@ -198,7 +198,7 @@ class WorkflowStepRef<
                 output = yield createValueResolver(value)();
               }
               self.node.onInputEvent(context, {
-                [key]: value,
+                [key]: output,
               } as any);
               return output;
             })(),

@@ -62,7 +62,7 @@ Here's a very simple AI chat application.
 ```typescript
 import "dotenv/config";
 import { Workflow } from "@reagentai/reagent/workflow";
-import { ChatCompletion, ChatInput } from "@reagentai/reagent/nodes";
+import { ChatCompletion, WorkflowInput } from "@reagentai/reagent/nodes";
 
 // create a new workflow
 const workflow = new Workflow({
@@ -72,7 +72,7 @@ const workflow = new Workflow({
 
 // add an input node
 // each workflow must have an input node and user node for final output
-const input = workflow.addNode("input", new ChatInput());
+const input = workflow.addNode("input", new WorkflowInput());
 
 // add a chat completion node
 const chat1 = workflow.addNode("chat-1", new ChatCompletion(), {

@@ -1,7 +1,7 @@
 import { Workflow, lazy } from "@reagentai/reagent";
 import {
   ChatCompletionWithToolCalling,
-  ChatInput,
+  WorkflowInput,
 } from "@reagentai/reagent/nodes";
 import { AgentError } from "@reagentai/react/tools/AgentError.js";
 
@@ -12,7 +12,7 @@ const workflow = new Workflow({
   description: "This agent shows random weather in Weather Widget",
 });
 
-const input = workflow.addNode("input", new ChatInput());
+const input = workflow.addNode("input", new WorkflowInput());
 const error = workflow.addNode("error", new AgentError());
 
 const chat1 = workflow.addNode("chat-1", new ChatCompletionWithToolCalling(), {
