@@ -29,7 +29,7 @@ const configSchema = z.object({
       type: "textarea",
     }),
   temperature: z.number({ coerce: true }).default(0.9).label("Temperature"),
-  stream: z.boolean().default(false).label("Stream"),
+  stream: z.boolean().default(true).label("Stream"),
 });
 
 const inputSchema = z.object({

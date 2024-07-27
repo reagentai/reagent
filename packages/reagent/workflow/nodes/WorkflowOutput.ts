@@ -5,22 +5,38 @@ const inputSchema = z.object({
   markdownStream: z.instanceof(Observable).optional().label("Markdown stream"),
   markdown: z.string().optional().label("Markdown"),
   ui: z.instanceof(Observable).optional().label("UI"),
+  data: z.instanceof(Observable).optional().label("Data"),
 });
 
 const outputSchema = z.object({
   markdownStream: z
     .instanceof(Observable)
     .optional()
-    .label("Markdown stream")
     .ui({
       disabled: true,
-    }),
-  markdown: z.string().optional().label("Markdown").ui({
-    disabled: true,
-  }),
-  ui: z.instanceof(Observable).optional().label("UI").ui({
-    disabled: true,
-  }),
+    })
+    .label("Markdown stream"),
+  markdown: z
+    .string()
+    .optional()
+    .ui({
+      disabled: true,
+    })
+    .label("Markdown"),
+  ui: z
+    .instanceof(Observable)
+    .optional()
+    .ui({
+      disabled: true,
+    })
+    .label("UI"),
+  data: z
+    .instanceof(Observable)
+    .optional()
+    .ui({
+      disabled: true,
+    })
+    .label("Data"),
 });
 
 const ICON = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
