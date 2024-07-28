@@ -66,6 +66,7 @@ type WorkflowNode<
   Output extends Record<string, unknown>,
 > = AbstractWorkflowNode<Config, Input, Output> & {
   new (): AbstractWorkflowNode<Config, Input, Output>;
+  components: [string, () => any][];
   execute(
     context: Context<Config, Output>,
     input: Input

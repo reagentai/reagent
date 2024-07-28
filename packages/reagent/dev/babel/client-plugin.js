@@ -1,23 +1,54 @@
 import * as t from "@babel/types";
 
 const tranformCreateAgentNode = {
+  ObjectExpression: {
+    enter(_path) {
+      this.state = {
+        // will be marked as true if target is "frontend"
+        frontend: false,
+        components: {},
+        renderCalls: [],
+        renderCallCount: 0,
+      };
+    },
+    exit(path, state) {
+      if (path.scope != state._createReagentNode.local.scope) {
+        return;
+      }
+      if (this.state.renderCalls.length > 0) {
+        path.node.properties.push(
+          t.objectProperty(
+            t.identifier("components"),
+            t.arrayExpression(this.state.renderCalls)
+          )
+        );
+      }
+    },
+  },
+  ObjectProperty(path, state) {
+    const { key, value } = path.node;
+    if (key.name == "target" && value.value == "frontend") {
+      state.frontend = true;
+    }
+    path.skip();
+  },
   ObjectMethod(path, state) {
     if (path.node.key.name != "execute") {
       return;
     }
-    // make sure run is non-async generator
-    path.node.generator = true;
-    path.node.async = false;
     const context = path.get("params")[0];
-    const executeState = {
-      method: path.node,
-      contextName: context.node.name,
-      context,
-      renderCalls: [],
-      renderCallCount: 0,
-    };
-    path.traverse(transformCreateAgentNodeExecuteMethod, executeState);
-    path.skip();
+
+    this.state.method = path.node;
+    this.state.contextName = context.node.name;
+    this.state.context = context;
+
+    path.traverse(transformCreateAgentNodeExecuteMethod, this.state);
+
+    if (!state.frontend) {
+      path.remove();
+    } else {
+      path.skip();
+    }
   },
 };
 
@@ -28,23 +59,17 @@ const transformCreateAgentNodeExecuteMethod = {
       if (path.parent !== this.method) {
         return;
       }
-      path.skip();
-      path.replaceWith(
-        t.blockStatement(
-          this.renderCalls.map((renderCall) => {
-            return t.expressionStatement(renderCall);
-          })
-        )
-      );
-      // all identifier nodes in createReagentNode is already marked
-      // as removed since it's being replaced with a new node.
+      // if the target for this node isn't "frontend", mark all identifiers
+      // as removed since "execute" method will be removed for client code.
       // so, mark the nodes that replaced old nodes as not-removed
       // TODO: there must be a better solution
-      path.traverse({
-        Identifier(path) {
-          path.__reagentNodeRemoved = undefined;
-        },
-      });
+      if (!this.frontend) {
+        path.traverse({
+          Identifier(path) {
+            path.__reagentNodeRemoved = undefined;
+          },
+        });
+      }
     },
   },
   CallExpression(path, state) {
@@ -58,13 +83,11 @@ const transformCreateAgentNodeExecuteMethod = {
       return;
     }
     this.renderCalls.push(
-      t.yieldExpression(
-        t.arrayExpression([
-          // add render id as the first argument
-          t.stringLiteral(`render-${this.renderCallCount++}`),
-          path.node.arguments[0],
-        ])
-      )
+      t.arrayExpression([
+        // add render id as the first argument
+        t.stringLiteral(`render-${this.renderCallCount++}`),
+        path.node.arguments[0],
+      ])
     );
   },
 };

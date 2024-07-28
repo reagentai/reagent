@@ -20,10 +20,9 @@ const AgentNodeRenderer = (
     const node = nodesByTypeId[props.node!.type];
     // ignore UI rendering if agent node not found
     if (!node) {
-      return [];
+      return {};
     }
-    // @ts-expect-error
-    return [...node.execute()].reduce(
+    return node.components.reduce(
       (agg, curr) => {
         agg[curr[0]] = curr[1];
         return agg;
@@ -41,6 +40,7 @@ const AgentNodeRenderer = (
   }
   return (
     <Component
+      // @ts-expect-error
       data={props.render.data}
       useAgentNode={() => {
         const state = props.store(

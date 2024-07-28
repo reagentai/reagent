@@ -54,6 +54,7 @@ test("add render-id to nested render calls", () => {
         }
         yield { msg: "Hello" };
       },
+      hasUI: true
     });
   `);
 

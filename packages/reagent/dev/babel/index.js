@@ -65,19 +65,20 @@ function createPlugin(options) {
                   path.__reagentNodeRemoved = true;
                 },
               });
-              node.arguments[0].properties.forEach((prop) => {
-                if (prop.key.name == "execute") {
-                  path.traverse(tranformCreateAgentNode, state);
-                }
-              });
+              path.traverse(tranformCreateAgentNode, state);
               path.replaceWith(
                 t.objectExpression(
                   node.arguments[0].properties.filter((prop) => {
                     return (
                       options.ssr ||
-                      ["id", "version", "name", "execute"].includes(
-                        prop.key.name
-                      )
+                      [
+                        "id",
+                        "version",
+                        "name",
+                        "target",
+                        "components",
+                        "execute",
+                      ].includes(prop.key.name)
                     );
                   })
                 )

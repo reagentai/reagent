@@ -130,6 +130,8 @@ function createRemoveDefaultExportPlugin(options) {
               },
             });
             path.remove();
+          } else {
+            path.skip();
           }
         },
       },
