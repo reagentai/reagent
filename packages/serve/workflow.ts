@@ -3,7 +3,7 @@ import {
   ReplaySubject,
   map,
   mergeMap,
-} from "@reagentai/reagent/rxjs";
+} from "@reagentai/reagent/rxjs.js";
 import { Workflow } from "@reagentai/reagent/workflow.js";
 import { uniqueId } from "@reagentai/reagent/utils/uniqueId.js";
 import type { Chat } from "@reagentai/reagent/chat/index.js";
