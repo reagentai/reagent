@@ -4,10 +4,8 @@ import { get } from "lodash-es";
 import { Context } from "../../core/index.js";
 import { ModelInvokeOptions } from "./types.js";
 import { Metadata } from "./schema.js";
-import {
-  createOpenAIStreamDeltaToResponseBuilder,
-  jsonStreamToAsyncIterator,
-} from "../../stream/index.js";
+import { createOpenAIStreamDeltaToResponseBuilder } from "../../utils/response-builder.js";
+import { jsonStreamToAsyncIterator } from "../../../utils/stream.js";
 import { BaseModelExecutor } from "./BaseModelExecutor.js";
 
 /**

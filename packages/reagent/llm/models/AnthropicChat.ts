@@ -12,7 +12,7 @@ import {
   ModelInvokeOptions,
 } from "./core/index.js";
 import { FormattedChatMessage } from "../prompt/index.js";
-import { jsonStreamToAsyncIterator } from "../stream/index.js";
+import { jsonStreamToAsyncIterator } from "../../utils/stream.js";
 
 type Options = Pick<ModelOptions, "model"> & {
   url?: string;

@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { produce } from "immer";
 import type { Chat } from "@reagentai/reagent/chat";
-import { jsonStreamToAsyncIterator } from "@reagentai/reagent/llm/stream/index.js";
+import { jsonStreamToAsyncIterator } from "@reagentai/reagent/utils/stream.js";
 
 type NewMessage = {
   id: string;
