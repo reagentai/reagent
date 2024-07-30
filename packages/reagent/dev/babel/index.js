@@ -19,6 +19,9 @@ function createPlugin(options) {
     : tranformCreateAgentNodeClient;
   return ({ types: t }) => {
     return {
+      pre() {
+        this.state = {};
+      },
       visitor: {
         Program(path) {
           if (
@@ -29,7 +32,7 @@ function createPlugin(options) {
             path.stop();
           }
         },
-        ImportDeclaration(path, state) {
+        ImportDeclaration(path) {
           if (path.node.source.value.startsWith("@reagentai/reagent")) {
             const specifiers = path.get("specifiers");
             const createReagentNodeSpecifier = specifiers.find((specifier) => {
@@ -41,35 +44,40 @@ function createPlugin(options) {
             });
 
             if (createReagentNodeSpecifier) {
-              state._createReagentNode = {
+              this.state._createReagentNode = {
                 local: createReagentNodeSpecifier.get("local"),
               };
             }
           }
         },
-        CallExpression(path, state) {
-          if (!state._createReagentNode) {
+        CallExpression(path) {
+          if (
+            !this.state._createReagentNode ||
+            path.node.callee.name !=
+              this.state._createReagentNode.local.node.name
+          ) {
             return;
           }
           const { node } = path;
-          if (node.callee.name == state._createReagentNode.local.node.name) {
+          if (
+            node.callee.name == this.state._createReagentNode.local.node.name
+          ) {
             const callee = path.get("callee");
             // make sure the scope matches
-            if (callee.scope != state._createReagentNode.local.scope) {
+            if (callee.scope != this.state._createReagentNode.local.scope) {
               return;
             }
-            path.skip();
             if (!options.ssr) {
               path.traverse({
                 Identifier(path) {
                   path.__reagentNodeRemoved = true;
                 },
               });
-              path.traverse(tranformCreateAgentNode, state);
+              path.traverse(tranformCreateAgentNode, this.state);
               path.replaceWith(
                 t.objectExpression(
                   node.arguments[0].properties.filter((prop) => {
-                    return (
+                    const preserve =
                       options.ssr ||
                       [
                         "id",
@@ -78,8 +86,15 @@ function createPlugin(options) {
                         "target",
                         "components",
                         "execute",
-                      ].includes(prop.key.name)
-                    );
+                      ].includes(prop.key.name);
+                    if (!preserve) {
+                      path.traverse({
+                        Identifier(path) {
+                          path.__reagentNodeRemoved = true;
+                        },
+                      });
+                    }
+                    return preserve;
                   })
                 )
               );

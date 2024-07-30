@@ -6,10 +6,6 @@ import generate from "@babel/generator";
 // @ts-ignore
 import createBabelPlugin from "./index";
 
-const plugin = createBabelPlugin({
-  ssr: false,
-});
-
 test("skip transpile if directive '@reagent-skip-transform' is found", () => {
   const codeToTransform = `
     "@reagent-skip-transform";
@@ -310,6 +306,38 @@ test("don't transpile createReagentNode if imported scope doesn't match", () => 
   expect(transformedCode).toBe(cleanUpCode(expected));
 });
 
+test("remove unnecessary fields from client side node", () => {
+  const expected = `
+  import { createReagentNode } from "@reagentai/reagent/agent";
+
+  const FirstStep = {
+    id: "step-1",
+    name: "Step One",
+    version: "0.0.1"
+  };
+  `;
+
+  // Note: need to use react import otherwise babel will remove for some reason
+  const { code: transformedCode } = transform(`
+  import { createReagentNode, z } from "@reagentai/reagent/agent";
+
+  const FirstStep = createReagentNode({
+    id: "step-1",
+    name: "Step One",
+    description: "Description for step 1",
+    version: "0.0.1",
+    async *execute(context, input) {
+      console.log("STEP 1");
+      yield { done: true };
+    },
+  });
+  `);
+  expect(transformedCode).to.equal(cleanUpCode(expected));
+});
+
+const plugin = createBabelPlugin({
+  ssr: false,
+});
 const transform = (code: string): { code: string } => {
   // @ts-expect-error
   return transformSync(code, {

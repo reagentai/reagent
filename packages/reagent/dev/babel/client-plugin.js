@@ -2,8 +2,9 @@ import * as t from "@babel/types";
 
 const tranformCreateAgentNode = {
   ObjectExpression: {
-    enter(_path) {
+    enter(_path, state) {
       this.state = {
+        _createReagentNode: state._createReagentNode,
         // will be marked as true if target is "frontend"
         frontend: false,
         components: {},
@@ -11,8 +12,8 @@ const tranformCreateAgentNode = {
         renderCallCount: 0,
       };
     },
-    exit(path, state) {
-      if (path.scope != state._createReagentNode.local.scope) {
+    exit(path) {
+      if (path.scope != this.state._createReagentNode.local.scope) {
         return;
       }
       if (this.state.renderCalls.length > 0) {
@@ -25,15 +26,29 @@ const tranformCreateAgentNode = {
       }
     },
   },
-  ObjectProperty(path, state) {
+  ObjectProperty(path) {
     const { key, value } = path.node;
     if (key.name == "target" && value.value == "frontend") {
-      state.frontend = true;
+      this.state.frontend = true;
     }
-    path.skip();
+    if (
+      !["id", "version", "name", "target", "components", "execute"].includes(
+        path.node.key.name
+      )
+    ) {
+      path.traverse({
+        Identifier(path) {
+          path.__reagentNodeRemoved = true;
+        },
+      });
+      path.remove();
+    } else {
+      path.skip();
+    }
   },
-  ObjectMethod(path, state) {
+  ObjectMethod(path) {
     if (path.node.key.name != "execute") {
+      path.remove();
       return;
     }
     const context = path.get("params")[0];
@@ -44,7 +59,7 @@ const tranformCreateAgentNode = {
 
     path.traverse(transformCreateAgentNodeExecuteMethod, this.state);
 
-    if (!state.frontend) {
+    if (!this.state.frontend) {
       path.remove();
     } else {
       path.skip();
@@ -72,7 +87,7 @@ const transformCreateAgentNodeExecuteMethod = {
       }
     },
   },
-  CallExpression(path, state) {
+  CallExpression(path) {
     const callee = path.get("callee");
     const isContextRender =
       t.isMemberExpression(callee.node) &&

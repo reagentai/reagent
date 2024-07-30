@@ -22,7 +22,7 @@ const filterRegex = new RegExp(
  * @property {string[]} [include] - glob pattern to include files
  * @property {string[]} [exclude] - glob pattern to exclude files; include takes precedence
  * @property {any[]} [presets] - babel presets
- * @property {((options: {ssr: boolean}) => any)[]} [plugins] - babel plugins
+ * @property {any[]} [plugins] - babel plugins
  */
 
 /**

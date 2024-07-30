@@ -1,3 +1,5 @@
+import * as t from "@babel/types";
+
 const createFindExportedIdentifiers = () => {
   const visitor = {
     ClassBody(path) {
@@ -15,6 +17,54 @@ const createFindExportedIdentifiers = () => {
       path.traverse(visitor, state);
     },
   };
+};
+
+const treeshake = {
+  CallExpression(path) {
+    if (path.scope != this.state.scope || !this.state.isReagentaiAgentModule) {
+      return;
+    }
+    const callee = path.get("callee");
+    if (
+      t.isIdentifier(callee.node) &&
+      !this.state.exportedIdentifiers.has(callee.node.name)
+    ) {
+      path.traverse({
+        Identifier(path) {
+          path.__reagentNodeRemoved = true;
+        },
+      });
+      path.remove();
+    } else if (
+      t.isMemberExpression(callee) &&
+      !this.state.exportedIdentifiers.has(callee.node.object.name)
+    ) {
+      path.traverse({
+        Identifier(path) {
+          path.__reagentNodeRemoved = true;
+        },
+      });
+      path.remove();
+    }
+  },
+  VariableDeclarator(path) {
+    if (!this.state.isReagentaiAgentModule) {
+      return;
+    }
+    if (
+      path.scope == this.state.scope &&
+      !this.state.exportedIdentifiers.has(path.node.id.name)
+    ) {
+      path.traverse({
+        Identifier(path) {
+          path.__reagentNodeRemoved = true;
+        },
+      });
+      path.remove();
+    } else {
+      path.skip();
+    }
+  },
 };
 
 /**
@@ -45,6 +95,7 @@ function createRemoveDefaultExportPlugin(options) {
             };
             path.traverse(findExportedIdentifiers, state);
             this.state = state;
+            path.traverse(treeshake, { state });
           },
           exit(path) {
             if (!this.state.isReagentaiAgentModule) {
@@ -85,54 +136,6 @@ function createRemoveDefaultExportPlugin(options) {
               t.stringLiteral("__removed_by_reagent__")
             )
           );
-        },
-        CallExpression(path) {
-          if (
-            path.scope != this.state.scope ||
-            !this.state.isReagentaiAgentModule
-          ) {
-            return;
-          }
-          const callee = path.get("callee");
-          if (
-            t.isIdentifier(callee.node) &&
-            !this.state.exportedIdentifiers.has(callee.node.name)
-          ) {
-            path.traverse({
-              Identifier(path) {
-                path.__reagentNodeRemoved = true;
-              },
-            });
-            path.remove();
-          } else if (
-            t.isMemberExpression(callee) &&
-            !this.state.exportedIdentifiers.has(callee.node.object.name)
-          ) {
-            path.traverse({
-              Identifier(path) {
-                path.__reagentNodeRemoved = true;
-              },
-            });
-            path.remove();
-          }
-        },
-        VariableDeclarator(path) {
-          if (!this.state.isReagentaiAgentModule) {
-            return;
-          }
-          if (
-            path.scope == this.state.scope &&
-            !this.state.exportedIdentifiers.has(path.node.id.name)
-          ) {
-            path.traverse({
-              Identifier(path) {
-                path.__reagentNodeRemoved = true;
-              },
-            });
-            path.remove();
-          } else {
-            path.skip();
-          }
         },
       },
     };
