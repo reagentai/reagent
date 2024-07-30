@@ -22,7 +22,7 @@ test("test vite plugin - should remove default export", () => {
     id: "step-1",
     name: "Step One",
     version: "0.0.1",
-    target: "frontend",
+    target: "client",
     async *execute(context, input) {
         console.log("STEP 1");
         yield { done: true };
@@ -42,7 +42,7 @@ test("test vite plugin - should remove default export", () => {
     description: "Description for step 1",
     version: "0.0.1",
     input: z.object({}),
-    target: "frontend",
+    target: "client",
     output: z.object({
         done: z.boolean(),
     }),

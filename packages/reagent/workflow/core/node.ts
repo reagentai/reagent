@@ -84,6 +84,7 @@ export const createReagentNode = <
   description?: string;
   type?: "tool";
   icon?: string;
+  target?: "client";
   config?: ZodObjectSchema<Config>;
   input?: ZodObjectSchema<Input>;
   output: ZodObjectSchema<Output>;

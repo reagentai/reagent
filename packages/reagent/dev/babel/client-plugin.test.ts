@@ -194,14 +194,14 @@ test("extract only render calls from createReagentNode when using variable", () 
   expect(transformedCode).toBe(expected);
 });
 
-test("leave execute method intact if target is frontend", () => {
+test("leave execute method intact if target is client", () => {
   const expected = cleanUpCode(`
     import { createReagentNode, z } from "@reagentai/reagent/agent";
     const GetWeather = {
       id: "@reagentai/demo-agents/getWeather",
       name: "Get weather",
       version: "0.0.1",
-      target: "frontend",
+      target: "client",
       async *execute(context, input) {
         context.render((props) => <div>NICE</div>);
         yield { msg: "Hello" };
@@ -219,7 +219,7 @@ test("leave execute method intact if target is frontend", () => {
       name: "Get weather",
       description: "",
       version: "0.0.1",
-      target: "frontend",
+      target: "client",
       input: z.object({
         msg: z.string()
       }),

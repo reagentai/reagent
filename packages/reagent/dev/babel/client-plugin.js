@@ -5,8 +5,8 @@ const tranformCreateAgentNode = {
     enter(_path, state) {
       this.state = {
         _createReagentNode: state._createReagentNode,
-        // will be marked as true if target is "frontend"
-        frontend: false,
+        // will be marked as true if target is "client"
+        targetClient: false,
         components: {},
         renderCalls: [],
         renderCallCount: 0,
@@ -28,8 +28,8 @@ const tranformCreateAgentNode = {
   },
   ObjectProperty(path) {
     const { key, value } = path.node;
-    if (key.name == "target" && value.value == "frontend") {
-      this.state.frontend = true;
+    if (key.name == "target" && value.value == "client") {
+      this.state.targetClient = true;
     }
     if (
       !["id", "version", "name", "target", "components", "execute"].includes(
@@ -59,7 +59,7 @@ const tranformCreateAgentNode = {
 
     path.traverse(transformCreateAgentNodeExecuteMethod, this.state);
 
-    if (!this.state.frontend) {
+    if (!this.state.targetClient) {
       path.remove();
     } else {
       path.skip();
@@ -74,11 +74,11 @@ const transformCreateAgentNodeExecuteMethod = {
       if (path.parent !== this.method) {
         return;
       }
-      // if the target for this node isn't "frontend", mark all identifiers
+      // if the target for this node isn't "client", mark all identifiers
       // as removed since "execute" method will be removed for client code.
       // so, mark the nodes that replaced old nodes as not-removed
       // TODO: there must be a better solution
-      if (!this.frontend) {
+      if (!this.targetClient) {
         path.traverse({
           Identifier(path) {
             path.__reagentNodeRemoved = undefined;
