@@ -1,6 +1,6 @@
 import { ReplaySubject } from "rxjs";
 import { channel, END, runSaga, stdChannel } from "redux-saga";
-import { all, fork, take } from "redux-saga/effects";
+import { all, call, fork, getContext, take } from "redux-saga/effects";
 
 import { WorkflowStepRef } from "./WorkflowStep.js";
 import { NodeMetadata, WorkflowOutputBindings, RenderUpdate } from "./types.js";
@@ -14,6 +14,28 @@ type OutputEvent<Output> = {
   } | null;
   node: NodeMetadata;
   value: Output;
+};
+
+enum StepStatus {
+  WAITING = "WAITING",
+  INVOKED = "INVOKED",
+  COMPLETED = "COMPLETED",
+  FAILED = "FAILED",
+}
+
+type StepState = {
+  status: StepStatus;
+  output: Record<string, any>;
+};
+
+type InvokeOptions<Input extends Record<string, any> = any> = {
+  nodeId: string;
+  input: Input;
+  getStepState?: (nodeId: string) => Promise<StepState | undefined>;
+  updateStepState?: (
+    nodeId: string,
+    state: Partial<StepState>
+  ) => Promise<void>;
 };
 
 class WorkflowRun {
@@ -32,25 +54,28 @@ class WorkflowRun {
 
   constructor(
     nodesById: Map<string, WorkflowStepRef<any, any, any>>,
-    outputBindings: WorkflowOutputBindings
+    outputBindings: WorkflowOutputBindings,
+    options: Pick<InvokeOptions, "getStepState" | "updateStepState">
   ) {
     this.#id = uniqueId();
     this.#nodesById = nodesById;
     this.#outputBindings = outputBindings;
+    this.#channel = stdChannel();
     this.#streams = {
       markdown: new ReplaySubject(),
       markdownStream: new ReplaySubject(),
       ui: new ReplaySubject(),
     };
-    this.#channel = stdChannel();
-    this.task = this.#createTask();
+    this.task = this.#createTask(options);
   }
 
   get id() {
     return this.#id;
   }
 
-  #createTask() {
+  #createTask(
+    options: Pick<InvokeOptions, "getStepState" | "updateStepState">
+  ) {
     const self = this;
 
     const channels: Record<string, ReturnType<typeof channel>> = {
@@ -61,6 +86,56 @@ class WorkflowRun {
     self.#streams["markdown"] = new ReplaySubject();
     self.#streams["markdownStream"] = new ReplaySubject();
     self.#streams["ui"] = new ReplaySubject();
+
+    function* setInitialState(): any {
+      const getStepState: InvokeOptions["getStepState"] =
+        yield getContext("getStepState");
+      const dispatch = yield getContext("dispatch");
+      const session = yield getContext("session");
+      if (getStepState) {
+        const stateById: Record<string, StepState> = {};
+        for (const nodeId of [...self.#nodesById.keys()]) {
+          const state: StepState = yield call(getStepState, nodeId);
+          stateById[nodeId] = state;
+          if (state) {
+            // dispatch ALREADY_INVOKED such that tasks waiting
+            // for INVOKE event are cancelled before OUTPUT events
+            // are emitted
+            if (state.status != StepStatus.WAITING) {
+              dispatch({
+                type: EventType.SKIP_INVOKE,
+                session,
+                node: { id: nodeId },
+                success: true,
+              });
+            }
+          }
+        }
+
+        Object.entries(stateById).forEach(([nodeId, state]) => {
+          if (state.status == StepStatus.INVOKED) {
+            dispatch({
+              type: EventType.SKIP_RUN,
+              session,
+              node: { id: nodeId },
+            });
+          } else if (state.status == StepStatus.COMPLETED) {
+            dispatch({
+              type: EventType.OUTPUT,
+              session,
+              node: { id: nodeId },
+              output: state.output,
+            });
+            dispatch({
+              type: EventType.RUN_COMPLETED,
+              session,
+              node: { id: nodeId },
+              success: true,
+            });
+          }
+        });
+      }
+    }
 
     function* outputSubscribers() {
       const subscriptions = Object.entries(self.#outputBindings!).map(
@@ -89,7 +164,7 @@ class WorkflowRun {
         const action = yield take((e: any) => {
           return (
             e.type == EventType.NO_BINDINGS ||
-            e.type == EventType.RUN_SKIPPED ||
+            e.type == EventType.SKIP_RUN ||
             e.type == EventType.RUN_COMPLETED
           );
         });
@@ -105,6 +180,7 @@ class WorkflowRun {
       }
     }
     function* root() {
+      yield fork(setInitialState);
       yield fork(allNodesRunCompletion);
       yield fork(outputSubscribers);
       yield all(
@@ -114,20 +190,15 @@ class WorkflowRun {
       );
     }
 
-    const state = {
-      inputsByNodeId: {},
-      outputsByNodeId: {},
-    };
     const task = runSaga(
       {
         channel: self.#channel,
-        getState: () => {
-          return state;
-        },
         context: {
           session: {
             id: uniqueId(),
           },
+          getStepState: options.getStepState,
+          updateStepState: options.updateStepState,
           dispatch(output: any) {
             self.#channel.put(output);
           },
@@ -144,8 +215,9 @@ class WorkflowRun {
     return task;
   }
 
-  invoke(options: { nodeId: string; input: any }) {
+  invoke(options: InvokeOptions) {
     const self = this;
+
     self.#channel.put({
       type: EventType.INVOKE,
       node: {
@@ -164,6 +236,21 @@ class WorkflowRun {
     });
   }
 
+  dispatch(event: {
+    type: EventType;
+    session: { id: string };
+    node: { id: string };
+    output: any;
+  }) {
+    const self = this;
+    self.#channel.put({
+      ...event,
+      dispatch(event: any) {
+        self.#channel.put(event);
+      },
+    });
+  }
+
   get output() {
     const self = this;
     return {
@@ -174,4 +261,5 @@ class WorkflowRun {
   }
 }
 
-export { WorkflowRun };
+export { WorkflowRun, StepStatus };
+export type { InvokeOptions };

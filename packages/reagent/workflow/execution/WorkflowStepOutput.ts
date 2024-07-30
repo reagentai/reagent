@@ -167,7 +167,7 @@ class ToolProvider<Input> extends AbstractValueProvider<Tool<Input, any>> {
       },
       onSkipped() {
         dispatch({
-          type: EventType.RUN_SKIPPED,
+          type: EventType.SKIP_RUN,
           node: {
             id: self.#ref.nodeId,
           },
@@ -211,13 +211,13 @@ class OutputValueProvider<Output> extends AbstractValueProvider<Output> {
         e.node.id == self.#ref.nodeId &&
         ((e.type == EventType.OUTPUT && e.output[self.#field] != undefined) ||
           e.type == EventType.RUN_COMPLETED ||
-          e.type == EventType.RUN_SKIPPED)
+          e.type == EventType.SKIP_RUN)
       );
     });
 
     if (
       action.type == EventType.RUN_COMPLETED ||
-      action.type == EventType.RUN_SKIPPED
+      action.type == EventType.SKIP_RUN
     ) {
       yield cancel();
       return;

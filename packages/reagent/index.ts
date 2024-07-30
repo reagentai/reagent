@@ -1,6 +1,7 @@
 export {
   z,
   Workflow,
+  EventType,
   lazy,
   createReagentNode,
   AbstractWorkflowNode,

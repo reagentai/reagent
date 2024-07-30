@@ -6,9 +6,10 @@ import { z } from "../core/zod.js";
 import { WorkflowStepOptions, WorkflowStepRef } from "./WorkflowStep.js";
 import { AbstractWorkflowNode } from "../core/node.js";
 import { WorkflowStep } from "./WorkflowStep.js";
-import { WorkflowRun } from "./WorkflowRun.js";
+import { InvokeOptions, WorkflowRun } from "./WorkflowRun.js";
 import type { WorkflowOutputBindings } from "./types.js";
 import { AbstractValueProvider } from "./WorkflowStepOutput.js";
+import { EventType } from "./event.js";
 
 type WorkflowConfig = {
   name: string;
@@ -138,12 +139,53 @@ class Workflow {
     return step;
   }
 
-  run<Input>(options: { nodeId: string; input: Input }) {
+  // Trigger the start of the workflow
+  run<Input>(options: Omit<InvokeOptions, "updateStepState">) {
     const run = new WorkflowRun(
       this.#ref.nodesById,
-      this.#outputBindings as any
+      this.#outputBindings as any,
+      pick(options, "getStepState", "updateStepState")
     );
     run.invoke(options);
+    return run;
+  }
+
+  // Dispatch events to the workflow
+  // This will start a workflow run based on existing state
+  dispatch(
+    options: {
+      sessionId: string;
+      nodeId: string;
+    } & Pick<InvokeOptions, "getStepState" | "updateStepState"> &
+      (
+        | {
+            event: EventType.OUTPUT;
+            output: any;
+          }
+        | {
+            event: EventType.RUN_COMPLETED;
+          }
+      )
+  ) {
+    const run = new WorkflowRun(
+      this.#ref.nodesById,
+      this.#outputBindings as any,
+      pick(options, "getStepState", "updateStepState")
+    );
+    if (options.event == EventType.OUTPUT) {
+      run.dispatch({
+        type: EventType.OUTPUT,
+        session: {
+          id: options.sessionId,
+        },
+        node: {
+          id: options.nodeId,
+        },
+        output: options.output,
+      });
+    } else {
+      throw new Error("not implemented");
+    }
     return run;
   }
 

@@ -94,7 +94,6 @@ class WorkflowStepRef<
 
   *saga(): any {
     const self = this;
-
     const subs = [...self.subscriptions].map((sub) => sub());
     yield fork(function* saga(): any {
       if (subs.length == 0) {
@@ -106,12 +105,13 @@ class WorkflowStepRef<
     yield fork(function* saga(): any {
       const bindings = yield fork(self.bindingsResolver.bind(self));
       const invoke = yield fork(self.invokeListenerSaga.bind(self));
+
       try {
         yield join([bindings, invoke]);
       } finally {
         if (yield cancelled()) {
           yield put({
-            type: EventType.RUN_SKIPPED,
+            type: EventType.SKIP_RUN,
             node: {
               id: self.nodeId,
             },
@@ -124,8 +124,13 @@ class WorkflowStepRef<
   *invokeListenerSaga(): any {
     const self = this;
     const action = yield take(
-      (e: any) => e.type == "INVOKE" && e.node.id == self.nodeId
+      (e: any) =>
+        e.node.id == self.nodeId &&
+        (e.type == EventType.INVOKE || e.type == EventType.SKIP_INVOKE)
     );
+    if (action.type == EventType.SKIP_INVOKE) {
+      return;
+    }
 
     const dispatch = yield getContext("dispatch");
     const session = yield getContext("session");
@@ -310,6 +315,10 @@ class WorkflowStep<
     this._types = undefined;
   }
 
+  get id() {
+    return this.#ref.nodeId;
+  }
+
   bind(bindings: EdgeBindingWithToolCall<Input>) {
     this.#ref.setBindings(bindings);
     this.#workflow.calculateNodeDependencies(this.#ref.nodeId);
@@ -330,9 +339,9 @@ class WorkflowStep<
       const action = yield take(
         (e: any) =>
           e.node.id == self.#ref.nodeId &&
-          (e.type == EventType.TOOL_CALL || e.type == EventType.RUN_SKIPPED)
+          (e.type == EventType.TOOL_CALL || e.type == EventType.SKIP_RUN)
       );
-      if (action.type == EventType.RUN_SKIPPED) {
+      if (action.type == EventType.SKIP_RUN) {
         yield cancel();
       }
       return action.input;
