@@ -9,37 +9,37 @@ import {
 
 import { runReagentWorkflow } from "../workflow.js";
 
-const createChatAgentRouter = (agents: Map<string, Workflow>) => {
+const createChatWorkflowRouter = (workflows: Map<string, Workflow>) => {
   const router = new Hono();
 
   router.get("/_healthy", (c) => c.text("OK"));
 
-  router.get("/agents", (c) => {
+  router.get("/workflows", (c) => {
     return c.json(
-      [...agents.entries()].map(([id, agent]) => {
+      [...workflows.entries()].map(([id, workflow]) => {
         return {
           id,
-          name: agent.name,
-          description: agent.description,
+          name: workflow.name,
+          description: workflow.description,
         };
       })
     );
   });
 
-  router.get("/agents/:agentId", (c) => {
-    const agent = agents.get(c.req.param().agentId);
-    if (!agent) {
+  router.get("/workflows/:workflowId", (c) => {
+    const workflow = workflows.get(c.req.param().workflowId);
+    if (!workflow) {
       return c.notFound();
     }
     return c.json({
-      name: agent.name,
-      description: agent.description,
-      graph: agent.generateGraph(),
+      name: workflow.name,
+      description: workflow.description,
+      graph: workflow.generateGraph(),
     });
   });
 
   const invokeSchema = z.object({
-    agentId: z.string().default("default"),
+    workflowId: z.string().default("default"),
     nodeId: z.string(),
     input: z.object({
       id: z.string(),
@@ -57,8 +57,8 @@ const createChatAgentRouter = (agents: Map<string, Workflow>) => {
 
   router.post("/invoke", async (ctx) => {
     const body = invokeSchema.parse(await ctx.req.json());
-    const agent = agents.get(body.agentId);
-    if (!agent) {
+    const workflow = workflows.get(body.workflowId);
+    if (!workflow) {
       return ctx.text("Agent not found", 400);
     }
 
@@ -86,17 +86,17 @@ const createChatAgentRouter = (agents: Map<string, Workflow>) => {
       });
     }
 
-    const agentOutputStream = runReagentWorkflow(agent, {
+    const outputStream = runReagentWorkflow(workflow, {
       nodeId: "input",
       input: {
         query: body.input.message.content,
         model,
       },
     });
-    return agentOutputStream.toResponse();
+    return outputStream.toResponse();
   });
 
   return router;
 };
 
-export { createChatAgentRouter };
+export { createChatWorkflowRouter };

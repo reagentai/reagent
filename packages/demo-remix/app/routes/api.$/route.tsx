@@ -1,10 +1,10 @@
 import { Hono } from "hono";
 import { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
-import { createChatAgentRouter } from "@reagentai/serve/chat";
-import { agents } from "@reagentai/react/demo-agents";
+import { createChatWorkflowRouter } from "@reagentai/serve/chat";
+import { workflows } from "@reagentai/react-examples";
 
 const app = new Hono();
-app.route("/api/chat", createChatAgentRouter(agents));
+app.route("/api/chat", createChatWorkflowRouter(workflows));
 
 export const loader = async (args: LoaderFunctionArgs) => {
   return handleRequest(args);

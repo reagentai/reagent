@@ -11,7 +11,7 @@ import dagre from "dagre";
 import style from "reactflow/dist/style.css?inline";
 import clsx from "clsx";
 
-const AgentGraph = (props: { agentId: string; nodes: any[] }) => {
+const WorkflowGraph = (props: { workflowId: string; nodes: any[] }) => {
   const [graph, setGraph] = useState({
     nodes: [] as any[],
     edges: [] as any[],
@@ -150,4 +150,4 @@ const getLayoutedElements = (nodes: any[], edges: any[], direction = "LR") => {
   return { nodes, edges };
 };
 
-export default AgentGraph;
+export default WorkflowGraph;

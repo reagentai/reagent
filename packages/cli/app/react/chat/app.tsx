@@ -2,11 +2,7 @@ import { Suspense, lazy, useEffect, useMemo, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import {
-  ChatThemeProvider,
-  ReagentChat,
-  createChatStore,
-} from "@reagentai/react/chat";
+import { ReagentChat, createChatStore } from "@reagentai/react/chat";
 import { ReagentContextProvider } from "@reagentai/react/workflow";
 import {
   DropdownMenu,
@@ -19,24 +15,24 @@ import {
 } from "@reagentai/react/components/DropdownMenu.js";
 
 // @ts-expect-error
-import * as agentModule from "virtual:reagent-agent-module";
+import * as workflowModule from "virtual:reagent-agent-module";
 import "./reagent.css";
 
 import { models as llmModels } from "../../models";
 
 // @ts-expect-error
-const AgentGraph = lazy(() => import("./graph.tsx"));
+const WorkflowGraph = lazy(() => import("./graph.tsx"));
 
-const Agent = () => {
-  const agentId = "default";
+const App = () => {
+  const workflowId = "default";
   const [invokeError, setInvokeError] = useState<string | null>(null);
   const [isAgentGraphVisible, setAgentGraphVisiblity] = useState(false);
-  const [agent, setAgent] = useState<any>();
+  const [workflow, setWorkflow] = useState<any>();
   const llmModelId = useTopBarStore((s: any) => s.llmModelId);
   useEffect(() => {
-    fetch(`/api/chat/agents/${agentId}`).then(async (res) => {
-      const agent = await res.json();
-      setAgent(agent);
+    fetch(`/api/chat/workflows/${workflowId}`).then(async (res) => {
+      const workflow = await res.json();
+      setWorkflow(workflow);
     });
   }, []);
   const store = useMemo(
@@ -67,7 +63,7 @@ const Agent = () => {
   );
   const messages = store((s) => s.messages);
 
-  if (!agent) {
+  if (!workflow) {
     return <div className="text-xs text-gray-600">Loading...</div>;
   }
   return (
@@ -76,7 +72,7 @@ const Agent = () => {
         <div className="h-full flex-col">
           <div className="h-9 shadow shadow-gray-300">
             <TopBar
-              agent={agent}
+              workflow={workflow}
               isAgentGraphVisible={isAgentGraphVisible}
               toggleAgentGraphVisiblity={() => {
                 setAgentGraphVisiblity(!isAgentGraphVisible);
@@ -87,13 +83,15 @@ const Agent = () => {
           <div className="flex flex-1 h-[calc(100%-theme(spacing.9))] divide-x-2 divide-gray-200 overflow-hidden">
             <div className="flex flex-col flex-1 h-full overflow-auto">
               <ErrorBoundary fallback={<div>ERROR!</div>}>
-                {Object.entries(messages).length == 0 && agent && (
-                  <div className="agent-info flex py-20 justify-center">
+                {Object.entries(messages).length == 0 && workflow && (
+                  <div className="workflow-info flex py-20 justify-center">
                     <div className="flex flex-col space-y-5">
                       <div className="text-center text-2xl font-semibold text-gray-700">
-                        {agent.name}
+                        {workflow.name}
                       </div>
-                      <div className="text-gray-600">{agent.description}</div>
+                      <div className="text-gray-600">
+                        {workflow.description}
+                      </div>
                     </div>
                   </div>
                 )}
@@ -103,7 +101,7 @@ const Agent = () => {
                   </div>
                 )}
                 <div className="h-full">
-                  <ReagentContextProvider nodes={agentModule.nodes || []}>
+                  <ReagentContextProvider nodes={workflowModule.nodes || []}>
                     <ReagentChat store={store} />
                   </ReagentContextProvider>
                 </div>
@@ -112,7 +110,10 @@ const Agent = () => {
             {isAgentGraphVisible && (
               <Suspense>
                 <div className="flex-1">
-                  <AgentGraph agentId={agentId} nodes={agent.graph.nodes} />
+                  <WorkflowGraph
+                    workflowId={workflowId}
+                    nodes={workflow.graph.nodes}
+                  />
                 </div>
               </Suspense>
             )}
@@ -124,7 +125,7 @@ const Agent = () => {
 };
 
 const TopBar = (props: {
-  agent: any;
+  workflow: any;
   chatStore: any;
   isAgentGraphVisible: boolean;
   toggleAgentGraphVisiblity: () => void;
@@ -135,7 +136,7 @@ const TopBar = (props: {
     <div className="top-bar w-full h-full py-1.5 px-2 flex justify-end space-x-4 text-xs bg-gray-100">
       <div className="flex flex-1 items-center">
         <div className="pl-32 font-medium text-sm text-gray-600">
-          {props.agent.name}
+          {props.workflow.name}
         </div>
       </div>
       <DropdownMenu>
@@ -206,4 +207,4 @@ const useTopBarStore = create(
   )
 );
 
-export default Agent;
+export default App;

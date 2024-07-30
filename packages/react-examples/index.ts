@@ -1,13 +1,13 @@
-import chatAgent from "./chat.js";
-import weatherAgent from "./weather/index.js";
-import sqlAgent from "./sql/index.js";
+import chat from "./chat.js";
+import weather from "./weather/index.js";
+import sql from "./sql/index.js";
 import e2b from "./e2b.js";
 
-const agents = new Map([
-  ["default", chatAgent],
-  ["weather", weatherAgent],
-  ["sql", sqlAgent],
+const workflows = new Map([
+  ["default", chat],
+  ["weather", weather],
+  ["sql", sql],
   ["e2b", e2b],
 ]);
 
-export { agents };
+export { workflows };

@@ -1,2 +1,2 @@
-export { createChatAgentRouter } from "./chat/index.js";
+export { createChatWorkflowRouter } from "./chat/index.js";
 export { runReagentWorkflow } from "./workflow.js";

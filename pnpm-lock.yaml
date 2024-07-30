@@ -188,6 +188,9 @@ importers:
       '@reagentai/react':
         specifier: workspace:^
         version: link:../react/dist
+      '@reagentai/react-examples':
+        specifier: workspace:^
+        version: link:../react-examples/dist
       '@reagentai/reagent':
         specifier: workspace:^
         version: link:../reagent/dist

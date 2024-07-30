@@ -1,1 +1,1 @@
-export { createChatAgentRouter } from "./router.js";
+export { createChatWorkflowRouter } from "./router.js";
