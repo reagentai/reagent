@@ -1,7 +1,9 @@
 import dedent from "dedent";
 import { Observable, ReplaySubject } from "rxjs";
 import zodToJsonSchema from "zod-to-json-schema";
-import { get, isEmpty, pick } from "lodash-es";
+import delve from "dlv";
+import { includeKeys } from "filter-obj";
+import { isEmpty } from "lodash-es";
 
 import { ChatCompletionExecutor } from "../../llm/executors/index.js";
 import {
@@ -41,8 +43,19 @@ const configSchema = z.object({
 
 const inputSchema = z.object({
   model: z.instanceof(BaseModelProvider),
-  query: z.string().label("Query"),
-  context: z.string().optional().label("Context"),
+  query: z
+    .string()
+    .ui({
+      type: "textarea",
+    })
+    .label("Query"),
+  context: z
+    .string()
+    .optional()
+    .ui({
+      type: "textarea",
+    })
+    .label("Context"),
   chatHistory: z.array(z.any()).optional().label("Chat History"),
   tools: agentToolSchema.array().optional().label("Tools"),
 });
@@ -135,7 +148,7 @@ const ChatCompletionWithToolCalling = createReagentNode({
           invokeContext,
           {}
         );
-        const aiResponse = get(
+        const aiResponse = delve(
           invokeContext,
           "state.core.llm.response.data.choices.0.message"
         );
@@ -201,17 +214,15 @@ class ToolsProvider extends Runnable {
         function: {
           name: tool.name,
           description: tool.description,
-          parameters: pick(
+          parameters: includeKeys(
             zodToJsonSchema(tool.parameters),
-            "type",
-            "properties",
-            "required"
+            // @ts-expect-error
+            ["type", "properties", "required"]
           ),
         },
         [TOOL]: tool,
       };
     });
-    // console.log("toolsJson =", this.toolsJson);
   }
 
   get namespace(): string {

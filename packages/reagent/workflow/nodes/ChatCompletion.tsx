@@ -34,8 +34,19 @@ const configSchema = z.object({
 
 const inputSchema = z.object({
   model: z.instanceof(BaseModelProvider),
-  query: z.string().label("Query"),
-  context: z.string().optional().label("Context"),
+  query: z
+    .string()
+    .ui({
+      type: "textarea",
+    })
+    .label("Query"),
+  context: z
+    .string()
+    .optional()
+    .ui({
+      type: "textarea",
+    })
+    .label("Context"),
   chatHistory: z
     .array(z.custom<FormattedChatMessage>())
     .optional()

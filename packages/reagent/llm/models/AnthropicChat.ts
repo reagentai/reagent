@@ -1,7 +1,5 @@
 import ky from "ky";
-// @ts-expect-error
 import delve from "dlv";
-import { get } from "lodash-es";
 import invariant from "tiny-invariant";
 
 import { Context, InitContext } from "../core/index.js";
@@ -109,7 +107,7 @@ export class AnthropicChat extends BaseModelProvider<ModelInvokeOptions> {
           if (json.type == "content_block_stop") {
             stream.return();
           }
-          const delta = get(json, "delta");
+          const delta = delve(json, "delta");
           if (delta) {
             if (delta.type != "text_delta" && delta.type != "end_turn") {
               throw new Error("Unsupported delta type: " + delta.type);
@@ -242,7 +240,7 @@ const createStreamDeltaToResponseBuilder = () => {
         role = event.message.role;
       } else if (event.type == "content_block_start") {
         if (event.content_block.type == "text") {
-          const content = get(event, "content_block.text");
+          const content = delve(event, "content_block.text");
           if (content) {
             streamContent += content;
           }
@@ -253,7 +251,7 @@ const createStreamDeltaToResponseBuilder = () => {
         }
       } else if (event.type == "content_block_delta") {
         if (event.delta.type == "text_delta") {
-          const content = get(event, "delta.text");
+          const content = delve(event, "delta.text");
           if (content) {
             streamContent += content;
           }

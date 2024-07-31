@@ -1,4 +1,4 @@
-import { get } from "lodash-es";
+import delve from "dlv";
 
 import { Context } from "../core/index.js";
 import {
@@ -21,7 +21,7 @@ export class ToolCallExecutor extends AbstractExecutor {
   async invoke(options: InvokeOptions = {}): Promise<Context> {
     const chatCompletionExecutor = new ChatCompletionExecutor(this.#options);
     const context = await chatCompletionExecutor.invoke(options);
-    const aiResponse = get(
+    const aiResponse = delve(
       context,
       "state.core.llm.response.data.choices.0.message"
     );

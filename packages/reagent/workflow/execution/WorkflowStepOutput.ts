@@ -1,12 +1,12 @@
 import { Observable, Observer, ReplaySubject, Subscription } from "rxjs";
-import { EventType } from "./event.js";
 import { channel } from "redux-saga";
 import { cancel, getContext, put, spawn, take } from "redux-saga/effects";
 import slugify, { slugifyWithCounter } from "@sindresorhus/slugify";
-import { pick } from "lodash-es";
+import { includeKeys } from "filter-obj";
 
 import { WorkflowStepRef } from "./WorkflowStep.js";
 import { NodeDependency, NodeMetadata, Session, Tool } from "./types.js";
+import { EventType } from "./event.js";
 
 const slugifyCounter = slugifyWithCounter();
 
@@ -160,7 +160,7 @@ class ToolProvider<Input> extends AbstractValueProvider<Tool<Input, any>> {
           });
           const output = await outputTask.toPromise();
           if (self.#output) {
-            return pick(output, self.#output);
+            return includeKeys(output, self.#output);
           }
           return output;
         },

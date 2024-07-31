@@ -1,6 +1,7 @@
-import { pick, uniqBy } from "lodash-es";
 import zodToJsonSchema, { JsonSchema7ObjectType } from "zod-to-json-schema";
 import toposort from "toposort";
+import { uniqBy } from "lodash-es";
+import { includeKeys } from "filter-obj";
 
 import { z } from "../core/zod.js";
 import { WorkflowStepOptions, WorkflowStepRef } from "./WorkflowStep.js";
@@ -144,7 +145,7 @@ class Workflow {
     const run = new WorkflowRun(
       this.#ref.nodesById,
       this.#outputBindings as any,
-      pick(options, "getStepState", "updateStepState")
+      includeKeys(options, ["getStepState"])
     );
     run.invoke(options);
     return run;
@@ -170,7 +171,7 @@ class Workflow {
     const run = new WorkflowRun(
       this.#ref.nodesById,
       this.#outputBindings as any,
-      pick(options, "getStepState", "updateStepState")
+      includeKeys(options, ["getStepState", "updateStepState"])
     );
     if (options.event == EventType.OUTPUT) {
       run.dispatch({
@@ -234,7 +235,7 @@ class Workflow {
         inputs,
         outputs,
         hasUI: metadata.hasUI,
-        type: pick(metadata, "id", "name"),
+        type: includeKeys(metadata, ["id", "name"]),
         dependencies: e[1].dependencies,
       };
     });

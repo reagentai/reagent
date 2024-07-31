@@ -1,5 +1,5 @@
 import ky from "ky";
-import { get } from "lodash-es";
+import delve from "dlv";
 
 import { Context } from "../../core/index.js";
 import { ModelInvokeOptions } from "./types.js";
@@ -56,7 +56,7 @@ export class DefaultModelExecutor extends BaseModelExecutor {
       for await (const data of stream) {
         const { json } = data;
         if (json) {
-          const delta = get(json, "choices.0.delta");
+          const delta = delve(json, "choices.0.delta");
           builder.push(delta);
           streamedMessages = [...streamedMessages, json];
           context.setGlobalState("core.llm.response.stream", streamedMessages);
