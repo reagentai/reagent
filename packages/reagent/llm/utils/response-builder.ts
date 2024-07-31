@@ -1,4 +1,3 @@
-// @ts-expect-error
 import dlv from "dlv";
 import cleanSet from "clean-set";
 import { dset } from "dset";

@@ -1,5 +1,4 @@
 import cleanSet from "clean-set";
-// @ts-expect-error
 import delve from "dlv";
 import { dset } from "dset";
 import { klona } from "klona";

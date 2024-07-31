@@ -1,4 +1,3 @@
-// @ts-expect-error
 import delve from "dlv";
 
 import { Context } from "../core/index.js";
