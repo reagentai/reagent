@@ -1,1 +1,1 @@
-export { default as reagent } from "./plugin.js";
+export { default } from "./plugin.js";
