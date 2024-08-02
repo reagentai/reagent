@@ -75,7 +75,8 @@ const outputSchema = z.object({
 const ChatCompletionWithToolCalling = createReagentNode({
   id: "@core/chat-completion-with-tool-calling",
   version: "0.0.1",
-  name: "Chat completion",
+  name: "Chat completion with Tool Calling",
+  description: "Generate chat response using LLM tool-calling",
   icon: ICON,
   config: configSchema,
   input: inputSchema,

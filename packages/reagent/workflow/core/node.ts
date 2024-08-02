@@ -15,6 +15,7 @@ export type Metadata<
   description?: string;
   version: string;
   icon?: string;
+  target?: "client";
   type?: "tool";
   config: ZodObjectSchema<Config>;
   input: ZodObjectSchema<Input>;
@@ -115,6 +116,7 @@ export const createReagentNode = <
         description: options.description,
         type: options.type,
         icon: options.icon,
+        target: options.target,
         config,
         input: inputSchema,
         output: options.output,

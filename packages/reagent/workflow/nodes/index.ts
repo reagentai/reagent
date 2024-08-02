@@ -6,3 +6,7 @@ export { default as InputValue } from "./InputValue.js";
 export { default as LLMModel } from "./LLMModel.js";
 export { default as RestAPI } from "./RestAPI.js";
 export { default as ChatCompletionWithToolCalling } from "./ChatCompletionWithToolCalling.js";
+export { default as ExtractJSON } from "./ExtractJSON.js";
+export { default as ExtractJSONFromImage } from "./ExtractJSONFromImage.js";
+export { default as ConvertPDFToImage } from "./ConvertPDFToImage.js";
+export { default as PostgresDatabase } from "./PostgresDatabase.js";
