@@ -4,28 +4,25 @@ import {
   map,
   mergeMap,
 } from "@reagentai/reagent/rxjs.js";
-import { Workflow } from "@reagentai/reagent/workflow.js";
+import {
+  Workflow,
+  Task,
+  WorkflowRunOptions,
+} from "@reagentai/reagent/index.js";
 import { uniqueId } from "@reagentai/reagent/utils/uniqueId.js";
 import type { Chat } from "@reagentai/reagent/chat/index.js";
-import type { Task } from "redux-saga";
 
 type OutputStream = Observable<any> & {
   task: Task;
   toResponse(): Response;
 };
 
-const runReagentWorkflow = <I extends Record<string, unknown>>(
+const triggerReagentWorkflow = (
   workflow: Workflow,
-  options: {
-    nodeId: string;
-    input: I;
-  }
+  options: WorkflowRunOptions
 ) => {
   const workflowOutputStream = new ReplaySubject<Chat.Response>();
-  const run = workflow.run({
-    nodeId: options.nodeId,
-    input: options.input,
-  });
+  const run = workflow.emit(options);
   run.task.toPromise().finally(() => {
     workflowOutputStream.complete();
   });
@@ -103,6 +100,15 @@ const runReagentWorkflow = <I extends Record<string, unknown>>(
       },
     });
 
+  run.events.subscribe({
+    next(data) {
+      workflowOutputStream.next({
+        type: "event",
+        data,
+      });
+    },
+  });
+
   return Object.assign(workflowOutputStream, {
     task: run.task,
     toResponse() {
@@ -136,4 +142,4 @@ const runReagentWorkflow = <I extends Record<string, unknown>>(
   } as OutputStream);
 };
 
-export { runReagentWorkflow };
+export { triggerReagentWorkflow };

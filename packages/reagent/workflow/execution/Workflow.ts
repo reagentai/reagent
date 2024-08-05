@@ -7,10 +7,11 @@ import { z } from "../core/zod.js";
 import { WorkflowStepOptions, WorkflowStepRef } from "./WorkflowStep.js";
 import { AbstractWorkflowNode } from "../core/node.js";
 import { WorkflowStep } from "./WorkflowStep.js";
-import { InvokeOptions, WorkflowRun } from "./WorkflowRun.js";
+import { WorkflowRun, WorkflowRunOptions } from "./WorkflowRun.js";
 import type { WorkflowOutputBindings } from "./types.js";
 import { AbstractValueProvider } from "./WorkflowStepOutput.js";
-import { EventType } from "./event.js";
+import { EventType, WorkflowEvent } from "./types.js";
+import { uniqueId } from "../../utils/uniqueId.js";
 
 type WorkflowConfig = {
   name: string;
@@ -140,53 +141,70 @@ class Workflow {
     return step;
   }
 
-  // Trigger the start of the workflow
-  run<Input>(options: Omit<InvokeOptions, "updateStepState">) {
-    const run = new WorkflowRun(
-      this.#ref.nodesById,
-      this.#outputBindings as any,
-      includeKeys(options, ["getStepState"])
-    );
-    run.invoke(options);
-    return run;
+  start(
+    options: Omit<WorkflowRunOptions, "events"> &
+      Pick<WorkflowEvent.Invoke, "node" | "input">
+  ) {
+    return this.emit({
+      ...options,
+      events: [
+        {
+          type: EventType.INVOKE,
+          node: options.node,
+          input: options.input,
+        },
+      ],
+    });
   }
 
   // Dispatch events to the workflow
   // This will start a workflow run based on existing state
-  dispatch(
-    options: {
-      sessionId: string;
-      nodeId: string;
-    } & Pick<InvokeOptions, "getStepState" | "updateStepState"> &
-      (
-        | {
-            event: EventType.OUTPUT;
-            output: any;
-          }
-        | {
-            event: EventType.RUN_COMPLETED;
-          }
-      )
-  ) {
+  // To start a new workflow, dispatch "INVOKE" event
+  emit(options: WorkflowRunOptions) {
+    const sessionId = options.sessionId || uniqueId();
     const run = new WorkflowRun(
       this.#ref.nodesById,
       this.#outputBindings as any,
-      includeKeys(options, ["getStepState", "updateStepState"])
+      {
+        sessionId,
+        ...includeKeys(options, ["getStepState", "updateStepState"]),
+      }
     );
-    if (options.event == EventType.OUTPUT) {
-      run.dispatch({
-        type: EventType.OUTPUT,
-        session: {
-          id: options.sessionId,
-        },
-        node: {
-          id: options.nodeId,
-        },
-        output: options.output,
-      });
-    } else {
-      throw new Error("not implemented");
+
+    for (const event of options.events) {
+      if (event.type == EventType.OUTPUT) {
+        run.queueEvents({
+          type: EventType.OUTPUT,
+          node: {
+            id: event.node.id,
+          },
+          output: event.output,
+        });
+      } else if (event.type == EventType.INVOKE) {
+        run.queueEvents({
+          type: EventType.INVOKE,
+          node: {
+            id: event.node.id,
+          },
+          input: event.input,
+        });
+      } else if (event.type == EventType.RUN_COMPLETED) {
+        run.queueEvents({
+          type: EventType.RUN_COMPLETED,
+          node: {
+            id: event.node.id,
+          },
+        });
+      } else {
+        throw new Error("not implemented");
+      }
     }
+
+    // start the workflow
+    run.queueEvents({
+      // @ts-expect-error
+      type: EventType.START,
+    });
     return run;
   }
 

@@ -1,36 +1,16 @@
 import { z, ZodObjectSchema } from "./zod.js";
 import { Context, RenderContext } from "./context.js";
-import type { AsyncGeneratorWithField, AtLeastOne } from "./types.js";
+import type {
+  AtLeastOne,
+  BaseReagentNodeOptions,
+  ExecutionResult,
+  Metadata,
+  WithDefaultEmpty,
+} from "./types.js";
 
-type WithDefaultEmpty<T> =
-  T extends Record<string, unknown> ? T : Record<string, unknown>;
+const IS_AGENT_NODE = Symbol("_AGENT_NODE_");
 
-export type Metadata<
-  Config extends Record<string, unknown>,
-  Input extends Record<string, unknown>,
-  Output extends Record<string, unknown>,
-> = {
-  id: string;
-  name: string;
-  description?: string;
-  version: string;
-  icon?: string;
-  target?: "client";
-  type?: "tool";
-  config: ZodObjectSchema<Config>;
-  input: ZodObjectSchema<Input>;
-  output: ZodObjectSchema<Output>;
-  // whether this node renders UI components
-  // this doesn't have to be passed when creating a node since
-  // babel plugin will set this during build time
-  hasUI?: boolean;
-};
-
-type ExecutionResult<T> = AsyncGeneratorWithField<T>;
-
-export const IS_AGENT_NODE = Symbol("_AGENT_NODE_");
-
-export abstract class AbstractWorkflowNode<
+abstract class AbstractWorkflowNode<
   Config extends Record<string, unknown> | void,
   Input extends Record<string, unknown>,
   Output extends Record<string, unknown>,
@@ -74,28 +54,26 @@ type WorkflowNode<
   ): ExecutionResult<AtLeastOne<Output>>;
 };
 
-export const createReagentNode = <
+const createReagentNode = <
   Config extends Record<string, unknown> | void,
   Input extends Record<string, unknown> | void,
   Output extends Record<string, unknown>,
->(options: {
-  id: string;
-  version: string;
-  name: string;
-  description?: string;
-  type?: "tool";
-  icon?: string;
-  target?: "client";
-  config?: ZodObjectSchema<Config>;
-  input?: ZodObjectSchema<Input>;
-  output: ZodObjectSchema<Output>;
-  hasUI?: boolean;
-  onInputEvent?: (
-    context: Context<Config, Output>,
-    data: AtLeastOne<Input>
-  ) => void;
-  execute: WorkflowNode<Config, WithDefaultEmpty<Input>, Output>["execute"];
-}) => {
+>(
+  options: BaseReagentNodeOptions<Config, Input, Output> & {
+    description?: string;
+    type?: "tool";
+    icon?: string;
+    target?: "client";
+    config?: ZodObjectSchema<Config>;
+    input?: ZodObjectSchema<Input>;
+    output: ZodObjectSchema<Output>;
+    hasUI?: boolean;
+    onInputEvent?: (
+      context: Context<Config, Output>,
+      data: AtLeastOne<Input>
+    ) => void;
+  }
+) => {
   const config = (options.config || z.object({})) as ZodObjectSchema<
     WithDefaultEmpty<Config>
   >;
@@ -135,4 +113,5 @@ export const createReagentNode = <
   >;
 };
 
-export type { WorkflowNode };
+export type { WorkflowNode, BaseReagentNodeOptions };
+export { IS_AGENT_NODE, AbstractWorkflowNode, createReagentNode };

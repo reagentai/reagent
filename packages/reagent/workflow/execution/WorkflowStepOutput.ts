@@ -5,8 +5,13 @@ import slugify, { slugifyWithCounter } from "@sindresorhus/slugify";
 import { includeKeys } from "filter-obj";
 
 import { WorkflowStepRef } from "./WorkflowStep.js";
-import { NodeDependency, NodeMetadata, Session, Tool } from "./types.js";
-import { EventType } from "./event.js";
+import {
+  EventType,
+  type NodeDependency,
+  type NodeMetadata,
+  type Session,
+  type Tool,
+} from "./types.js";
 
 const slugifyCounter = slugifyWithCounter();
 
@@ -138,7 +143,7 @@ class ToolProvider<Input> extends AbstractValueProvider<Tool<Input, any>> {
     const dispatch = yield getContext("dispatch");
     const outputTask = yield spawn(function* (): any {
       const res = yield take(
-        (e: any) => e.type == "OUTPUT" && e.node.id == self.#ref.nodeId
+        (e: any) => e.type == EventType.OUTPUT && e.node.id == self.#ref.nodeId
       );
       return res.output;
     });
@@ -208,17 +213,15 @@ class OutputValueProvider<Output> extends AbstractValueProvider<Output> {
     const self = this;
     const action = yield take((e: any) => {
       return (
-        e.node.id == self.#ref.nodeId &&
         ((e.type == EventType.OUTPUT && e.output[self.#field] != undefined) ||
-          e.type == EventType.RUN_COMPLETED ||
-          e.type == EventType.SKIP_RUN)
+          e.type == EventType.SKIP_RUN ||
+          e.type == EventType.RUN_CANCELLED ||
+          e.type == EventType.EXECUTE_ON_CLIENT) &&
+        e.node.id == self.#ref.nodeId
       );
     });
 
-    if (
-      action.type == EventType.RUN_COMPLETED ||
-      action.type == EventType.SKIP_RUN
-    ) {
+    if (action.type != EventType.OUTPUT) {
       yield cancel();
       return;
     }
@@ -278,7 +281,7 @@ class RenderOutputProvider<Value> extends AbstractValueProvider<Value> {
     while (1) {
       const self = this;
       const action = yield take((e: any) => {
-        return e.node.id == self.#ref.nodeId && e.type == EventType.RENDER;
+        return e.type == EventType.RENDER && e.node.id == self.#ref.nodeId;
       });
 
       let value = action.render;

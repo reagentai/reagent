@@ -73,12 +73,28 @@ export namespace Chat {
         createdAt: string;
       };
     };
+
+    type ExecuteOnClientEvent = {
+      type: "EXECUTE_ON_CLIENT";
+      session: {
+        id: string;
+      };
+      node: {
+        id: string;
+      };
+      input: any;
+    };
+    export type WorkflowEvent = {
+      type: "event";
+      data: ExecuteOnClientEvent;
+    };
   }
 
   export type Response =
     | StreamResponse.Message
     | StreamResponse.ContentDelta
     | StreamResponse.ToolUI
-    | StreamResponse.ToolUIUpdate;
+    | StreamResponse.ToolUIUpdate
+    | StreamResponse.WorkflowEvent;
   export type ResponseStream = AsyncIterable<Response>;
 }

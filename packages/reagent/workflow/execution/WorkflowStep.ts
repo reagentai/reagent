@@ -21,12 +21,10 @@ import {
   ToolProvider,
   ValueProvider,
 } from "./WorkflowStepOutput.js";
-import { EventType } from "./event.js";
 import { Lazy, lazy } from "./operators/index.js";
-import type { EdgeBindings, RenderUpdate } from "./types.js";
+import { EventType, type EdgeBindings, type RenderUpdate } from "./types.js";
 
 const TOOL_CALL_SAGA = Symbol("TOOL_CALL_SAGA");
-const NO_BINDING_RETURN = Symbol("NO_BINDING_RETURN");
 
 type WorkflowStepOptions = {
   label?: string;
@@ -87,7 +85,6 @@ class WorkflowStepRef<
       type: EventType.RUN_COMPLETED,
       session: options.session,
       node: { id: self.nodeId },
-      success: true,
     });
     return output as Output;
   }
@@ -107,16 +104,9 @@ class WorkflowStepRef<
       const invoke = yield fork(self.invokeListenerSaga.bind(self));
 
       try {
-        yield join([bindings, invoke]);
+        yield join([invoke, bindings]);
       } finally {
-        if (yield cancelled()) {
-          yield put({
-            type: EventType.SKIP_RUN,
-            node: {
-              id: self.nodeId,
-            },
-          });
-        }
+        yield cancel();
       }
     });
   }
@@ -125,20 +115,37 @@ class WorkflowStepRef<
     const self = this;
     const action = yield take(
       (e: any) =>
-        e.node.id == self.nodeId &&
-        (e.type == EventType.INVOKE || e.type == EventType.SKIP_INVOKE)
+        (e.type == EventType.NO_BINDINGS ||
+          e.type == EventType.INVOKE ||
+          e.type == EventType.SKIP_INVOKE ||
+          e.type == EventType.EXECUTE_ON_CLIENT) &&
+        e.node.id == self.nodeId
     );
-    if (action.type == EventType.SKIP_INVOKE) {
+    if (action.type != EventType.INVOKE) {
       return;
     }
 
     const dispatch = yield getContext("dispatch");
     const session = yield getContext("session");
-    yield call(self.execute.bind(self), {
-      input: action.input,
-      dispatch,
-      session,
-    });
+    if (self.node.metadata.target == "client") {
+      yield dispatch({
+        type: EventType.EXECUTE_ON_CLIENT,
+        session,
+        node: {
+          id: self.nodeId,
+          type: self.node.metadata.id,
+          version: self.node.metadata.version,
+        },
+        input: action.input,
+      });
+      yield cancel();
+    } else {
+      yield call(self.execute.bind(self), {
+        input: action.input,
+        dispatch,
+        session,
+      });
+    }
   }
 
   *bindingsResolver(): any {
@@ -147,13 +154,7 @@ class WorkflowStepRef<
       yield take(EventType.START);
       // TODO: handle nodes that have no input. do those nodes need
       // to be bound? if not, when to invoke them?
-      yield put({
-        type: EventType.NO_BINDINGS,
-        node: {
-          id: self.nodeId,
-        },
-      });
-      return NO_BINDING_RETURN;
+      return;
     }
     const toolCallInputSaga = self.bindings![TOOL_CALL_SAGA]
       ? yield fork(self.bindings![TOOL_CALL_SAGA])
@@ -168,6 +169,7 @@ class WorkflowStepRef<
         return function* resolveValueProvider(): any {
           if (AbstractValueProvider.isValueProvider(v)) {
             const res = yield v.saga();
+            // res is undefined if the saga was cancell
             if (res.onSkipped) {
               cleanups.push(res.onSkipped);
             }
@@ -177,7 +179,7 @@ class WorkflowStepRef<
               if (toolCallInputSaga) {
                 yield take(
                   (e: any) =>
-                    e.node.id == self.nodeId && e.type == EventType.TOOL_CALL
+                    e.type == EventType.TOOL_CALL && e.node.id == self.nodeId
                 );
               }
               return (v as unknown as Lazy<any>)();
@@ -218,7 +220,7 @@ class WorkflowStepRef<
       }
 
       yield put({
-        type: "INVOKE",
+        type: EventType.INVOKE,
         node: {
           id: self.nodeId,
         },
@@ -228,13 +230,23 @@ class WorkflowStepRef<
       // before cleaning up
       yield fork(function* saga() {
         yield take((e: any) => {
-          return e.node.id == self.nodeId && e.type == EventType.RUN_COMPLETED;
+          return (
+            (e.type == EventType.RUN_COMPLETED ||
+              e.type == EventType.EXECUTE_ON_CLIENT) &&
+            e.node.id == self.nodeId
+          );
         });
         cleanups.forEach((cleanup) => cleanup());
       });
       return input;
     } finally {
       if (yield cancelled()) {
+        yield put({
+          type: EventType.RUN_CANCELLED,
+          node: {
+            id: self.nodeId,
+          },
+        });
         cleanups.forEach((cleanup) => cleanup());
       }
     }
@@ -253,7 +265,12 @@ class WorkflowStepRef<
       node,
       config: this.config || {},
       sendOutput(output: Output) {
-        dispatch({ type: "OUTPUT", session, node, output });
+        dispatch({
+          type: EventType.OUTPUT,
+          session,
+          node,
+          output,
+        });
       },
       render(step, data) {
         // since this runs in server side,
@@ -265,7 +282,7 @@ class WorkflowStepRef<
           version: self.node.metadata.version,
         };
         dispatch({
-          type: "RENDER",
+          type: EventType.RENDER,
           session,
           node,
           render: {
@@ -276,7 +293,7 @@ class WorkflowStepRef<
         return {
           update(data) {
             dispatch({
-              type: "RENDER",
+              type: EventType.RENDER,
               session,
               node,
               render: {
@@ -338,8 +355,8 @@ class WorkflowStep<
     bindings[TOOL_CALL_SAGA] = function* saga(): any {
       const action = yield take(
         (e: any) =>
-          e.node.id == self.#ref.nodeId &&
-          (e.type == EventType.TOOL_CALL || e.type == EventType.SKIP_RUN)
+          (e.type == EventType.TOOL_CALL || e.type == EventType.SKIP_RUN) &&
+          e.node.id == self.#ref.nodeId
       );
       if (action.type == EventType.SKIP_RUN) {
         yield cancel();

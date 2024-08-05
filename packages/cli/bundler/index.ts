@@ -1,7 +1,7 @@
 import { createServer } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "tailwindcss";
-import { reagent } from "@reagentai/reagent/dev/vite/index.js";
+import reagentPlugin from "@reagentai/reagent/vite.js";
 
 import { devServer } from "./plugins/server";
 import { virtualFiles } from "./plugins/virtual";
@@ -53,7 +53,7 @@ const dev = async (options: Options) => {
         //  @vitejs/plugin-react can't detect preamble error
         include: [process.cwd()],
       }),
-      reagent({
+      reagentPlugin({
         include: ["**/@reagentai/**"],
         exclude: ["**/node_modules/**"],
       }),

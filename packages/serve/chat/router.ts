@@ -7,7 +7,7 @@ import {
   DummyModel,
 } from "@reagentai/reagent/llm/models/index.js";
 
-import { runReagentWorkflow } from "../workflow.js";
+import { triggerReagentWorkflow } from "../workflow.js";
 
 const createChatWorkflowRouter = (workflows: Map<string, Workflow>) => {
   const router = new Hono();
@@ -86,7 +86,7 @@ const createChatWorkflowRouter = (workflows: Map<string, Workflow>) => {
       });
     }
 
-    const outputStream = runReagentWorkflow(workflow, {
+    const outputStream = triggerReagentWorkflow(workflow, {
       nodeId: "input",
       input: {
         query: body.input.message.content,

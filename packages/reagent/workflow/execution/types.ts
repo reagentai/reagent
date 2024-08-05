@@ -1,9 +1,89 @@
-import { OutputValueProvider, ValueProvider } from "./WorkflowStepOutput";
-import { ZodObjectSchema } from "../core/zod";
-import { Lazy } from "./operators";
+import { OutputValueProvider, ValueProvider } from "./WorkflowStepOutput.js";
+import { ZodObjectSchema } from "../core/zod.js";
+import { Lazy } from "./operators/index.js";
+
+export enum StepStatus {
+  WAITING = "WAITING",
+  INVOKED = "INVOKED",
+  COMPLETED = "COMPLETED",
+  FAILED = "FAILED",
+}
+
+export enum EventType {
+  // emitted when a workflow is started
+  START = "START",
+  INVOKE = "INVOKE",
+  NO_BINDINGS = "NO_BINDINGS",
+  SKIP_INVOKE = "SKIP_INVOKE",
+  SKIP_RUN = "SKIP_RUN",
+  TOOL_CALL = "TOOL_CALL",
+  OUTPUT = "OUTPUT",
+  RENDER = "RENDER",
+  EXECUTE_ON_CLIENT = "EXECUTE_ON_CLIENT",
+  RUN_COMPLETED = "RUN_COMPLETED",
+  RUN_CANCELLED = "RUN_CANCELLED",
+}
 
 export type Session = {
   id: string;
+};
+
+namespace WorkflowEvent {
+  export type Invoke = {
+    type: EventType.INVOKE;
+    session: {
+      id: string;
+    };
+    node: {
+      id: string;
+    };
+    input: any;
+  };
+
+  export type Output = {
+    type: EventType.OUTPUT;
+    session: {
+      id: string;
+    };
+    node: {
+      id: string;
+    };
+    output: any;
+  };
+
+  export type RunCompleted = {
+    type: EventType.RUN_COMPLETED;
+    session: {
+      id: string;
+    };
+    node: {
+      id: string;
+    };
+  };
+}
+
+export type { WorkflowEvent };
+
+export type StepState = {
+  status: StepStatus;
+  output: Record<string, any>;
+};
+
+export type WorkflowRunEvent =
+  | Omit<WorkflowEvent.Output, "session">
+  | Omit<WorkflowEvent.Invoke, "session">
+  | Omit<WorkflowEvent.RunCompleted, "session">;
+
+export type WorkflowRunOptions = {
+  sessionId?: string;
+  getStepState?: (
+    nodeId: string
+  ) => StepState | void | Promise<StepState | undefined | void>;
+  updateStepState?: (
+    nodeId: string,
+    state: Partial<StepState>
+  ) => Promise<void>;
+  events: WorkflowRunEvent[];
 };
 
 export type NodeMetadata = {
