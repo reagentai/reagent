@@ -1,4 +1,4 @@
-import { createReagentNode, z } from "@reagentai/reagent/workflow.js";
+import { createReagentNode, z } from "@reagentai/reagent/workflow";
 import { faker } from "@faker-js/faker";
 import { format as formatSql } from "sql-formatter";
 import Markdown from "react-markdown";

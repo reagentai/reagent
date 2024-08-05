@@ -11,6 +11,7 @@
   "exports": {
     ".": "./index.js",
     "./rxjs": "./rxjs.js",
+    "./chat": "./chat/index.js",
     "./workflow": "./workflow.js",
     "./workflow/nodes": "./workflow/nodes/index.js",
     "./llm/models": "././llm/models/index.js",

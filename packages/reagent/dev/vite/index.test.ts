@@ -34,7 +34,7 @@ test("test vite plugin - should remove default export", () => {
     export const __reagentai_exports__ = true;`);
 
   const source = `import { Workflow } from "@reagentai/reagent";
-    import { createReagentNode, z } from "@reagentai/reagent/workflow.js";
+    import { createReagentNode, z } from "@reagentai/reagent/workflow";
 
     const FirstStep = createReagentNode({
     id: "step-1",

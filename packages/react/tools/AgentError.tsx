@@ -1,4 +1,4 @@
-import { createReagentNode, z } from "@reagentai/reagent/workflow.js";
+import { createReagentNode, z } from "@reagentai/reagent/workflow";
 
 const AgentError = createReagentNode({
   id: "@reagentai/react/agent-error",

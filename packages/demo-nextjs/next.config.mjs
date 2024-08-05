@@ -4,10 +4,10 @@ export default {
       test: /\.+(js|jsx|mjs|cjs|ts|tsx)$/,
       use: [
         {
-          loader: "@reagentai/reagent/dev/webpack/index.js",
+          loader: "@reagentai/reagent/webpack",
           options: {
             ssr: isServer,
-            include: ["**/@reagentai/**"],
+            include: ["**/reagent/packages/**", "**/@reagentai/**"],
             exclude: ["**/node_modules/**"],
           },
         },

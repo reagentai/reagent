@@ -5,7 +5,7 @@ import {
   Groq,
   OpenAI,
   DummyModel,
-} from "@reagentai/reagent/llm/models/index.js";
+} from "@reagentai/reagent/llm/models";
 
 import { triggerReagentWorkflow } from "../workflow.js";
 

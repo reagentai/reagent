@@ -1,7 +1,7 @@
 import { createServer } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "tailwindcss";
-import reagentPlugin from "@reagentai/reagent/vite.js";
+import reagentPlugin from "@reagentai/reagent/vite";
 
 import { devServer } from "./plugins/server";
 import { virtualFiles } from "./plugins/virtual";

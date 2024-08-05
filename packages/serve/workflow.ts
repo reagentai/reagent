@@ -3,14 +3,10 @@ import {
   ReplaySubject,
   map,
   mergeMap,
-} from "@reagentai/reagent/rxjs.js";
-import {
-  Workflow,
-  Task,
-  WorkflowRunOptions,
-} from "@reagentai/reagent/index.js";
-import { uniqueId } from "@reagentai/reagent/utils/uniqueId.js";
-import type { Chat } from "@reagentai/reagent/chat/index.js";
+} from "@reagentai/reagent/rxjs";
+import { Workflow, Task, WorkflowRunOptions } from "@reagentai/reagent";
+import { uniqueId } from "@reagentai/reagent/utils";
+import type { Chat } from "@reagentai/reagent/chat";
 
 type OutputStream = Observable<any> & {
   task: Task;

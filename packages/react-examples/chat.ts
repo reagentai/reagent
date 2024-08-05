@@ -1,5 +1,5 @@
-import { Workflow } from "@reagentai/reagent/workflow.js";
-import { ChatCompletion, WorkflowInput } from "@reagentai/reagent/nodes.js";
+import { Workflow } from "@reagentai/reagent/workflow";
+import { ChatCompletion, WorkflowInput } from "@reagentai/reagent/nodes";
 
 const workflow = new Workflow({
   name: "Simple AI Chat",
