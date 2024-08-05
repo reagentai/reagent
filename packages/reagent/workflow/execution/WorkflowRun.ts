@@ -152,7 +152,8 @@ class WorkflowRun {
             // are emitted
             if (
               state.status == StepStatus.COMPLETED ||
-              state.status == StepStatus.FAILED
+              state.status == StepStatus.FAILED ||
+              state.status == StepStatus.INVOKED
             ) {
               self.#channel.put({
                 type: EventType.SKIP_INVOKE,
@@ -165,13 +166,7 @@ class WorkflowRun {
         }
 
         Object.entries(stateById).forEach(([nodeId, state]) => {
-          if (state.status == StepStatus.INVOKED) {
-            self.#channel.put({
-              type: EventType.SKIP_RUN,
-              session,
-              node: { id: nodeId },
-            });
-          } else if (state.status == StepStatus.COMPLETED) {
+          if (state.status == StepStatus.COMPLETED) {
             self.#channel.put({
               type: EventType.OUTPUT,
               session,

@@ -4,12 +4,18 @@ import {
   map,
   mergeMap,
 } from "@reagentai/reagent/rxjs";
-import { Workflow, Task, WorkflowRunOptions } from "@reagentai/reagent";
+import {
+  Workflow,
+  Task,
+  WorkflowRunOptions,
+  WorkflowRun,
+} from "@reagentai/reagent";
 import { uniqueId } from "@reagentai/reagent/utils";
 import type { Chat } from "@reagentai/reagent/chat";
 
 type OutputStream = Observable<any> & {
   task: Task;
+  events: WorkflowRun["events"];
   toResponse(): Response;
 };
 
@@ -107,6 +113,7 @@ const triggerReagentWorkflow = (
 
   return Object.assign(workflowOutputStream, {
     task: run.task,
+    events: run.events,
     toResponse() {
       const self = this;
       const responseStream = new ReadableStream({

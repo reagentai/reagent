@@ -10,6 +10,7 @@ export type Context<
   };
   config: Config;
   sendOutput(output: Partial<Output>): void;
+  done: () => void;
   render<Data>(
     Component: (props: {
       data: Data;
@@ -25,6 +26,10 @@ export type Context<
   ): {
     update(data: Data): void;
   };
+  // return 'PENDING' from 'execute' method if output will be sent later
+  // using sendOutput. `context.done()` should be called when step is completed
+  // if 'PENDING' is returned
+  PENDING: Symbol;
 };
 
 export type RenderContext<State = void> = {};

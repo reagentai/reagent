@@ -5,7 +5,7 @@ export type AtLeastOne<T> = {
   [K in keyof T]-?: Pick<T, K> & Partial<Omit<T, K>>;
 }[keyof T];
 
-export type AsyncGeneratorWithField<T> = AsyncGenerator<T, void, void>;
+export type AsyncGeneratorWithField<T> = AsyncGenerator<T, Symbol | void, void>;
 
 export type WithDefaultEmpty<T> =
   T extends Record<string, unknown> ? T : Record<string, unknown>;

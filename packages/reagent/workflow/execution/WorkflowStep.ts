@@ -104,12 +104,25 @@ class WorkflowStepRef<
     const self = this;
     const context = self.#buildContext(options.session, options.dispatch);
     const generator = self.node.execute(context, options.input);
-    const output = {};
-    for await (const partialOutput of generator) {
-      context.sendOutput(partialOutput);
-      Object.assign(output, partialOutput);
+
+    const stepOutput = {};
+    let result = await generator.next();
+    while (!result.done) {
+      Object.assign(stepOutput, result.value);
+      context.sendOutput(result.value);
+      result = await generator.next();
     }
-    return output as Output;
+
+    if (result.value == context.PENDING) {
+      // @ts-expect-error
+      const output = await context[context.PENDING];
+      return output as Output;
+    } else {
+      // resolve pending promise if it's node isn't PENDING
+      // so that the promise gets GCed
+      context.done();
+      return stepOutput as Output;
+    }
   }
 
   *#invokeListenerSaga(): any {
@@ -262,6 +275,8 @@ class WorkflowStepRef<
         yield take((e: any) => {
           return (
             (e.type == EventType.RUN_COMPLETED ||
+              e.type == EventType.RUN_CANCELLED ||
+              e.type == EventType.SKIP_RUN ||
               e.type == EventType.EXECUTE_ON_CLIENT) &&
             e.node.id == self.nodeId
           );
@@ -290,11 +305,23 @@ class WorkflowStepRef<
     const node = {
       id: self.nodeId,
     };
+
+    let resolve: any;
+    const pendingHook = new Promise((r) => (resolve = r));
+    const PENDING = Symbol("_PENDING_");
+    const allOutput = {};
     return {
       session,
       node,
       config: this.config || {},
+      PENDING,
+      // @ts-expect-error
+      [PENDING]: pendingHook,
+      done() {
+        resolve(allOutput);
+      },
       sendOutput(output: Output) {
+        Object.assign(allOutput, output);
         dispatch({
           type: EventType.OUTPUT,
           session,
