@@ -1,0 +1,28 @@
+{
+  "name": "@reagentai/client",
+  "version": "0.1.0",
+  "description": "Frontend client for Reagent workflows",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "prepublish": "rm -rf dist && pnpm build && cp package.json dist"
+  },
+  "exports": {
+    "./workflow": {
+      "import": "./workflow/index.js",
+      "types": "./workflow/types.d.ts"
+    }
+  },
+  "publishConfig": {
+    "directory": "dist",
+    "linkDirectory": true
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@reagentai/reagent": "workspace:^",
+    "redux-saga": "^1.3.0"
+  },
+  "devDependencies": {
+    "typescript": "5.4.5"
+  }
+}
