@@ -8,6 +8,16 @@
     "build": "tsc",
     "prepublish": "rm -rf dist && pnpm build && cp package.json dist"
   },
+  "exports": {
+    ".": "./index.js",
+    "./rxjs": "./rxjs.js",
+    "./workflow": "./workflow.js",
+    "./workflow/nodes": "./workflow/nodes/index.js",
+    "./llm/models": "././llm/models/index.js",
+    "./utils": "./utils.js",
+    "./vite": "./vite.js",
+    "./webpack": "./webpack.js"
+  },
   "publishConfig": {
     "directory": "dist",
     "linkDirectory": true

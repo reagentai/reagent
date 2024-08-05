@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { Workflow, z } from "@reagentai/reagent/workflow/index.js";
+import { EventType, Workflow, z } from "@reagentai/reagent/workflow";
 import {
   AnthropicChat,
   Groq,
@@ -87,11 +87,16 @@ const createChatWorkflowRouter = (workflows: Map<string, Workflow>) => {
     }
 
     const outputStream = triggerReagentWorkflow(workflow, {
-      nodeId: "input",
-      input: {
-        query: body.input.message.content,
-        model,
-      },
+      events: [
+        {
+          type: EventType.INVOKE,
+          node: { id: "input" },
+          input: {
+            query: body.input.message.content,
+            model,
+          },
+        },
+      ],
     });
     return outputStream.toResponse();
   });
