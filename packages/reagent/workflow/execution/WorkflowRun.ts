@@ -203,7 +203,8 @@ class WorkflowRun {
             e.type == EventType.SKIP_RUN ||
             e.type == EventType.RUN_COMPLETED ||
             e.type == EventType.EXECUTE_ON_CLIENT ||
-            e.type == EventType.RUN_CANCELLED
+            e.type == EventType.RUN_CANCELLED ||
+            e.type == EventType.RUN_FAILED
           );
         });
         nodesCompleted.add(action.node.id);

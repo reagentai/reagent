@@ -9,6 +9,7 @@ import {
   join,
   cancelled,
 } from "redux-saga/effects";
+import { serializeError } from "serialize-error";
 
 import { Context } from "../core/context.js";
 import { AbstractWorkflowNode } from "../core/node.js";
@@ -77,24 +78,6 @@ class WorkflowStepRef<
     });
   }
 
-  async execute(options: { session: any; input: any; dispatch: any }) {
-    const self = this;
-    const context = self.#buildContext(options.session, options.dispatch);
-    const generator = self.node.execute(context, options.input);
-    const output = {};
-    for await (const partialOutput of generator) {
-      context.sendOutput(partialOutput);
-      Object.assign(output, partialOutput);
-    }
-
-    options.dispatch({
-      type: EventType.RUN_COMPLETED,
-      session: options.session,
-      node: { id: self.nodeId },
-    });
-    return output as Output;
-  }
-
   *saga(): any {
     const self = this;
     const subs = [...self.subscriptions].map((sub) => sub());
@@ -106,8 +89,8 @@ class WorkflowStepRef<
     });
 
     yield fork(function* saga(): any {
-      const bindings = yield fork(self.bindingsResolver.bind(self));
-      const invoke = yield fork(self.invokeListenerSaga.bind(self));
+      const bindings = yield fork(self.#bindingsResolver.bind(self));
+      const invoke = yield fork(self.#invokeListenerSaga.bind(self));
 
       try {
         yield join([invoke, bindings]);
@@ -117,7 +100,19 @@ class WorkflowStepRef<
     });
   }
 
-  *invokeListenerSaga(): any {
+  async #execute(options: { session: any; input: any; dispatch: any }) {
+    const self = this;
+    const context = self.#buildContext(options.session, options.dispatch);
+    const generator = self.node.execute(context, options.input);
+    const output = {};
+    for await (const partialOutput of generator) {
+      context.sendOutput(partialOutput);
+      Object.assign(output, partialOutput);
+    }
+    return output as Output;
+  }
+
+  *#invokeListenerSaga(): any {
     const self = this;
     const action = yield take(
       (e: any) =>
@@ -153,19 +148,37 @@ class WorkflowStepRef<
       });
       yield cancel();
     } else {
-      const output = yield call(self.execute.bind(self), {
-        input: action.input,
-        dispatch,
-        session,
-      });
-      yield call(updateStepState, self.nodeId, {
-        status: StepStatus.COMPLETED,
-        output,
-      } satisfies StepState);
+      try {
+        const output = yield call(self.#execute.bind(self), {
+          input: action.input,
+          dispatch,
+          session,
+        });
+
+        dispatch({
+          type: EventType.RUN_COMPLETED,
+          session,
+          node: { id: self.nodeId },
+        });
+        yield call(updateStepState, self.nodeId, {
+          status: StepStatus.COMPLETED,
+          output,
+        } satisfies StepState);
+      } catch (e) {
+        dispatch({
+          type: EventType.RUN_FAILED,
+          session,
+          node: { id: self.nodeId },
+        });
+        yield call(updateStepState, self.nodeId, {
+          status: StepStatus.FAILED,
+          error: serializeError(e),
+        } satisfies StepState);
+      }
     }
   }
 
-  *bindingsResolver(): any {
+  *#bindingsResolver(): any {
     const self = this;
     if (!self.bindings) {
       yield take(EventType.START);

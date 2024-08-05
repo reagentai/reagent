@@ -3,7 +3,6 @@ import { ZodObjectSchema } from "../core/zod.js";
 import { Lazy } from "./operators/index.js";
 
 export enum StepStatus {
-  WAITING = "WAITING",
   INVOKED = "INVOKED",
   COMPLETED = "COMPLETED",
   FAILED = "FAILED",
@@ -22,6 +21,7 @@ export enum EventType {
   EXECUTE_ON_CLIENT = "EXECUTE_ON_CLIENT",
   RUN_COMPLETED = "RUN_COMPLETED",
   RUN_CANCELLED = "RUN_CANCELLED",
+  RUN_FAILED = "RUN_FAILED",
 }
 
 export type Session = {
@@ -64,10 +64,20 @@ namespace WorkflowEvent {
 
 export type { WorkflowEvent };
 
-export type StepState = {
-  status: StepStatus;
-  output: Record<string, any>;
-};
+export type StepState =
+  | {
+      status: StepStatus.INVOKED;
+      input: Record<string, any>;
+    }
+  | {
+      status: StepStatus.COMPLETED;
+      output: Record<string, any>;
+    }
+  | {
+      status: StepStatus.FAILED;
+      // output of serialize-error
+      error: any;
+    };
 
 export type WorkflowRunEvent =
   | Omit<WorkflowEvent.Output, "session">

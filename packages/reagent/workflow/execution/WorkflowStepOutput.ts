@@ -216,6 +216,7 @@ class OutputValueProvider<Output> extends AbstractValueProvider<Output> {
         ((e.type == EventType.OUTPUT && e.output[self.#field] != undefined) ||
           e.type == EventType.SKIP_RUN ||
           e.type == EventType.RUN_CANCELLED ||
+          e.type == EventType.RUN_FAILED ||
           e.type == EventType.EXECUTE_ON_CLIENT) &&
         e.node.id == self.#ref.nodeId
       );
