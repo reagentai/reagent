@@ -82,7 +82,7 @@ export type WorkflowRunOptions = {
   updateStepState?: (
     nodeId: string,
     state: Partial<StepState>
-  ) => Promise<void>;
+  ) => void | Promise<void>;
   events: WorkflowRunEvent[];
 };
 

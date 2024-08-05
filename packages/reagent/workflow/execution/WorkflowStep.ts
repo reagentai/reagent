@@ -22,7 +22,13 @@ import {
   ValueProvider,
 } from "./WorkflowStepOutput.js";
 import { Lazy, lazy } from "./operators/index.js";
-import { EventType, type EdgeBindings, type RenderUpdate } from "./types.js";
+import {
+  EventType,
+  StepState,
+  StepStatus,
+  type EdgeBindings,
+  type RenderUpdate,
+} from "./types.js";
 
 const TOOL_CALL_SAGA = Symbol("TOOL_CALL_SAGA");
 
@@ -127,6 +133,13 @@ class WorkflowStepRef<
 
     const dispatch = yield getContext("dispatch");
     const session = yield getContext("session");
+    const updateStepState = yield getContext("updateStepState");
+
+    yield call(updateStepState, self.nodeId, {
+      status: StepStatus.INVOKED,
+      input: action.input,
+    } satisfies StepState);
+
     if (self.node.metadata.target == "client") {
       yield dispatch({
         type: EventType.EXECUTE_ON_CLIENT,
@@ -140,11 +153,15 @@ class WorkflowStepRef<
       });
       yield cancel();
     } else {
-      yield call(self.execute.bind(self), {
+      const output = yield call(self.execute.bind(self), {
         input: action.input,
         dispatch,
         session,
       });
+      yield call(updateStepState, self.nodeId, {
+        status: StepStatus.COMPLETED,
+        output,
+      } satisfies StepState);
     }
   }
 

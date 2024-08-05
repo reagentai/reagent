@@ -1,6 +1,14 @@
 import { ReplaySubject } from "rxjs";
 import { channel, runSaga, stdChannel } from "redux-saga";
-import { actionChannel, all, call, fork, put, take } from "redux-saga/effects";
+import {
+  actionChannel,
+  all,
+  call,
+  fork,
+  getContext,
+  put,
+  take,
+} from "redux-saga/effects";
 
 import { WorkflowStepRef } from "./WorkflowStep.js";
 import {
@@ -132,17 +140,20 @@ class WorkflowRun {
     // and then emit queued events
     function* startWorkflow(incomingEvents: any): any {
       const session = self.#session;
-      const { getStepState } = options;
+      const getStepState = yield getContext("getStepState");
       if (getStepState) {
         const stateById: Record<string, StepState> = {};
         for (const nodeId of [...self.#nodesById.keys()]) {
           const state = yield call(getStepState, nodeId);
           if (state) {
             stateById[nodeId] = state;
-            // dispatch ALREADY_INVOKED such that tasks waiting
+            // dispatch SKIP_INVOKE such that tasks waiting
             // for INVOKE event are cancelled before OUTPUT events
             // are emitted
-            if (state.status != StepStatus.WAITING) {
+            if (
+              state.status == StepStatus.COMPLETED ||
+              state.status == StepStatus.FAILED
+            ) {
               self.#channel.put({
                 type: EventType.SKIP_INVOKE,
                 session,
@@ -226,7 +237,7 @@ class WorkflowRun {
         context: {
           session: self.#session,
           getStepState: options.getStepState,
-          updateStepState: options.updateStepState,
+          updateStepState: options.updateStepState || (() => {}),
           dispatch(output: any) {
             self.#channel.put(output);
           },
