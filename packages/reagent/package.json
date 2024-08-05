@@ -25,7 +25,7 @@
       "import": "./workflow.js",
       "types": "./workflow.d.ts"
     },
-    "./workflow/nodes": {
+    "./nodes": {
       "import": "./workflow/nodes/index.js",
       "types": "./workflow/nodes/index.d.ts"
     },
