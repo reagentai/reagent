@@ -39,10 +39,12 @@
     },
     "./vite": {
       "import": "./vite.js",
+      "require": "./webpack.js",
       "types": "./vite.d.ts"
     },
     "./webpack": {
       "import": "./webpack.js",
+      "require": "./webpack.js",
       "types": "./webpack.d.ts"
     }
   },
