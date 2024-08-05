@@ -9,15 +9,42 @@
     "prepublish": "rm -rf dist && pnpm build && cp package.json dist"
   },
   "exports": {
-    ".": "./index.js",
-    "./rxjs": "./rxjs.js",
-    "./chat": "./chat/index.js",
-    "./workflow": "./workflow.js",
-    "./workflow/nodes": "./workflow/nodes/index.js",
-    "./llm/models": "././llm/models/index.js",
-    "./utils": "./utils.js",
-    "./vite": "./vite.js",
-    "./webpack": "./webpack.js"
+    ".": {
+      "import": "./index.js",
+      "types": "./index.d.ts"
+    },
+    "./rxjs": {
+      "import": "./rxjs.js",
+      "types": "./rxjs.d.ts"
+    },
+    "./chat": {
+      "import": "./chat/index.js",
+      "types": "./chat/index.d.ts"
+    },
+    "./workflow": {
+      "import": "./workflow.js",
+      "types": "./workflow.d.ts"
+    },
+    "./workflow/nodes": {
+      "import": "./workflow/nodes/index.js",
+      "types": "./workflow/nodes/index.d.ts"
+    },
+    "./llm/models": {
+      "import": "././llm/models/index.js",
+      "types": "././llm/models/index.d.ts"
+    },
+    "./utils": {
+      "import": "./utils.js",
+      "types": "./utils.d.ts"
+    },
+    "./vite": {
+      "import": "./vite.js",
+      "types": "./vite.d.ts"
+    },
+    "./webpack": {
+      "import": "./webpack.js",
+      "types": "./webpack.d.ts"
+    }
   },
   "publishConfig": {
     "directory": "dist",
