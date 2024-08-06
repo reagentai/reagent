@@ -4,14 +4,17 @@ import { cancel, getContext, put, spawn, take } from "redux-saga/effects";
 import slugify, { slugifyWithCounter } from "@sindresorhus/slugify";
 import { includeKeys } from "filter-obj";
 
+import { z } from "../core/zod.js";
 import { WorkflowStepRef } from "./WorkflowStep.js";
 import {
+  ClientEventType,
   EventType,
   type NodeDependency,
   type NodeMetadata,
   type Session,
   type Tool,
 } from "./types.js";
+import { InternalWorkflowRef } from "./Workflow.js";
 
 const slugifyCounter = slugifyWithCounter();
 
@@ -40,16 +43,20 @@ type ValueProvider<Value> = Pick<
   "subscribe" | "map"
 >;
 
+type SubscriberProvider = {
+  subscriptions: Set<any>;
+};
+
 abstract class AbstractValueProvider<Value>
   implements InternalValueProvider<Value>
 {
-  #ref: AnyWorkflowStepRef;
+  #ref: SubscriberProvider;
   #stream: ReplaySubject<SubscribedValue<Value>>;
   #subscription?: any;
   #subscriptionCount: number;
   __isValueProvider__: boolean;
 
-  constructor(node: AnyWorkflowStepRef) {
+  constructor(node: SubscriberProvider) {
     this.#ref = node;
     this.#stream = new ReplaySubject();
     this.#subscriptionCount = 0;
@@ -134,7 +141,15 @@ class ToolProvider<Input> extends AbstractValueProvider<Tool<Input, any>> {
   }
 
   get dependencies() {
-    return [];
+    const self = this;
+    return [
+      {
+        id: self.#ref.nodeId,
+        type: self.#ref.node.metadata.id,
+        version: self.#ref.node.metadata.version,
+        field: "__tool__",
+      },
+    ];
   }
 
   *saga(options: SagaOptions = {}): any {
@@ -177,6 +192,74 @@ class ToolProvider<Input> extends AbstractValueProvider<Tool<Input, any>> {
             id: self.#ref.nodeId,
           },
         });
+      },
+    };
+  }
+
+  map<Output>(mapper: any): InternalValueProvider<Output> {
+    throw new Error("unsupported");
+  }
+}
+
+class WorkflowToolProvider<Input> extends AbstractValueProvider<
+  Tool<Input, any>
+> {
+  #ref: InternalWorkflowRef;
+  #tool: Omit<Tool<any, any>, "execute">;
+  #options: { id: string; nodeId: string; input: Record<string, any> };
+  constructor(
+    ref: InternalWorkflowRef,
+    options: {
+      id: string;
+      nodeId: string;
+      input: Record<string, any>;
+    }
+  ) {
+    super(ref);
+    this.#ref = ref;
+    this.#options = options;
+
+    this.#tool = {
+      // Note: need to call `slugify` after `slugifyCounter` because
+      // `slugifyCounter` uses `-` as separator instead of `_`
+      name: slugify(slugifyCounter(this.#ref.config.name), {
+        separator: "_",
+      }),
+      description: this.#ref.config.description!,
+      parameters: z.object({}),
+    };
+  }
+
+  get dependencies() {
+    return [];
+  }
+
+  *saga(options: SagaOptions = {}): any {
+    const self = this;
+    const session = yield getContext("session");
+    return {
+      session,
+      node: {
+        id: self.#options.id,
+      },
+      value: {
+        ...self.#tool,
+        execute: async (args: any[]) => {
+          const run = self.#ref.emit({
+            sessionId: session.id,
+            events: [
+              {
+                type: ClientEventType.INVOKE,
+                node: {
+                  id: self.#options.nodeId,
+                },
+                input: args,
+              },
+            ],
+          });
+          const output = await run.task.toPromise();
+          return output;
+        },
       },
     };
   }
@@ -313,6 +396,7 @@ class RenderOutputProvider<Value> extends AbstractValueProvider<Value> {
 export {
   AbstractValueProvider,
   ToolProvider,
+  WorkflowToolProvider,
   OutputValueProvider,
   RenderOutputProvider,
 };

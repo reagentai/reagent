@@ -9,7 +9,11 @@ import { AbstractWorkflowNode } from "../core/node.js";
 import { WorkflowStep } from "./WorkflowStep.js";
 import { WorkflowRun, WorkflowRunOptions } from "./WorkflowRun.js";
 import type { WorkflowOutputBindings } from "./types.js";
-import { AbstractValueProvider, ValueProvider } from "./WorkflowStepOutput.js";
+import {
+  AbstractValueProvider,
+  ValueProvider,
+  WorkflowToolProvider,
+} from "./WorkflowStepOutput.js";
 import { ClientEventType, EventType, WorkflowEvent } from "./types.js";
 import { uniqueId } from "../../utils/uniqueId.js";
 
@@ -30,11 +34,14 @@ class InternalWorkflowRef {
   edges: [string, string][];
   // node ids sorted in topological order of dependency
   sortedNodeIds: string[];
+  outputBindings?: WorkflowOutputBindings;
+  subscriptions: Set<any>;
   constructor(config: WorkflowConfig) {
     this.config = config;
     this.nodesById = new Map();
     this.edges = [];
     this.sortedNodeIds = [];
+    this.subscriptions = new Set();
   }
 
   addNodeRef(ref: WorkflowStepRef<any, any, any>) {
@@ -66,10 +73,50 @@ class InternalWorkflowRef {
     // an issue
     this.sortedNodeIds = toposort(this.edges);
   }
+
+  // Dispatch events to the workflow
+  // This will start a workflow run based on existing state
+  // To start a new workflow, dispatch "INVOKE" event
+  emit(options: WorkflowRunOptions) {
+    const sessionId = options.sessionId || uniqueId();
+    const run = new WorkflowRun(this.nodesById, this.outputBindings as any, {
+      sessionId,
+      ...includeKeys(options, ["getStepState", "updateStepState"]),
+    });
+
+    for (const event of options.events) {
+      if (event.type == ClientEventType.OUTPUT) {
+        run.queueEvents({
+          type: ClientEventType.OUTPUT,
+          node: event.node,
+          output: event.output,
+        });
+      } else if (event.type == ClientEventType.INVOKE) {
+        run.queueEvents({
+          type: ClientEventType.INVOKE,
+          node: event.node,
+          input: event.input,
+        });
+      } else if (event.type == ClientEventType.RUN_COMPLETED) {
+        run.queueEvents({
+          type: ClientEventType.RUN_COMPLETED,
+          node: event.node,
+        });
+      } else {
+        throw new Error("not implemented");
+      }
+    }
+
+    // start the workflow
+    run.queueEvents({
+      // @ts-expect-error
+      type: EventType.START,
+    });
+    return run;
+  }
 }
 
 class Workflow {
-  #outputBindings?: WorkflowOutputBindings;
   #ref;
   constructor(config: WorkflowConfig) {
     this.#ref = new InternalWorkflowRef(config);
@@ -84,10 +131,10 @@ class Workflow {
   }
 
   bind(bindings: WorkflowOutputBindings) {
-    if (Boolean(this.#outputBindings)) {
+    if (Boolean(this.#ref.outputBindings)) {
       throw new Error("Workflow outputs already bound!");
     }
-    this.#outputBindings = bindings;
+    this.#ref.outputBindings = bindings;
   }
 
   getNode<
@@ -141,11 +188,15 @@ class Workflow {
     return step;
   }
 
+  asTool(options: { id: string; nodeId: string; input: Record<string, any> }) {
+    return new WorkflowToolProvider<any>(this.#ref, options);
+  }
+
   start(
     options: Omit<WorkflowRunOptions, "events"> &
       Pick<WorkflowEvent.Invoke, "node" | "input">
   ) {
-    return this.emit({
+    return this.#ref.emit({
       ...options,
       events: [
         {
@@ -157,49 +208,8 @@ class Workflow {
     });
   }
 
-  // Dispatch events to the workflow
-  // This will start a workflow run based on existing state
-  // To start a new workflow, dispatch "INVOKE" event
   emit(options: WorkflowRunOptions) {
-    const sessionId = options.sessionId || uniqueId();
-    const run = new WorkflowRun(
-      this.#ref.nodesById,
-      this.#outputBindings as any,
-      {
-        sessionId,
-        ...includeKeys(options, ["getStepState", "updateStepState"]),
-      }
-    );
-
-    for (const event of options.events) {
-      if (event.type == ClientEventType.OUTPUT) {
-        run.queueEvents({
-          type: ClientEventType.OUTPUT,
-          node: event.node,
-          output: event.output,
-        });
-      } else if (event.type == ClientEventType.INVOKE) {
-        run.queueEvents({
-          type: ClientEventType.INVOKE,
-          node: event.node,
-          input: event.input,
-        });
-      } else if (event.type == ClientEventType.RUN_COMPLETED) {
-        run.queueEvents({
-          type: ClientEventType.RUN_COMPLETED,
-          node: event.node,
-        });
-      } else {
-        throw new Error("not implemented");
-      }
-    }
-
-    // start the workflow
-    run.queueEvents({
-      // @ts-expect-error
-      type: EventType.START,
-    });
-    return run;
+    return this.#ref.emit(options);
   }
 
   generateGraph() {
@@ -263,7 +273,7 @@ class Workflow {
         id: "@core/output",
         name: "Workflow output",
       },
-      dependencies: Object.entries(this.#outputBindings || {})
+      dependencies: Object.entries(this.#ref.outputBindings || {})
         .filter(([key]) => key != "data")
         .flatMap(([_, outputs]) =>
           (outputs as unknown as [string, ValueProvider<any>[]]).flatMap(
