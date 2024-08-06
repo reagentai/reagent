@@ -24,6 +24,7 @@ import {
 } from "./types.js";
 import { uniqueId } from "../../utils/uniqueId.js";
 import { ValueProvider } from "./WorkflowStepOutput.js";
+import { InternalWorkflowRef } from "./Workflow.js";
 
 type OutputEvent<Output> = {
   // session is null for session independent global values
@@ -33,10 +34,9 @@ type OutputEvent<Output> = {
 };
 
 class WorkflowRun {
+  #ref: InternalWorkflowRef;
   #id: string;
   #session: Session;
-  #nodesById: Map<string, WorkflowStepRef<any, any, any>>;
-  #outputBindings: WorkflowOutputBindings;
   #channel: ReturnType<typeof stdChannel>;
   #streams: {
     markdown: ReplaySubject<OutputEvent<string>>;
@@ -54,16 +54,14 @@ class WorkflowRun {
   #task: ReturnType<typeof runSaga> | undefined;
 
   constructor(
-    nodesById: Map<string, WorkflowStepRef<any, any, any>>,
-    outputBindings: WorkflowOutputBindings,
+    ref: InternalWorkflowRef,
     options: Omit<WorkflowRunOptions, "events">
   ) {
+    this.#ref = ref;
     this.#id = uniqueId();
     this.#session = {
       id: options.sessionId || uniqueId(),
     };
-    this.#nodesById = nodesById;
-    this.#outputBindings = outputBindings;
     this.#channel = stdChannel();
     this.#streams = {
       markdown: new ReplaySubject(),
@@ -111,7 +109,7 @@ class WorkflowRun {
     };
 
     function* outputSubscribers() {
-      const subscriptions = Object.entries(self.#outputBindings)
+      const subscriptions = Object.entries(self.#ref.outputBindings!)
         .filter(([key]) => key != "data")
         .map(([key, outputs]) => {
           const listener = channels[key];
@@ -149,7 +147,7 @@ class WorkflowRun {
       const getStepState = yield getContext("getStepState");
       if (getStepState) {
         const stateById: Record<string, StepState> = {};
-        for (const nodeId of [...self.#nodesById.keys()]) {
+        for (const nodeId of [...self.#ref.nodesById.keys()]) {
           const state = yield call(getStepState, nodeId);
           if (state) {
             stateById[nodeId] = state;
@@ -194,7 +192,7 @@ class WorkflowRun {
       }
     }
 
-    const nodesRef = [...self.#nodesById.values()];
+    const nodesRef = [...self.#ref.nodesById.values()];
     function* allNodesRunCompletion(): any {
       const nodesCompleted = new Set();
       while (1) {
@@ -227,7 +225,7 @@ class WorkflowRun {
       const job3 = yield fork(eventsSubscriber);
       const job4 = yield fork(outputSubscribers);
 
-      const dataBinding = self.#outputBindings["data"];
+      const dataBinding = self.#ref.outputBindings?.["data"];
       const outputSaga = dataBinding
         ? yield fork((dataBinding as any).saga.bind(dataBinding))
         : undefined;

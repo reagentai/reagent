@@ -152,7 +152,7 @@ class ToolProvider<Input> extends AbstractValueProvider<Tool<Input, any>> {
     ];
   }
 
-  *saga(options: SagaOptions = {}): any {
+  *saga(_: SagaOptions = {}): any {
     const self = this;
     const session = yield getContext("session");
     const dispatch = yield getContext("dispatch");
@@ -234,7 +234,7 @@ class WorkflowToolProvider<Input> extends AbstractValueProvider<
     return [];
   }
 
-  *saga(options: SagaOptions = {}): any {
+  *saga(_: SagaOptions = {}): any {
     const self = this;
     const session = yield getContext("session");
     return {
@@ -257,10 +257,12 @@ class WorkflowToolProvider<Input> extends AbstractValueProvider<
               },
             ],
           });
+
           const output = await run.task.toPromise();
-          return output;
+          return { result: output };
         },
       },
+      onSkipped() {},
     };
   }
 

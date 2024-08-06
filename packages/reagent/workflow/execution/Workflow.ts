@@ -79,7 +79,7 @@ class InternalWorkflowRef {
   // To start a new workflow, dispatch "INVOKE" event
   emit(options: WorkflowRunOptions) {
     const sessionId = options.sessionId || uniqueId();
-    const run = new WorkflowRun(this.nodesById, this.outputBindings as any, {
+    const run = new WorkflowRun(this, {
       sessionId,
       ...includeKeys(options, ["getStepState", "updateStepState"]),
     });
