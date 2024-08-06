@@ -9,7 +9,7 @@ import { AbstractWorkflowNode } from "../core/node.js";
 import { WorkflowStep } from "./WorkflowStep.js";
 import { WorkflowRun, WorkflowRunOptions } from "./WorkflowRun.js";
 import type { WorkflowOutputBindings } from "./types.js";
-import { AbstractValueProvider } from "./WorkflowStepOutput.js";
+import { AbstractValueProvider, ValueProvider } from "./WorkflowStepOutput.js";
 import { ClientEventType, EventType, WorkflowEvent } from "./types.js";
 import { uniqueId } from "../../utils/uniqueId.js";
 
@@ -263,15 +263,18 @@ class Workflow {
         id: "@core/output",
         name: "Workflow output",
       },
-      dependencies: Object.values(this.#outputBindings || {}).flatMap(
-        (outputs) =>
-          outputs.flatMap((o: any) => {
-            if (AbstractValueProvider.isValueProvider(o)) {
-              return o.dependencies;
+      dependencies: Object.entries(this.#outputBindings || {})
+        .filter(([key]) => key != "data")
+        .flatMap(([_, outputs]) =>
+          (outputs as unknown as [string, ValueProvider<any>[]]).flatMap(
+            (o: any) => {
+              if (AbstractValueProvider.isValueProvider(o)) {
+                return o.dependencies;
+              }
+              return [];
             }
-            return [];
-          })
-      ),
+          )
+        ),
     });
 
     return {

@@ -6,6 +6,7 @@ import {
   call,
   fork,
   getContext,
+  join,
   put,
   take,
 } from "redux-saga/effects";
@@ -22,6 +23,7 @@ import {
   EventType,
 } from "./types.js";
 import { uniqueId } from "../../utils/uniqueId.js";
+import { ValueProvider } from "./WorkflowStepOutput.js";
 
 type OutputEvent<Output> = {
   // session is null for session independent global values
@@ -34,7 +36,7 @@ class WorkflowRun {
   #id: string;
   #session: Session;
   #nodesById: Map<string, WorkflowStepRef<any, any, any>>;
-  #outputBindings?: WorkflowOutputBindings;
+  #outputBindings: WorkflowOutputBindings;
   #channel: ReturnType<typeof stdChannel>;
   #streams: {
     markdown: ReplaySubject<OutputEvent<string>>;
@@ -109,8 +111,9 @@ class WorkflowRun {
     };
 
     function* outputSubscribers() {
-      const subscriptions = Object.entries(self.#outputBindings!).map(
-        ([key, outputs]) => {
+      const subscriptions = Object.entries(self.#outputBindings)
+        .filter(([key]) => key != "data")
+        .map(([key, outputs]) => {
           const listener = channels[key];
           return (function* saga() {
             yield fork(function* saga() {
@@ -120,10 +123,13 @@ class WorkflowRun {
                 self.#streams[key].next(value);
               }
             });
-            yield all(outputs.map((o) => (o as any).saga({ listener })));
+            yield all(
+              (outputs as unknown as [string, ValueProvider<any>[]]).map((o) =>
+                (o as any).saga({ listener })
+              )
+            );
           })();
-        }
-      );
+        });
       yield all(subscriptions);
     }
 
@@ -216,15 +222,23 @@ class WorkflowRun {
     }
     function* root(): any {
       const incomingEvents = yield actionChannel("INCOMING_EVENT");
-      yield fork(startWorkflow, incomingEvents);
-      yield fork(allNodesRunCompletion);
-      yield fork(eventsSubscriber);
-      yield fork(outputSubscribers);
+      const job1 = yield fork(startWorkflow, incomingEvents);
+      const job2 = yield fork(allNodesRunCompletion);
+      const job3 = yield fork(eventsSubscriber);
+      const job4 = yield fork(outputSubscribers);
+
+      const dataBinding = self.#outputBindings["data"];
+      const outputSaga = dataBinding
+        ? yield fork((dataBinding as any).saga.bind(dataBinding))
+        : undefined;
       yield all(
         nodesRef.map((ref) => {
           return ref.saga.bind(ref)();
         })
       );
+      yield join([job1, job2, job3, job4]);
+      const output = dataBinding ? yield join(outputSaga) : undefined;
+      return output?.value;
     }
 
     const task = runSaga(

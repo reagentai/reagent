@@ -18,7 +18,7 @@ export { lazy } from "./execution/operators/index.js";
 export {
   ClientEventType as EventType,
   StepStatus,
-  StepState,
+  type StepState,
 } from "./execution/types.js";
 export { WorkflowRun } from "./execution/WorkflowRun.js";
 export type {

@@ -142,6 +142,7 @@ export type WorkflowOutputBindings = {
   markdown?: ValueProvider<any>[];
   markdownStream?: ValueProvider<any>[];
   ui?: ValueProvider<RenderUpdate>[];
+  data?: ValueProvider<any>;
 };
 
 export type RenderUpdate = {
