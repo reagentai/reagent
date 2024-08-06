@@ -10,7 +10,7 @@ import { WorkflowStep } from "./WorkflowStep.js";
 import { WorkflowRun, WorkflowRunOptions } from "./WorkflowRun.js";
 import type { WorkflowOutputBindings } from "./types.js";
 import { AbstractValueProvider } from "./WorkflowStepOutput.js";
-import { EventType, WorkflowEvent } from "./types.js";
+import { ClientEventType, EventType, WorkflowEvent } from "./types.js";
 import { uniqueId } from "../../utils/uniqueId.js";
 
 type WorkflowConfig = {
@@ -149,7 +149,7 @@ class Workflow {
       ...options,
       events: [
         {
-          type: EventType.INVOKE,
+          type: ClientEventType.INVOKE,
           node: options.node,
           input: options.input,
         },
@@ -172,25 +172,25 @@ class Workflow {
     );
 
     for (const event of options.events) {
-      if (event.type == EventType.OUTPUT) {
+      if (event.type == ClientEventType.OUTPUT) {
         run.queueEvents({
-          type: EventType.OUTPUT,
+          type: ClientEventType.OUTPUT,
           node: {
             id: event.node.id,
           },
           output: event.output,
         });
-      } else if (event.type == EventType.INVOKE) {
+      } else if (event.type == ClientEventType.INVOKE) {
         run.queueEvents({
-          type: EventType.INVOKE,
+          type: ClientEventType.INVOKE,
           node: {
             id: event.node.id,
           },
           input: event.input,
         });
-      } else if (event.type == EventType.RUN_COMPLETED) {
+      } else if (event.type == ClientEventType.RUN_COMPLETED) {
         run.queueEvents({
-          type: EventType.RUN_COMPLETED,
+          type: ClientEventType.RUN_COMPLETED,
           node: {
             id: event.node.id,
           },

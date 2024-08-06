@@ -27,7 +27,12 @@ export function devServer(): VitePlugin {
     configureServer: async (server) => {
       const app = createRouter();
       const agents = new Map();
-      app.route("/api/chat", createChatWorkflowRouter(agents as any));
+      app.route(
+        "/api/chat",
+        createChatWorkflowRouter(agents as any, {
+          streamStateUpdatesToClient: true,
+        })
+      );
       server.middlewares.use(async (req, res, next) => {
         const hasRoute = app.router.match(req.method!, req.url!)[0].length > 0;
         if (!hasRoute) {

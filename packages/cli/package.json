@@ -10,7 +10,8 @@
     "test": "vitest run",
     "build-client": "vite build -c vite.client.config.js",
     "build-bin": "vite build -c vite.bin.config.js",
-    "build": "pnpm run \"/^build-[client|bin]/\"",
+    "build-check": "tsc --noEmit",
+    "build": "pnpm run \"/^build-[client|bin|check]/\"",
     "prepublish": "rm -rf dist && pnpm build && cp package.json dist"
   },
   "exports": {
@@ -35,6 +36,7 @@
     "@hono/node-server": "^1.11.2",
     "@hono/vite-dev-server": "^0.12.1",
     "@radix-ui/react-toast": "^1.1.5",
+    "@reagentai/client": "workspace:^",
     "@reagentai/react": "workspace:^",
     "@reagentai/reagent": "workspace:^",
     "@reagentai/serve": "workspace:^",
@@ -61,6 +63,7 @@
     "@types/dagre": "^0.7.52",
     "@types/react": "^18.3.2",
     "@types/react-dom": "^18.3.0",
+    "typescript": "5.4.5",
     "vite-plugin-static-copy": "^1.0.5",
     "vitest": "^1.6.0"
   }

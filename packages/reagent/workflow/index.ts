@@ -15,7 +15,11 @@ export type { Node, Edge, Graph } from "./core/schemas.js";
 
 export { Workflow } from "./execution/Workflow.js";
 export { lazy } from "./execution/operators/index.js";
-export { EventType, StepStatus, StepState } from "./execution/types.js";
+export {
+  ClientEventType as EventType,
+  StepStatus,
+  StepState,
+} from "./execution/types.js";
 export { WorkflowRun } from "./execution/WorkflowRun.js";
 export type {
   WorkflowRunOptions,

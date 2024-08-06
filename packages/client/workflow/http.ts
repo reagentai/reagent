@@ -2,43 +2,52 @@ import { EventType, type BaseReagentNodeOptions } from "@reagentai/reagent";
 import { jsonStreamToAsyncIterator } from "@reagentai/reagent/utils";
 
 import { executeNode } from "./execution.js";
+import type { Subscriber } from "./types.js";
+
+export type HttpOptions = {
+  url: string;
+  headers?: Record<string, string>;
+};
 
 const createHttpClient = (options: {
-  url: string;
+  http: HttpOptions;
   nodes: BaseReagentNodeOptions<any, any, any>[];
 }) => {
   return {
-    // even though "states" is bound to emit function,
-    // setting it here will shut up TS compiler
-    states: undefined as any,
-    async emit(emitOptions: {
+    emit(emitOptions: {
       sessionId?: string;
       events: any[];
       states?: Record<string, any>;
     }) {
-      const self = this;
-      self.states = {
-        ...(self.states || {}),
-        ...(emitOptions.states || {}),
-      };
-      const res = await fetch(options.url, {
-        method: "POST",
-        body: JSON.stringify({
-          sessionId: emitOptions.sessionId,
-          events: emitOptions.events,
-          states: self.states,
-        }),
-      });
-
-      const response = jsonStreamToAsyncIterator(res.body!);
-      const subscribers: any[] = [];
-      const pendingExecutions = [];
-      const states: any = {
-        ...(self.states || {}),
-      };
+      const subscribers: Subscriber[] = [];
       const promise = (async () => {
+        const self = this as any;
+        self.states = {
+          ...(self.states || {}),
+          ...(emitOptions.states || {}),
+        };
+
+        const res = await fetch(options.http.url, {
+          method: "POST",
+          body: JSON.stringify({
+            sessionId: emitOptions.sessionId,
+            events: emitOptions.events,
+            states: self.states,
+          }),
+          headers: options.http.headers,
+        });
+
+        if (res.status != 200) {
+          subscribers.forEach((subscriber) => subscriber.error?.(res));
+          return;
+        }
+
+        const response = jsonStreamToAsyncIterator(res.body!);
+        const pendingExecutions = [];
+        const states: any = {
+          ...(self.states || {}),
+        };
         for await (const { json } of response) {
-          subscribers.forEach((subscriber) => subscriber(json));
           if (json.type == "event") {
             const event = json.data;
             if (event.type == EventType.EXECUTE_ON_CLIENT) {
@@ -56,6 +65,8 @@ const createHttpClient = (options: {
             } else if (event.type == "UPDATE_NODE_STATE") {
               states[event.node.id] = event.state;
             }
+          } else {
+            subscribers.forEach((subscriber) => subscriber.next?.(json));
           }
         }
         await Promise.all(
@@ -74,8 +85,8 @@ const createHttpClient = (options: {
         );
       })();
       return {
-        subscribe(cb: (value: any) => void) {
-          subscribers.push(cb);
+        subscribe(subscriber: Subscriber) {
+          subscribers.push(subscriber);
         },
         toPromise() {
           return promise;

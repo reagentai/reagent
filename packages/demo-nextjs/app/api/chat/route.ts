@@ -1,34 +1,50 @@
-import { z } from "@reagentai/reagent";
+import { EventType, z } from "@reagentai/reagent";
 import { OpenAI } from "@reagentai/reagent/llm/models";
-import { runReagentWorkflow } from "@reagentai/serve";
-import agent from "@reagentai/react-examples/e2b";
+import { triggerReagentWorkflow } from "@reagentai/serve";
+import workflow from "../../workflow/workflow";
 
 const invokeSchema = z.object({
-  input: z.object({
-    id: z.string(),
-    message: z.object({
-      content: z.string(),
-    }),
-    model: z
+  sessionId: z.string().optional(),
+  events: z.array(
+    z
       .object({
-        provider: z.enum(["openai", "anthropic", "groq"]),
-        name: z.string(),
+        type: z.nativeEnum(EventType),
+        node: z.object({
+          id: z.string(),
+        }),
+        input: z.any(),
       })
-      .optional(),
-  }),
+      .passthrough()
+  ),
+  states: z.record(z.string(), z.any()).optional(),
 });
 
 export async function POST(request: Request) {
-  const { input } = invokeSchema.parse(await request.json());
+  const {
+    sessionId,
+    events,
+    states = {},
+  } = invokeSchema.parse(await request.json());
   const model = new OpenAI({
     model: "gpt-3.5-turbo",
   });
 
-  const workflowOutput = runReagentWorkflow<any>(agent, {
-    nodeId: "input",
-    input: {
-      query: input.message.content,
-      model,
+  const workflowOutput = triggerReagentWorkflow(workflow, {
+    sessionId,
+    // @ts-expect-error
+    events,
+    async getStepState(nodeId) {
+      return states[nodeId];
+    },
+    updateStepState(nodeId, state) {
+      workflowOutput.next({
+        type: "event",
+        data: {
+          type: "UPDATE_NODE_STATE",
+          node: { id: nodeId },
+          state,
+        },
+      });
     },
   });
   return workflowOutput.toResponse();

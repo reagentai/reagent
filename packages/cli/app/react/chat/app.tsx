@@ -40,7 +40,8 @@ const App = () => {
       createChatStore(
         {
           messages: {},
-          invokeUrl: "/api/chat/invoke",
+          url: "/api/chat/invoke",
+          nodes: workflowModule.nodes,
           middleware: {
             request(options) {
               setInvokeError(null);
@@ -52,7 +53,9 @@ const App = () => {
             },
           },
           async onInvokeError(res) {
-            setInvokeError((await res.text()) || res.statusText);
+            if (res instanceof Response) {
+              setInvokeError((await res.text()) || res.statusText);
+            }
           },
         },
         {

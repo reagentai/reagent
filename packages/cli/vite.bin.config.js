@@ -19,6 +19,7 @@ export default defineConfig({
       external: [
         "virtual:reagent-agent-module",
         /\@reagentai\/reagent*/,
+        /\@reagentai\/client*/,
         /\@reagentai\/serve*/,
         ...builtins(),
         /^node:.+/,

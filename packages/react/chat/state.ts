@@ -1,8 +1,9 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { produce } from "immer";
+import { createWorkflowClient } from "@reagentai/client/workflow";
 import type { Chat } from "@reagentai/reagent/chat";
-import { jsonStreamToAsyncIterator } from "@reagentai/reagent/utils";
+import type { BaseReagentNodeOptions } from "@reagentai/reagent";
 
 type NewMessage = {
   id: string;
@@ -28,7 +29,9 @@ export type InvokeOptions = {
 
 type StoreInit = {
   messages: Record<string, Chat.Message>;
-  invokeUrl: string;
+  // workflow execution url
+  url: string;
+  nodes: BaseReagentNodeOptions<any, any, any>[];
   middleware?: {
     request: (options: InvokeOptions) => { nodeId: string; input: any };
   };
@@ -41,34 +44,15 @@ export const createChatStore = (
     persistKey?: string;
   }
 ) => {
-  const invoke = async (options: {
-    nodeId: string;
-    input: NewMessage;
-    state: any;
-  }) => {
-    const body = init.middleware?.request?.(options) || {
-      nodeId: options.nodeId,
-      input: options.input,
-    };
-    const res = await fetch(init.invokeUrl!, {
-      method: "POST",
-      body: JSON.stringify(body),
+  const client = createWorkflowClient({
+    http: {
+      url: init.url,
       headers: {
         "content-type": "application/json",
       },
-    });
-    if (res.status != 200) {
-      init.onInvokeError?.(res);
-      return (async function* asyncGenerator() {})();
-    }
-    const iterator = jsonStreamToAsyncIterator(res.body!);
-    async function* asyncGenerator() {
-      for await (const { json } of iterator) {
-        yield json;
-      }
-    }
-    return asyncGenerator();
-  };
+    },
+    nodes: init.nodes,
+  });
 
   const withPerisist: typeof persist = options?.persistKey
     ? persist
@@ -138,47 +122,57 @@ export const createChatStore = (
               });
             });
 
-            const response = await invoke({
+            const body = init.middleware?.request?.({
+              ...options,
+              state: get(),
+            }) || {
               nodeId: options.nodeId,
               input: options.input,
-              state: get(),
-            });
-            for await (const msg of response) {
-              set((s) => {
-                let state: ChatState;
-                if (msg.type == "message/content") {
-                  const message = msg.data;
-                  state = produce(s, (state) => {
-                    state.messages[message.id] = message;
-                  });
-                } else if (msg.type == "message/content/delta") {
-                  const data = msg.data;
-                  state = produce(s, (state) => {
-                    if (s.messages[data.id]) {
-                      state.messages[data.id].message!.content =
-                        (s.messages[data.id].message?.content || "") +
-                        data.message.content;
-                    } else {
+            };
+            const result = client.start(body);
+            result.subscribe({
+              next(msg) {
+                set((s) => {
+                  let state: ChatState;
+                  if (msg.type == "message/content") {
+                    const message = msg.data;
+                    state = produce(s, (state) => {
+                      state.messages[message.id] = message;
+                    });
+                  } else if (msg.type == "message/content/delta") {
+                    const data = msg.data;
+                    state = produce(s, (state) => {
+                      if (s.messages[data.id]) {
+                        state.messages[data.id].message!.content =
+                          (s.messages[data.id].message?.content || "") +
+                          data.message.content;
+                      } else {
+                        state.messages[data.id] = data;
+                      }
+                    });
+                  } else if (msg.type == "message/ui") {
+                    state = produce(s, (state) => {
+                      state.messages[options.input.id] = msg.data;
+                    });
+                  } else if (msg.type == "message/ui/update") {
+                    const data = msg.data;
+                    state = produce(s, (state) => {
                       state.messages[data.id] = data;
-                    }
+                    });
+                  } else {
+                    throw new Error(
+                      "unknown message type:" + (msg as any).type
+                    );
+                  }
+                  return produce(state, (state: any) => {
+                    state.sortedMessageIds = sortMessages(state.messages);
                   });
-                } else if (msg.type == "message/ui") {
-                  state = produce(s, (state) => {
-                    state.messages[options.input.id] = msg.data;
-                  });
-                } else if (msg.type == "message/ui/update") {
-                  const data = msg.data;
-                  state = produce(s, (state) => {
-                    state.messages[data.id] = data;
-                  });
-                } else {
-                  throw new Error("unknown message type:" + (msg as any).type);
-                }
-                return produce(state, (state: any) => {
-                  state.sortedMessageIds = sortMessages(state.messages);
                 });
-              });
-            }
+              },
+              error(error) {
+                init.onInvokeError?.(error);
+              },
+            });
           },
         };
       },

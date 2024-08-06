@@ -1,29 +1,24 @@
 import { EventType, BaseReagentNodeOptions } from "@reagentai/reagent/workflow";
 
-import { createHttpClient } from "./http.js";
-
-type HttpOptions = {
-  http: {
-    url: string;
-  };
-};
+import { createHttpClient, HttpOptions } from "./http.js";
 
 type WebsocketOptions = {
   websocket: {
     url: string;
   };
 };
+
 type WorkflowClientOptions = {
   nodes: BaseReagentNodeOptions<any, any, any>[];
-} & (HttpOptions | WebsocketOptions);
+} & ({ http: HttpOptions } | WebsocketOptions);
 
 const createWorkflowClient = (options: WorkflowClientOptions) => {
   const client = createHttpClient({
-    url: (options as HttpOptions).http.url,
+    http: (options as any).http,
     nodes: options.nodes,
   });
   return {
-    async start(options: { nodeId: string; input: any }) {
+    start(options: { nodeId: string; input: any }) {
       const res = client.emit({
         events: [
           {

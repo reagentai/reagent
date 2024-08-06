@@ -24,13 +24,22 @@ export enum EventType {
   RUN_FAILED = "RUN_FAILED",
 }
 
+export enum ClientEventType {
+  INVOKE = EventType.INVOKE,
+  OUTPUT = EventType.OUTPUT,
+  EXECUTE_ON_CLIENT = EventType.EXECUTE_ON_CLIENT,
+  RUN_COMPLETED = EventType.RUN_COMPLETED,
+  RUN_CANCELLED = EventType.RUN_CANCELLED,
+  RUN_FAILED = EventType.RUN_FAILED,
+}
+
 export type Session = {
   id: string;
 };
 
 namespace WorkflowEvent {
   export type Invoke = {
-    type: EventType.INVOKE;
+    type: ClientEventType.INVOKE;
     session: {
       id: string;
     };
@@ -41,7 +50,7 @@ namespace WorkflowEvent {
   };
 
   export type Output = {
-    type: EventType.OUTPUT;
+    type: ClientEventType.OUTPUT;
     session: {
       id: string;
     };
@@ -52,7 +61,7 @@ namespace WorkflowEvent {
   };
 
   export type RunCompleted = {
-    type: EventType.RUN_COMPLETED;
+    type: ClientEventType.RUN_COMPLETED;
     session: {
       id: string;
     };

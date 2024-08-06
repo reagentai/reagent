@@ -74,7 +74,7 @@ export namespace Chat {
       };
     };
 
-    type ExecuteOnClientEvent = {
+    type ExecuteOnClient = {
       type: "EXECUTE_ON_CLIENT";
       session: {
         id: string;
@@ -84,9 +84,16 @@ export namespace Chat {
       };
       input: any;
     };
+    type UpdateNodeState = {
+      type: "UPDATE_NODE_STATE";
+      node: {
+        id: string;
+      };
+      state: any;
+    };
     export type WorkflowEvent = {
       type: "event";
-      data: ExecuteOnClientEvent;
+      data: ExecuteOnClient | UpdateNodeState;
     };
   }
 

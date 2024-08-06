@@ -9,7 +9,10 @@ import {
 
 import { triggerReagentWorkflow } from "../workflow.js";
 
-const createChatWorkflowRouter = (workflows: Map<string, Workflow>) => {
+const createChatWorkflowRouter = (
+  workflows: Map<string, Workflow>,
+  options: { streamStateUpdatesToClient?: boolean } = {}
+) => {
   const router = new Hono();
 
   router.get("/_healthy", (c) => c.text("OK"));
@@ -40,13 +43,14 @@ const createChatWorkflowRouter = (workflows: Map<string, Workflow>) => {
 
   const invokeSchema = z.object({
     workflowId: z.string().default("default"),
-    nodeId: z.string(),
-    input: z.object({
-      id: z.string(),
-      message: z.object({
-        content: z.string(),
-      }),
-    }),
+    events: z.array(
+      z.object({
+        type: z.nativeEnum(EventType),
+        node: z.object({ id: z.string() }),
+        input: z.any(),
+      })
+    ),
+    states: z.record(z.string(), z.any()).optional(),
     model: z
       .object({
         provider: z.enum(["openai", "anthropic", "groq"]),
@@ -86,18 +90,27 @@ const createChatWorkflowRouter = (workflows: Map<string, Workflow>) => {
       });
     }
 
+    const states = body.states || {};
     const outputStream = triggerReagentWorkflow(workflow, {
-      events: [
-        {
-          type: EventType.INVOKE,
-          node: { id: "input" },
-          input: {
-            query: body.input.message.content,
-            model,
-          },
-        },
-      ],
+      // @ts-expect-error
+      events: body.events,
+      async getStepState(nodeId) {
+        return states[nodeId];
+      },
+      updateStepState(nodeId, state) {
+        if (options.streamStateUpdatesToClient) {
+          outputStream.next({
+            type: "event",
+            data: {
+              type: "UPDATE_NODE_STATE",
+              node: { id: nodeId },
+              state,
+            },
+          });
+        }
+      },
     });
+
     return outputStream.toResponse();
   });
 

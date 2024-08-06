@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@reagentai/cli": "workspace:^",
+    "@reagentai/client": "workspace:^",
     "@reagentai/react": "workspace:^",
     "@reagentai/react-examples": "workspace:^",
     "@reagentai/reagent": "workspace:^",
@@ -15,5 +16,8 @@
     "dotenv": "^16.4.5",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.2"
   }
 }
