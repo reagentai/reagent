@@ -122,7 +122,7 @@ class ToolProvider<Input> extends AbstractValueProvider<Tool<Input, any>> {
     this.#tool = {
       // Note: need to call `slugify` after `slugifyCounter` because
       // `slugifyCounter` uses `-` as separator instead of `_`
-      name: slugify(slugifyCounter(this.#ref.node.metadata.id), {
+      name: slugify(slugifyCounter(this.#ref.node.metadata.name), {
         separator: "_",
       }),
       description: this.#ref.node.metadata.description!,
