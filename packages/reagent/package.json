@@ -30,8 +30,8 @@
       "types": "./workflow/nodes/index.d.ts"
     },
     "./llm/models": {
-      "import": "././llm/models/index.js",
-      "types": "././llm/models/index.d.ts"
+      "import": "./llm/models/index.js",
+      "types": "./llm/models/index.d.ts"
     },
     "./utils": {
       "import": "./utils.js",

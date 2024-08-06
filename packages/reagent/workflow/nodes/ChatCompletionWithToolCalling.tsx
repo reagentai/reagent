@@ -216,8 +216,8 @@ class ToolsProvider extends Runnable {
           name: tool.name,
           description: tool.description,
           parameters: includeKeys(
-            zodToJsonSchema(tool.parameters),
             // @ts-expect-error
+            zodToJsonSchema(tool.parameters),
             ["type", "properties", "required"]
           ),
         },

@@ -5,8 +5,8 @@ import {
   WorkflowInput,
 } from "@reagentai/reagent/nodes";
 
-import { AgentError } from "@reagentai/react/tools/AgentError";
-import { GenerateSQLQuery } from "./GenerateSQLQuery";
+import { AgentError } from "@reagentai/react/tools/AgentError.js";
+import { GenerateSQLQuery } from "./GenerateSQLQuery.js";
 
 const workflow = new Workflow({
   name: "SQL agent",

@@ -211,6 +211,7 @@ class Workflow {
   generateGraph() {
     const nodes = [...this.#ref.nodesById.entries()].map((e) => {
       const metadata = e[1].node.metadata;
+      // @ts-expect-error
       const jsonSchema = zodToJsonSchema(
         z.object({
           config: metadata.config,
