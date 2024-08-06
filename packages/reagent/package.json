@@ -1,6 +1,6 @@
 {
   "name": "@reagentai/reagent",
-  "version": "0.4.2",
+  "version": "0.5.0",
   "description": "A framework to build AI agents",
   "type": "module",
   "scripts": {
