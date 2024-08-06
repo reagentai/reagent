@@ -1,4 +1,7 @@
-import { EventType, BaseReagentNodeOptions } from "@reagentai/reagent/workflow";
+import {
+  EventType,
+  BaseReagentNodeOptions,
+} from "@reagentai/reagent/workflow/client";
 
 import { createHttpClient, HttpOptions } from "./http.js";
 

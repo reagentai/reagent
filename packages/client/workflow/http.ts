@@ -1,4 +1,7 @@
-import { EventType, type BaseReagentNodeOptions } from "@reagentai/reagent";
+import {
+  EventType,
+  type BaseReagentNodeOptions,
+} from "@reagentai/reagent/workflow/client";
 import { jsonStreamToAsyncIterator } from "@reagentai/reagent/utils";
 
 import { executeNode } from "./execution.js";

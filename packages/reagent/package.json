@@ -22,8 +22,12 @@
       "types": "./chat/index.d.ts"
     },
     "./workflow": {
-      "import": "./workflow.js",
-      "types": "./workflow.d.ts"
+      "import": "./workflow/index.js",
+      "types": "./workflow/index.d.ts"
+    },
+    "./workflow/client": {
+      "import": "./workflow/client.js",
+      "types": "./workflow/client.d.ts"
     },
     "./nodes": {
       "import": "./workflow/nodes/index.js",

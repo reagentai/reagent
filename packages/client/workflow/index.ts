@@ -1,2 +1,2 @@
-export { EventType } from "@reagentai/reagent";
+export { EventType } from "@reagentai/reagent/workflow/client";
 export { createWorkflowClient } from "./client.js";

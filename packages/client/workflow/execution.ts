@@ -1,4 +1,7 @@
-import { BaseReagentNodeOptions, StepStatus } from "@reagentai/reagent";
+import {
+  BaseReagentNodeOptions,
+  StepStatus,
+} from "@reagentai/reagent/workflow/client";
 import { WorkflowClient } from "./types";
 
 const executeNode = async (
