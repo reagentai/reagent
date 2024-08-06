@@ -1,5 +1,5 @@
 export namespace Chat {
-  type AgentNode = {
+  type NodeMetadata = {
     id: string;
     type: string;
     version: string;
@@ -12,7 +12,7 @@ export namespace Chat {
 
   export type Message = {
     id: string;
-    node?: AgentNode;
+    node?: NodeMetadata;
     message?: {
       content: string;
     };
@@ -27,7 +27,7 @@ export namespace Chat {
       data: {
         // message id
         id: string;
-        node: AgentNode;
+        node: NodeMetadata;
         message: {
           content: string;
         };
@@ -41,7 +41,7 @@ export namespace Chat {
       data: {
         // message id
         id: string;
-        node: AgentNode;
+        node: NodeMetadata;
         message: {
           content: string;
         };
@@ -55,7 +55,7 @@ export namespace Chat {
       data: {
         // message id
         id: string;
-        node: AgentNode;
+        node: NodeMetadata;
         ui: UIRenderData;
         role: string;
         createdAt: string;
@@ -67,7 +67,7 @@ export namespace Chat {
       data: {
         // message id
         id: string;
-        node: AgentNode;
+        node: NodeMetadata;
         ui: UIRenderData;
         role: string;
         createdAt: string;
@@ -79,16 +79,12 @@ export namespace Chat {
       session: {
         id: string;
       };
-      node: {
-        id: string;
-      };
+      node: NodeMetadata;
       input: any;
     };
     type UpdateNodeState = {
       type: "UPDATE_NODE_STATE";
-      node: {
-        id: string;
-      };
+      node: NodeMetadata;
       state: any;
     };
     export type WorkflowEvent = {

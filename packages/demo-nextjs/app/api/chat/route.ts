@@ -36,12 +36,12 @@ export async function POST(request: Request) {
     async getStepState(nodeId) {
       return states[nodeId];
     },
-    updateStepState(nodeId, state) {
+    updateStepState(node, state) {
       workflowOutput.next({
         type: "event",
         data: {
           type: "UPDATE_NODE_STATE",
-          node: { id: nodeId },
+          node,
           state,
         },
       });

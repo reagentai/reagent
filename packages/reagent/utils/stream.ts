@@ -4,7 +4,20 @@
  *
  * If parsing the data as JSON fails, it will return `{ text }`
  */
-async function* jsonStreamToAsyncIterator(stream: ReadableStream) {
+async function* jsonStreamToAsyncIterator<Json = any>(
+  stream: ReadableStream
+): AsyncGenerator<
+  | {
+      json: Json;
+      text?: undefined;
+    }
+  | {
+      text: string;
+      json?: undefined;
+    },
+  void,
+  unknown
+> {
   const reader = stream.getReader();
   try {
     let data = await reader?.read();

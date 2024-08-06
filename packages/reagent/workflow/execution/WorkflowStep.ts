@@ -142,8 +142,13 @@ class WorkflowStepRef<
     const dispatch = yield getContext("dispatch");
     const session = yield getContext("session");
     const updateStepState = yield getContext("updateStepState");
+    const node = {
+      id: self.nodeId,
+      type: self.node.metadata.id,
+      version: self.node.metadata.version,
+    };
 
-    yield call(updateStepState, self.nodeId, {
+    yield call(updateStepState, node, {
       status: StepStatus.INVOKED,
       input: action.input,
     } satisfies StepState);
@@ -152,11 +157,7 @@ class WorkflowStepRef<
       yield dispatch({
         type: EventType.EXECUTE_ON_CLIENT,
         session,
-        node: {
-          id: self.nodeId,
-          type: self.node.metadata.id,
-          version: self.node.metadata.version,
-        },
+        node,
         input: action.input,
       });
       yield cancel();
@@ -171,9 +172,9 @@ class WorkflowStepRef<
         dispatch({
           type: EventType.RUN_COMPLETED,
           session,
-          node: { id: self.nodeId },
+          node,
         });
-        yield call(updateStepState, self.nodeId, {
+        yield call(updateStepState, node, {
           status: StepStatus.COMPLETED,
           output,
         } satisfies StepState);
@@ -181,9 +182,9 @@ class WorkflowStepRef<
         dispatch({
           type: EventType.RUN_FAILED,
           session,
-          node: { id: self.nodeId },
+          node,
         });
-        yield call(updateStepState, self.nodeId, {
+        yield call(updateStepState, node, {
           status: StepStatus.FAILED,
           error: serializeError(e),
         } satisfies StepState);

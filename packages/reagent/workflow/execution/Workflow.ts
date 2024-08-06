@@ -175,25 +175,19 @@ class Workflow {
       if (event.type == ClientEventType.OUTPUT) {
         run.queueEvents({
           type: ClientEventType.OUTPUT,
-          node: {
-            id: event.node.id,
-          },
+          node: event.node,
           output: event.output,
         });
       } else if (event.type == ClientEventType.INVOKE) {
         run.queueEvents({
           type: ClientEventType.INVOKE,
-          node: {
-            id: event.node.id,
-          },
+          node: event.node,
           input: event.input,
         });
       } else if (event.type == ClientEventType.RUN_COMPLETED) {
         run.queueEvents({
           type: ClientEventType.RUN_COMPLETED,
-          node: {
-            id: event.node.id,
-          },
+          node: event.node,
         });
       } else {
         throw new Error("not implemented");

@@ -33,6 +33,20 @@ export enum ClientEventType {
   RUN_FAILED = EventType.RUN_FAILED,
 }
 
+export type NodeMetadata = {
+  // node id
+  id: string;
+  type: string;
+  version: string;
+};
+
+export type NodeDependency = {
+  id: string;
+  type: string;
+  version: string;
+  field: string;
+};
+
 export type Session = {
   id: string;
 };
@@ -43,9 +57,7 @@ namespace WorkflowEvent {
     session: {
       id: string;
     };
-    node: {
-      id: string;
-    };
+    node: Pick<NodeMetadata, "id">;
     input: any;
   };
 
@@ -54,9 +66,7 @@ namespace WorkflowEvent {
     session: {
       id: string;
     };
-    node: {
-      id: string;
-    };
+    node: Pick<NodeMetadata, "id">;
     output: any;
   };
 
@@ -65,9 +75,7 @@ namespace WorkflowEvent {
     session: {
       id: string;
     };
-    node: {
-      id: string;
-    };
+    node: Pick<NodeMetadata, "id">;
   };
 }
 
@@ -99,24 +107,10 @@ export type WorkflowRunOptions = {
     nodeId: string
   ) => StepState | void | Promise<StepState | undefined | void>;
   updateStepState?: (
-    nodeId: string,
+    node: NodeMetadata,
     state: Partial<StepState>
   ) => void | Promise<void>;
   events: WorkflowRunEvent[];
-};
-
-export type NodeMetadata = {
-  // node id
-  id: string;
-  type: string;
-  version: string;
-};
-
-export type NodeDependency = {
-  id: string;
-  type: string;
-  version: string;
-  field: string;
 };
 
 // LLM tool

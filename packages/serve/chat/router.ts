@@ -97,13 +97,13 @@ const createChatWorkflowRouter = (
       async getStepState(nodeId) {
         return states[nodeId];
       },
-      updateStepState(nodeId, state) {
+      updateStepState(node, state) {
         if (options.streamStateUpdatesToClient) {
           outputStream.next({
             type: "event",
             data: {
               type: "UPDATE_NODE_STATE",
-              node: { id: nodeId },
+              node,
               state,
             },
           });

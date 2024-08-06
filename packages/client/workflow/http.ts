@@ -2,6 +2,7 @@ import {
   EventType,
   type BaseReagentNodeOptions,
 } from "@reagentai/reagent/workflow/client";
+import type { Chat } from "@reagentai/reagent/chat";
 import { jsonStreamToAsyncIterator } from "@reagentai/reagent/utils";
 
 import { executeNode } from "./execution.js";
@@ -45,17 +46,18 @@ const createHttpClient = (options: {
           return;
         }
 
-        const response = jsonStreamToAsyncIterator(res.body!);
+        const response = jsonStreamToAsyncIterator<Chat.Response>(res.body!);
         const pendingExecutions = [];
         const states: any = {
           ...(self.states || {}),
         };
-        for await (const { json } of response) {
+        for await (let { json } of response) {
+          json = json!;
           if (json.type == "event") {
             const event = json.data;
             if (event.type == EventType.EXECUTE_ON_CLIENT) {
               const node = options.nodes.find(
-                (n1: any) => n1.id == event.node.id
+                (n1: any) => n1.id == event.node.type
               );
               if (!node) {
                 throw new Error(`Node not found: ${event.node.id}`);
