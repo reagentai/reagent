@@ -14,20 +14,20 @@ type ToolCall = {
 
 const parseStringResponse = (context: Context) => {
   return delve(
-    context.state,
-    "core.llm.response.data.choices.0.message.content"
+    context,
+    "state.core.llm.response.data.choices.0.message.content"
   );
 };
 
 const parseStringErrorMessage = (context: Context) => {
-  const error = delve(context.state, "core.llm.response.error");
+  const error = delve(context, "state.core.llm.response.error");
   return error?.message;
 };
 
 const parseToolCallsResponse = (context: Context): ToolCall[] | undefined => {
   const toolCalls = delve(
-    context.state,
-    "core.llm.response.data.choices.0.message.tool_calls"
+    context,
+    "state.core.llm.response.data.choices.0.message.tool_calls"
   );
 
   if (!toolCalls) {

@@ -129,7 +129,7 @@ abstract class AbstractExecutor extends Runnable {
         return undefined;
       }
       throw new Error(
-        `No resolved found for "${namespace}". Required by [namespace = "${ctxt.namespace}"]`
+        `No runnable found for "${namespace}". Required by [namespace = "${ctxt.namespace}"]`
       );
     }
 

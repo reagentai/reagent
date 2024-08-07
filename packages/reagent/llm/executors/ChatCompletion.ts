@@ -35,28 +35,29 @@ export class ChatCompletionExecutor extends AbstractExecutor {
         plugin(context);
       });
     }
-    const model = await context.resolve<ModelMetadata>(
-      "core.llm.model.metadata"
-    );
-    if (!model.supportedFeatures.includes("chat-completion")) {
-      throw new Error(
-        "ChatCompletionExecutor requires model with `chat-completion` feature"
-      );
-    }
-
-    const messages = await context.resolve<FormattedChatMessage[]>(
-      "core.prompt.chat.messages"
-    );
-    const tools = await context.resolve<any>("core.prompt.tools.json", {
-      optional: true,
-    });
-    const modelInvokeOptions = {
-      stream: options.config?.stream,
-      temperature: options.config?.temperature,
-      messages,
-      tools,
-    };
     try {
+      const model = await context.resolve<ModelMetadata>(
+        "core.llm.model.metadata"
+      );
+      if (!model.supportedFeatures.includes("chat-completion")) {
+        throw new Error(
+          "ChatCompletionExecutor requires model with `chat-completion` feature"
+        );
+      }
+
+      const messages = await context.resolve<FormattedChatMessage[]>(
+        "core.prompt.chat.messages"
+      );
+      const tools = await context.resolve<any>("core.prompt.tools.json", {
+        optional: true,
+      });
+      const modelInvokeOptions = {
+        stream: options.config?.stream,
+        temperature: options.config?.temperature,
+        messages,
+        tools,
+      };
+
       const response = await context.run(
         "core.llm.model.executor",
         modelInvokeOptions
