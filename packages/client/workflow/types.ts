@@ -7,7 +7,7 @@ export type Subscriber = {
 
 export type WorkflowClient = {
   emit(emitOptions: {
-    sessionId?: string;
+    session?: { id: string };
     events: WorkflowRunEvent[];
     // updated stated by node id
     states?: Record<string, StepState>;

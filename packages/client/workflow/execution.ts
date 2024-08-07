@@ -27,7 +27,7 @@ const executeNode = async (
         throw new Error("Calling 'done' isn't allowed form non PENDING step");
       }
       client.emit({
-        sessionId: session.id,
+        session,
         events: [],
         states: {
           [node.id]: {
@@ -63,6 +63,7 @@ const executeNode = async (
     isPending = true;
   } else {
     client.emit({
+      session,
       events: [],
       states: {
         [node.id]: {

@@ -19,7 +19,7 @@ const createHttpClient = (options: {
 }) => {
   return {
     emit(emitOptions: {
-      sessionId?: string;
+      session?: string;
       events: any[];
       states?: Record<string, any>;
     }) {
@@ -34,7 +34,7 @@ const createHttpClient = (options: {
         const res = await fetch(options.http.url, {
           method: "POST",
           body: JSON.stringify({
-            sessionId: emitOptions.sessionId,
+            session: emitOptions.session,
             events: emitOptions.events,
             states: self.states,
           }),
