@@ -4,6 +4,7 @@ import {
 } from "@reagentai/reagent/workflow/client";
 import type { Chat } from "@reagentai/reagent/chat";
 import { jsonStreamToAsyncIterator } from "@reagentai/reagent/utils";
+import { dset } from "dset/merge";
 
 import { executeNode } from "./execution.js";
 import type { Subscriber } from "./types.js";
@@ -15,7 +16,7 @@ export type HttpOptions = {
 
 const createHttpClient = (options: {
   http: HttpOptions;
-  nodes: BaseReagentNodeOptions<any, any, any>[];
+  templates: BaseReagentNodeOptions<any, any, any>[];
 }) => {
   return {
     emit(emitOptions: {
@@ -26,10 +27,10 @@ const createHttpClient = (options: {
       const subscribers: Subscriber[] = [];
       const promise = (async () => {
         const self = this as any;
-        self.states = {
-          ...(self.states || {}),
-          ...(emitOptions.states || {}),
-        };
+        self.states = self.states || {};
+        Object.entries(emitOptions.states || {}).forEach(([key, value]) => {
+          dset(self.states, [key], value);
+        });
 
         const res = await fetch(options.http.url, {
           method: "POST",
@@ -56,19 +57,22 @@ const createHttpClient = (options: {
           if (json.type == "event") {
             const event = json.data;
             if (event.type == EventType.EXECUTE_ON_CLIENT) {
-              const node = options.nodes.find(
+              const template = options.templates.find(
                 (n1: any) => n1.id == event.node.type
               );
-              if (!node) {
-                throw new Error(`Node not found: ${event.node.id}`);
+              if (!template) {
+                throw new Error(`Node template not found: ${event.node.id}`);
               }
               pendingExecutions.push({
-                node,
+                node: event.node,
                 session: event.session,
+                template,
                 input: event.input,
               });
             } else if (event.type == "UPDATE_NODE_STATE") {
-              states[event.node.id] = event.state;
+              const path = event.node.path || [];
+              path.push(event.node.id);
+              dset(states, path, event.state);
             }
           } else {
             subscribers.forEach((subscriber) => subscriber.next?.(json));
@@ -80,11 +84,7 @@ const createHttpClient = (options: {
               {
                 emit: self.emit.bind({ emit: self.emit, states }),
               },
-              {
-                session: execution.session,
-                node: execution.node,
-                input: execution.input,
-              }
+              execution
             );
           })
         );

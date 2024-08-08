@@ -1,3 +1,5 @@
+import { NodeMetadata, StepState } from "../client.js";
+
 export type Context<
   Config extends Record<string, unknown> | void,
   Output extends Record<string, unknown>,
@@ -9,8 +11,19 @@ export type Context<
     id: string;
   };
   config: Config;
+  // only set if the node is in progress
+  // node will be in progress if `context.setProgress(...)` is called
+  state: StepState | undefined;
+  updateState(node: NodeMetadata, state: StepState): void;
+  emit(event: any): void;
   sendOutput(output: Partial<Output>): void;
-  done: () => void;
+  // stop the current node execution. This node will be resumed when
+  // the workflow is triggered again after getting the data from client
+  // execution of a sub-workflow step or other triggers (webhooks?)
+  stop(): void;
+  // if `context.PENDING` is returned from `execute(...)`, done() should
+  // be called to stop the node execution
+  done(): void;
   render<Data>(
     Component: (props: {
       data: Data;

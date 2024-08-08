@@ -1,6 +1,7 @@
 export namespace Chat {
   type NodeMetadata = {
     id: string;
+    path?: string[];
     type: string;
     version: string;
   };

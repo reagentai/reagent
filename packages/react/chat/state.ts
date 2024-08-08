@@ -31,7 +31,7 @@ type StoreInit = {
   messages: Record<string, Chat.Message>;
   // workflow execution url
   url: string;
-  nodes: BaseReagentNodeOptions<any, any, any>[];
+  templates: BaseReagentNodeOptions<any, any, any>[];
   middleware?: {
     request: (options: InvokeOptions) => { nodeId: string; input: any };
   };
@@ -51,7 +51,7 @@ export const createChatStore = (
         "content-type": "application/json",
       },
     },
-    nodes: init.nodes,
+    templates: init.templates,
   });
 
   const withPerisist: typeof persist = options?.persistKey

@@ -1,6 +1,13 @@
 import { Observable, Observer, ReplaySubject, Subscription } from "rxjs";
 import { channel } from "redux-saga";
-import { cancel, getContext, put, spawn, take } from "redux-saga/effects";
+import {
+  actionChannel,
+  cancel,
+  getContext,
+  put,
+  spawn,
+  take,
+} from "redux-saga/effects";
 import slugify, { slugifyWithCounter } from "@sindresorhus/slugify";
 import { includeKeys } from "filter-obj";
 
@@ -152,7 +159,7 @@ class ToolProvider<Input> extends AbstractValueProvider<Tool<Input, any>> {
     ];
   }
 
-  *saga(_: SagaOptions = {}): any {
+  *saga(options: SagaOptions = {}): any {
     const self = this;
     const session = yield getContext("session");
     const dispatch = yield getContext("dispatch");
@@ -234,7 +241,7 @@ class WorkflowToolProvider<Input> extends AbstractValueProvider<
     return [];
   }
 
-  *saga(_: SagaOptions = {}): any {
+  *saga(options: SagaOptions = {}): any {
     const self = this;
     const session = yield getContext("session");
     return {
@@ -300,6 +307,7 @@ class OutputValueProvider<Output> extends AbstractValueProvider<Output> {
       return (
         ((e.type == EventType.OUTPUT && e.output[self.#field] != undefined) ||
           e.type == EventType.SKIP_RUN ||
+          e.type == EventType.RUN_COMPLETED ||
           e.type == EventType.RUN_CANCELLED ||
           e.type == EventType.RUN_FAILED ||
           e.type == EventType.EXECUTE_ON_CLIENT) &&
@@ -364,12 +372,12 @@ class RenderOutputProvider<Value> extends AbstractValueProvider<Value> {
   }
 
   *saga(options: SagaOptions = {}): any {
+    const self = this;
+    const renderChannel = yield actionChannel((e: any) => {
+      return e.type == EventType.RENDER && e.node.id == self.#ref.nodeId;
+    });
     while (1) {
-      const self = this;
-      const action = yield take((e: any) => {
-        return e.type == EventType.RENDER && e.node.id == self.#ref.nodeId;
-      });
-
+      const action = yield take(renderChannel);
       let value = action.render;
       for (const cb of self.#mapCallbacks) {
         value = cb(value);

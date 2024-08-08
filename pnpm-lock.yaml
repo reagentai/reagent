@@ -121,6 +121,9 @@ importers:
       '@reagentai/reagent':
         specifier: workspace:^
         version: link:../reagent/dist
+      dset:
+        specifier: ^3.1.3
+        version: 3.1.3
       redux-saga:
         specifier: ^1.3.0
         version: 1.3.0
@@ -136,8 +139,8 @@ importers:
         specifier: workspace:^
         version: link:../cli
       '@reagentai/client':
-        specifier: ^0.5.0
-        version: 0.5.0(@types/react@18.3.2)
+        specifier: workspace:^
+        version: link:../client/dist
       '@reagentai/react':
         specifier: workspace:^
         version: link:../react/dist
@@ -2335,57 +2338,6 @@ packages:
     transitivePeerDependencies:
       - '@types/react'
       - immer
-    dev: false
-
-  /@reagentai/client@0.5.0(@types/react@18.3.2):
-    resolution: {integrity: sha512-jSXix95i7NzwKJW9wodLjYACVham1QwqKUQ6AiGCKWNJZp9fB5oG6zttBYLwdlpba2Tjao4UYPaozrQlSGRjCw==}
-    dependencies:
-      '@reagentai/reagent': 0.5.0(@types/react@18.3.2)
-      redux-saga: 1.3.0
-    transitivePeerDependencies:
-      - '@types/react'
-      - babel-plugin-macros
-      - supports-color
-    dev: false
-
-  /@reagentai/reagent@0.5.0(@types/react@18.3.2):
-    resolution: {integrity: sha512-Tnlk8GOCAmtBjKfv2I3+JvDFtR+IVNNII2TfC65eqM2dNp0qFWrTwUZOP2WeLEtOdYeb5IARUilo4jwU2U0eHg==}
-    dependencies:
-      '@babel/core': 7.24.5
-      '@babel/generator': 7.24.5
-      '@babel/plugin-syntax-jsx': 7.24.6(@babel/core@7.24.5)
-      '@babel/preset-typescript': 7.24.1(@babel/core@7.24.5)
-      '@babel/types': 7.24.6
-      '@sindresorhus/slugify': 2.2.1
-      clean-set: 1.1.2
-      clsx: 2.1.1
-      dedent: 1.5.3
-      deepmerge: 4.3.1
-      dlv: 1.1.3
-      dset: 3.1.3
-      filter-obj: 6.1.0
-      immer: 10.1.1
-      klona: 2.0.6
-      ky: 1.2.4
-      lodash-es: 4.17.21
-      nanoid: 5.0.7
-      picomatch: 4.0.2
-      react: 18.3.1
-      react-icons: 5.2.1(react@18.3.1)
-      react-markdown: 9.0.1(@types/react@18.3.2)(react@18.3.1)
-      redux-saga: 1.3.0
-      rxjs: 7.8.1
-      serialize-error: 11.0.3
-      tiny-invariant: 1.3.3
-      toposort: 2.0.2
-      zod: 3.23.8
-      zod-to-json-schema: 3.23.0(zod@3.23.8)
-      zod-validation-error: 3.3.0(zod@3.23.8)
-      zustand: 4.5.2(@types/react@18.3.2)(immer@10.1.1)(react@18.3.1)
-    transitivePeerDependencies:
-      - '@types/react'
-      - babel-plugin-macros
-      - supports-color
     dev: false
 
   /@redux-saga/core@1.3.0:

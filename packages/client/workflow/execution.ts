@@ -1,7 +1,10 @@
 import {
+  NodeMetadata,
   BaseReagentNodeOptions,
   StepStatus,
 } from "@reagentai/reagent/workflow/client";
+import { dset } from "dset/merge";
+
 import { WorkflowClient } from "./types";
 
 const executeNode = async (
@@ -10,32 +13,53 @@ const executeNode = async (
     session: {
       id: string;
     };
-    node: BaseReagentNodeOptions<any, any, any>;
+    node: NodeMetadata;
+    template: BaseReagentNodeOptions<any, any, any>;
     input: any;
   }
 ) => {
-  const { session, node, input } = options;
+  const { session, node, template, input } = options;
   const stepOutput = {};
   let isPending = false;
+  const completeStep = () => {
+    const states = {};
+
+    const path = node.path || [];
+    path.push(node.id);
+
+    dset(states, path, {
+      "@@status": StepStatus.COMPLETED,
+      "@@data": {
+        output: stepOutput,
+      },
+    });
+
+    client.emit({
+      session,
+      events: [],
+      states,
+    });
+  };
   const context = {
     node,
     session,
     config: {},
+    state: undefined,
     PENDING: Symbol("__PENDING__"),
+    updateState() {
+      throw new Error("unsupported");
+    },
+    emit() {
+      throw new Error("unsupported");
+    },
+    stop() {
+      throw new Error("unsupported");
+    },
     done() {
       if (!isPending) {
         throw new Error("Calling 'done' isn't allowed form non PENDING step");
       }
-      client.emit({
-        session,
-        events: [],
-        states: {
-          [node.id]: {
-            status: StepStatus.COMPLETED,
-            output: stepOutput,
-          },
-        },
-      });
+      completeStep();
     },
     render() {
       return {
@@ -51,7 +75,7 @@ const executeNode = async (
     },
   };
 
-  const iterator = node.execute(context, input);
+  const iterator = template.execute(context, input);
   let result = await iterator.next();
   while (!result.done) {
     Object.assign(stepOutput, result.value);
@@ -62,16 +86,7 @@ const executeNode = async (
   if (returnValue == context.PENDING) {
     isPending = true;
   } else {
-    client.emit({
-      session,
-      events: [],
-      states: {
-        [node.id]: {
-          status: StepStatus.COMPLETED,
-          output: stepOutput,
-        },
-      },
-    });
+    completeStep();
   }
 };
 

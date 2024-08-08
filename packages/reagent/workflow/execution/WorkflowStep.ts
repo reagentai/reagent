@@ -10,6 +10,7 @@ import {
   cancelled,
 } from "redux-saga/effects";
 import { serializeError } from "serialize-error";
+import { dset } from "dset";
 
 import { Context } from "../core/context.js";
 import { AbstractWorkflowNode } from "../core/node.js";
@@ -25,6 +26,7 @@ import {
 import { Lazy, lazy } from "./operators/index.js";
 import {
   EventType,
+  NodeMetadata,
   StepState,
   StepStatus,
   type EdgeBindings,
@@ -89,9 +91,24 @@ class WorkflowStepRef<
     });
 
     yield fork(function* saga(): any {
-      const bindings = yield fork(self.#bindingsResolver.bind(self));
-      const invoke = yield fork(self.#invokeListenerSaga.bind(self));
+      const getStepState = yield getContext("getStepState");
+      const state: StepState = getStepState
+        ? yield call(getStepState, self.nodeId)
+        : undefined;
 
+      const { "@@status": status } = state || {};
+      if (
+        status == StepStatus.COMPLETED ||
+        status == StepStatus.INVOKED ||
+        status == StepStatus.FAILED
+      ) {
+        return;
+      }
+      const bindings = yield fork(self.#bindingsResolver.bind(self));
+      const invoke = yield fork(
+        self.#invokeListenerSaga.bind(self),
+        state || {}
+      );
       try {
         yield join([invoke, bindings]);
       } finally {
@@ -100,32 +117,33 @@ class WorkflowStepRef<
     });
   }
 
-  async #execute(options: { session: any; input: any; dispatch: any }) {
-    const self = this;
-    const context = self.#buildContext(options.session, options.dispatch);
-    const generator = self.node.execute(context, options.input);
+  async #execute(options: { input: any; context: any }) {
+    const { context, input } = options;
+    try {
+      const self = this;
+      const generator = self.node.execute(context, input);
 
-    const stepOutput = {};
-    let result = await generator.next();
-    while (!result.done) {
-      Object.assign(stepOutput, result.value);
-      context.sendOutput(result.value);
-      result = await generator.next();
-    }
+      const stepOutput = {};
+      let result = await generator.next();
+      while (!result.done) {
+        Object.assign(stepOutput, result.value);
+        context.sendOutput(result.value);
+        result = await generator.next();
+      }
 
-    if (result.value == context.PENDING) {
-      // @ts-expect-error
-      const output = await context[context.PENDING];
-      return output as Output;
-    } else {
-      // resolve pending promise if it's node isn't PENDING
-      // so that the promise gets GCed
+      if (result.value == context.PENDING) {
+        const output = await context[context.PENDING];
+        return output as Output;
+      } else {
+        return stepOutput as Output;
+      }
+    } finally {
+      // resolve pending promise so that it gets GCed
       context.done();
-      return stepOutput as Output;
     }
   }
 
-  *#invokeListenerSaga(): any {
+  *#invokeListenerSaga(state: StepState | undefined): any {
     const self = this;
     const action = yield take(
       (e: any) =>
@@ -148,11 +166,14 @@ class WorkflowStepRef<
       version: self.node.metadata.version,
     };
 
-    yield call(updateStepState, node, {
-      status: StepStatus.INVOKED,
-      input: action.input,
-    } satisfies StepState);
-
+    if (!state?.["@@status"]) {
+      yield call(updateStepState, node, {
+        "@@status": StepStatus.INVOKED,
+        "@@data": {
+          input: action.input,
+        },
+      } satisfies StepState);
+    }
     if (self.node.metadata.target == "client") {
       yield dispatch({
         type: EventType.EXECUTE_ON_CLIENT,
@@ -163,21 +184,27 @@ class WorkflowStepRef<
       yield cancel();
     } else {
       try {
+        const context = self.#buildContext({
+          session,
+          dispatch,
+          input: action.input,
+          state,
+        });
         const output = yield call(self.#execute.bind(self), {
           input: action.input,
-          dispatch,
-          session,
+          context,
         });
-
-        dispatch({
-          type: EventType.RUN_COMPLETED,
-          session,
-          node,
-        });
-        yield call(updateStepState, node, {
-          status: StepStatus.COMPLETED,
-          output,
-        } satisfies StepState);
+        if (output != context.PENDING) {
+          dispatch({
+            type: EventType.RUN_COMPLETED,
+            session,
+            node,
+          });
+          yield call(updateStepState, node, {
+            "@@status": StepStatus.COMPLETED,
+            "@@data": { output },
+          } satisfies StepState);
+        }
       } catch (e) {
         dispatch({
           type: EventType.RUN_FAILED,
@@ -185,8 +212,8 @@ class WorkflowStepRef<
           node,
         });
         yield call(updateStepState, node, {
-          status: StepStatus.FAILED,
-          error: serializeError(e),
+          "@@status": StepStatus.FAILED,
+          "@@data": { error: serializeError(e) },
         } satisfies StepState);
       }
     }
@@ -207,7 +234,10 @@ class WorkflowStepRef<
     try {
       const session = yield getContext("session");
       const dispatch = yield getContext("dispatch");
-      const context = self.#buildContext(session, dispatch);
+      const context = self.#buildContext({
+        session,
+        dispatch,
+      });
 
       function createValueResolver(v: any) {
         return function* resolveValueProvider(): any {
@@ -298,10 +328,13 @@ class WorkflowStepRef<
     }
   }
 
-  #buildContext(
-    session: Context<any, any>["session"],
-    dispatch: any
-  ): Context<any, any> {
+  #buildContext(options: {
+    session: Context<any, any>["session"];
+    dispatch: any;
+    input?: any;
+    state?: StepState;
+  }): Context<any, any> {
+    const { session, dispatch, input, state } = options;
     const self = this;
     const node = {
       id: self.nodeId,
@@ -316,8 +349,45 @@ class WorkflowStepRef<
       node,
       config: this.config || {},
       PENDING,
-      // @ts-expect-error
-      [PENDING]: pendingHook,
+      state,
+      updateState(n: NodeMetadata, s: StepState) {
+        const path = [...(n.path ?? []), n.id];
+        const state = {};
+        dset(state, path, s);
+        dispatch({
+          type: EventType.UPDATE_STATE,
+          node,
+          state,
+        });
+      },
+      emit(event: any) {
+        const path: string[] = event.node.path ?? [];
+        path.unshift(self.nodeId);
+        dispatch({
+          ...event,
+          node: {
+            ...event.node,
+            path,
+          },
+        });
+      },
+      stop() {
+        dispatch({
+          type: EventType.UPDATE_STATE,
+          node,
+          state: {
+            "@@status": StepStatus.STOPPED,
+            "@@data": {
+              input,
+            },
+          },
+        });
+        dispatch({
+          type: EventType.RUN_PAUSED,
+          node,
+        });
+        resolve(PENDING);
+      },
       done() {
         resolve(allOutput);
       },
@@ -362,6 +432,8 @@ class WorkflowStepRef<
           },
         };
       },
+      /* @ts-ignore */
+      [PENDING]: pendingHook,
     };
   }
 }

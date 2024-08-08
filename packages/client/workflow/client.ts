@@ -12,13 +12,13 @@ type WebsocketOptions = {
 };
 
 type WorkflowClientOptions = {
-  nodes: BaseReagentNodeOptions<any, any, any>[];
+  templates: BaseReagentNodeOptions<any, any, any>[];
 } & ({ http: HttpOptions } | WebsocketOptions);
 
 const createWorkflowClient = (options: WorkflowClientOptions) => {
   const client = createHttpClient({
     http: (options as any).http,
-    nodes: options.nodes,
+    templates: options.templates,
   });
   return {
     start(options: { nodeId: string; input: any }) {

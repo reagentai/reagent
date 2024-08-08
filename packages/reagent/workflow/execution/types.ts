@@ -4,22 +4,35 @@ import { Lazy } from "./operators/index.js";
 
 export enum StepStatus {
   INVOKED = "INVOKED",
+  STOPPED = "STOPPED",
   COMPLETED = "COMPLETED",
   FAILED = "FAILED",
+}
+
+export enum WorkflowStatus {
+  NOT_STARTED = "NOT_STARTED",
+  IN_PROGRESS = "IN_PROGRESS",
+  // status is stopped if the workflow isn't completed yet
+  // but the current run was finished
+  STOPPED = "STOPPED",
+  COMPLETED = "COMPLETED",
 }
 
 export enum EventType {
   // emitted when a workflow is started
   START = "START",
   INVOKE = "INVOKE",
+  RESUME = "RESUME",
   NO_BINDINGS = "NO_BINDINGS",
   SKIP_INVOKE = "SKIP_INVOKE",
   SKIP_RUN = "SKIP_RUN",
   TOOL_CALL = "TOOL_CALL",
   OUTPUT = "OUTPUT",
   RENDER = "RENDER",
+  UPDATE_STATE = "UPDATE_STATE",
   EXECUTE_ON_CLIENT = "EXECUTE_ON_CLIENT",
   RUN_COMPLETED = "RUN_COMPLETED",
+  RUN_PAUSED = "RUN_PAUSED",
   RUN_CANCELLED = "RUN_CANCELLED",
   RUN_FAILED = "RUN_FAILED",
 }
@@ -36,6 +49,7 @@ export enum ClientEventType {
 export type NodeMetadata = {
   // node id
   id: string;
+  path?: string[];
   type: string;
   version: string;
 };
@@ -81,20 +95,38 @@ namespace WorkflowEvent {
 
 export type { WorkflowEvent };
 
-export type StepState =
+// Note: using `@@` prefix for state fields so that
+// sub workflow's state can be stored using the node id
+// without field name collision
+export type StepState = (
   | {
-      status: StepStatus.INVOKED;
-      input: Record<string, any>;
+      "@@status": StepStatus.INVOKED;
+      "@@data": {
+        input: Record<string, any>;
+      };
     }
   | {
-      status: StepStatus.COMPLETED;
-      output: Record<string, any>;
+      "@@status": StepStatus.COMPLETED;
+      "@@data": {
+        output: Record<string, any>;
+      };
     }
   | {
-      status: StepStatus.FAILED;
+      "@@status": StepStatus.FAILED;
       // output of serialize-error
-      error: any;
-    };
+      "@@data": {
+        error: any;
+      };
+    }
+  | {
+      "@@status": StepStatus.STOPPED;
+      "@@data": {
+        input: any;
+      };
+    }
+) &
+  // for sub-workflow states
+  Record<string, any>;
 
 export type WorkflowRunEvent =
   | Omit<WorkflowEvent.Output, "session">
@@ -108,7 +140,7 @@ export type WorkflowRunOptions = {
   ) => StepState | void | Promise<StepState | undefined | void>;
   updateStepState?: (
     node: NodeMetadata,
-    state: Partial<StepState>
+    state: StepState
   ) => void | Promise<void>;
   events: WorkflowRunEvent[];
 };
@@ -131,7 +163,7 @@ export type EdgeBindings<Input> = {
   [K in keyof Input]: Required<Input>[K] extends any[]
     ?
         | Required<Input>[K]
-        | ValueProvider<Required<Input>[K][]>
+        | ValueProvider<Required<Input>[K]>
         | ValueOrProvider<Required<Input>[K][number]>[]
     : Input[K] extends ValueProvider<Input[K]>
       ? ValueProvider<Input[K]>

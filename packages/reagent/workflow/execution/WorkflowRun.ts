@@ -1,9 +1,11 @@
 import { ReplaySubject } from "rxjs";
+import deepmerge from "deepmerge";
 import { channel, runSaga, stdChannel } from "redux-saga";
 import {
   actionChannel,
   all,
   call,
+  cancel,
   fork,
   getContext,
   join,
@@ -11,16 +13,15 @@ import {
   take,
 } from "redux-saga/effects";
 
-import { WorkflowStepRef } from "./WorkflowStep.js";
 import {
   NodeMetadata,
-  WorkflowOutputBindings,
   RenderUpdate,
   Session,
   WorkflowRunOptions,
   StepStatus,
   StepState,
   EventType,
+  WorkflowStatus,
 } from "./types.js";
 import { uniqueId } from "../../utils/uniqueId.js";
 import { ValueProvider } from "./WorkflowStepOutput.js";
@@ -52,6 +53,7 @@ class WorkflowRun {
     }>;
   };
   #task: ReturnType<typeof runSaga> | undefined;
+  #status: WorkflowStatus;
 
   constructor(
     ref: InternalWorkflowRef,
@@ -69,6 +71,7 @@ class WorkflowRun {
       ui: new ReplaySubject(),
       events: new ReplaySubject(),
     };
+    this.#status = WorkflowStatus.NOT_STARTED;
     this.#task = this.#initTask(options);
   }
 
@@ -89,14 +92,58 @@ class WorkflowRun {
     };
   }
 
+  get status() {
+    return this.#status;
+  }
+
   get task() {
     if (!this.#task) {
-      throw new Error("Workflow run not initialized");
+      throw new Error("Workflow run not started");
     }
     return this.#task!;
   }
 
-  #initTask(options: Omit<WorkflowRunOptions, "events">) {
+  #initTask(
+    options: Pick<WorkflowRunOptions, "getStepState" | "updateStepState">
+  ) {
+    const self = this;
+    let stepStates: Record<string, any> = {};
+    return runSaga(
+      {
+        channel: self.#channel,
+        context: {
+          session: self.#session,
+          getStepState: options.getStepState,
+          async updateStepState(node: NodeMetadata, state: StepState) {
+            if (options.updateStepState) {
+              if (!stepStates[node.id]) {
+                stepStates[node.id] = options.getStepState
+                  ? await options.getStepState(node.id)
+                  : {};
+              }
+              stepStates[node.id] = deepmerge(
+                stepStates[node.id],
+                state as any
+              );
+              options.updateStepState(node, stepStates[node.id]);
+            }
+          },
+          dispatch(output: any) {
+            self.#channel.put(output);
+          },
+        },
+        dispatch(output) {
+          self.#channel.put(output);
+        },
+        // TODO: store inputs and outputs in state and use it
+        // instead of using events so that workflow can be resumed
+        // from any step
+      },
+      self.#saga()
+    );
+  }
+
+  #saga() {
     const self = this;
     self.#streams["markdown"] = new ReplaySubject();
     self.#streams["markdownStream"] = new ReplaySubject();
@@ -148,16 +195,17 @@ class WorkflowRun {
       if (getStepState) {
         const stateById: Record<string, StepState> = {};
         for (const nodeId of [...self.#ref.nodesById.keys()]) {
-          const state = yield call(getStepState, nodeId);
+          const state: StepState = yield call(getStepState, nodeId);
           if (state) {
             stateById[nodeId] = state;
+            const { "@@status": status, "@@data": data } = state;
             // dispatch SKIP_INVOKE such that tasks waiting
             // for INVOKE event are cancelled before OUTPUT events
             // are emitted
             if (
-              state.status == StepStatus.COMPLETED ||
-              state.status == StepStatus.FAILED ||
-              state.status == StepStatus.INVOKED
+              status == StepStatus.COMPLETED ||
+              status == StepStatus.FAILED ||
+              status == StepStatus.INVOKED
             ) {
               self.#channel.put({
                 type: EventType.SKIP_INVOKE,
@@ -165,23 +213,38 @@ class WorkflowRun {
                 node: { id: nodeId },
                 success: true,
               });
+            } else if (status == StepStatus.STOPPED) {
+              self.#channel.put({
+                type: EventType.RESUME,
+                session,
+                node: { id: nodeId },
+                input: data.input,
+              });
             }
           }
         }
 
         Object.entries(stateById).forEach(([nodeId, state]) => {
-          if (state.status == StepStatus.COMPLETED) {
+          const { "@@status": status, "@@data": data } = state;
+          if (status == StepStatus.COMPLETED) {
             self.#channel.put({
               type: EventType.OUTPUT,
               session,
               node: { id: nodeId },
-              output: state.output,
+              output: data.output,
             });
             self.#channel.put({
               type: EventType.RUN_COMPLETED,
               session,
               node: { id: nodeId },
             });
+          } else if (
+            status == StepStatus.INVOKED ||
+            status == StepStatus.FAILED ||
+            status == StepStatus.STOPPED
+          ) {
+          } else {
+            throw new Error("not implemented");
           }
         });
       }
@@ -192,20 +255,45 @@ class WorkflowRun {
       }
     }
 
+    function* updateState(): any {
+      const channel = yield actionChannel((e: any) => {
+        return e.type == EventType.UPDATE_STATE;
+      });
+      const updateStepState = yield getContext("updateStepState");
+      while (1) {
+        const action = yield take(channel);
+        yield call(updateStepState, action.node, action.state);
+      }
+    }
+
     const nodesRef = [...self.#ref.nodesById.values()];
     function* allNodesRunCompletion(): any {
+      const channel = yield actionChannel((e: any) => {
+        return (
+          e.type == EventType.NO_BINDINGS ||
+          e.type == EventType.SKIP_RUN ||
+          e.type == EventType.EXECUTE_ON_CLIENT ||
+          e.type == EventType.RUN_COMPLETED ||
+          e.type == EventType.RUN_PAUSED ||
+          e.type == EventType.RUN_CANCELLED ||
+          e.type == EventType.RUN_FAILED
+        );
+      });
+      let workflowCompleted = true;
       const nodesCompleted = new Set();
       while (1) {
-        const action = yield take((e: any) => {
-          return (
-            e.type == EventType.NO_BINDINGS ||
-            e.type == EventType.SKIP_RUN ||
-            e.type == EventType.RUN_COMPLETED ||
-            e.type == EventType.EXECUTE_ON_CLIENT ||
-            e.type == EventType.RUN_CANCELLED ||
-            e.type == EventType.RUN_FAILED
-          );
-        });
+        const action = yield take(channel);
+        // if node.path is set, the action is of sub-workflow,
+        // so skip it
+        if (action.node.path && action.node.path.length > 0) {
+          continue;
+        }
+        if (
+          action.type == EventType.RUN_PAUSED ||
+          action.type == EventType.EXECUTE_ON_CLIENT
+        ) {
+          workflowCompleted = false;
+        }
         nodesCompleted.add(action.node.id);
         if (nodesCompleted.size == nodesRef.length) {
           self.#channel.close();
@@ -214,16 +302,18 @@ class WorkflowRun {
             self.#streams[key].complete();
             channel.close();
           });
-          break;
+          return workflowCompleted;
         }
       }
     }
-    function* root(): any {
+    return function* root(): any {
+      self.#status = WorkflowStatus.IN_PROGRESS;
       const incomingEvents = yield actionChannel("INCOMING_EVENT");
-      const job1 = yield fork(startWorkflow, incomingEvents);
-      const job2 = yield fork(allNodesRunCompletion);
+      const queueEvents = yield fork(startWorkflow, incomingEvents);
+      const completionSaga = yield fork(allNodesRunCompletion);
       const job3 = yield fork(eventsSubscriber);
       const job4 = yield fork(outputSubscribers);
+      const job6 = yield fork(updateState);
 
       const dataBinding = self.#ref.outputBindings?.["data"];
       const outputSaga = dataBinding
@@ -234,32 +324,20 @@ class WorkflowRun {
           return ref.saga.bind(ref)();
         })
       );
-      yield join([job1, job2, job3, job4]);
+      yield join([queueEvents, job3, job4, job6]);
+      const workflowCompleted = yield join(completionSaga);
       const output = dataBinding ? yield join(outputSaga) : undefined;
-      return output?.value;
-    }
 
-    const task = runSaga(
-      {
-        channel: self.#channel,
-        context: {
-          session: self.#session,
-          getStepState: options.getStepState,
-          updateStepState: options.updateStepState || (() => {}),
-          dispatch(output: any) {
-            self.#channel.put(output);
-          },
-        },
-        dispatch(output) {
-          self.#channel.put(output);
-        },
-        // TODO: store inputs and outputs in state and use it
-        // instead of using events so that workflow can be resumed
-        // from any step
-      },
-      root
-    );
-    return task;
+      if (!workflowCompleted) {
+        self.#status = WorkflowStatus.STOPPED;
+        // cancel here so that task.isCancelled() returns true
+        // if the workflow wasn't completed
+        yield cancel();
+      } else {
+        self.#status = WorkflowStatus.COMPLETED;
+      }
+      return output?.value;
+    };
   }
 
   queueEvents(event: WorkflowRunOptions["events"][number]) {

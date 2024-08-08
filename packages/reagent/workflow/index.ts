@@ -17,6 +17,7 @@ export { Workflow } from "./execution/Workflow.js";
 export { lazy } from "./execution/operators/index.js";
 export {
   ClientEventType as EventType,
+  WorkflowStatus,
   StepStatus,
   type StepState,
 } from "./execution/types.js";

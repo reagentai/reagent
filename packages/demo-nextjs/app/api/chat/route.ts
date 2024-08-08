@@ -4,7 +4,12 @@ import { triggerReagentWorkflow } from "@reagentai/serve";
 import workflow from "../../workflow/workflow";
 
 const invokeSchema = z.object({
-  sessionId: z.string().optional(),
+  session: z
+    .object({
+      id: z.string().optional(),
+    })
+    .passthrough()
+    .optional(),
   events: z.array(
     z
       .object({
@@ -21,7 +26,7 @@ const invokeSchema = z.object({
 
 export async function POST(request: Request) {
   const {
-    sessionId,
+    session,
     events,
     states = {},
   } = invokeSchema.parse(await request.json());
@@ -30,7 +35,7 @@ export async function POST(request: Request) {
   });
 
   const workflowOutput = triggerReagentWorkflow(workflow, {
-    sessionId,
+    sessionId: session?.id,
     // @ts-expect-error
     events,
     async getStepState(nodeId) {
