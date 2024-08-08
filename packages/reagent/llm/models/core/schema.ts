@@ -8,6 +8,7 @@ export const metadata = z.object({
     "anthropic:claude-3",
     "meta:llama-2",
     "meta:llama-3",
+    "meta:llama-3.1",
     "mistral:mixtral",
     "google:gemma",
     "unknown",

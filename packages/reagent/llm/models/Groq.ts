@@ -19,6 +19,12 @@ const models = [
     family: "meta:llama-2",
     contextLength: 4096,
   },
+
+  {
+    id: "llama-3.1-8b-instant",
+    family: "meta:llama-3.1",
+    contextLength: 131_072,
+  },
   {
     id: "mixtral-8x7b-32768",
     family: "mistral:mixtral",

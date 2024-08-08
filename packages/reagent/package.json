@@ -37,6 +37,10 @@
       "import": "./llm/models/index.js",
       "types": "./llm/models/index.d.ts"
     },
+    "./llm/prompt": {
+      "import": "./llm/prompt/index.js",
+      "types": "./llm/prompt/index.d.ts"
+    },
     "./llm/executors": {
       "import": "./llm/executors/index.js",
       "types": "./llm/executors/index.d.ts"

@@ -41,6 +41,11 @@ const createOpenAIStreamDeltaToResponseBuilder = () => {
       }
     },
     build() {
+      if (streamContent.length == 0 && streamToolCalls.length == 0) {
+        return {
+          choices: [],
+        };
+      }
       return {
         choices: [
           {
