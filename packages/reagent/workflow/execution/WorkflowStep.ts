@@ -481,7 +481,7 @@ class WorkflowStep<
       parameters: options.parameters as any,
       output: options.output as any,
     });
-    const bindings = options.bind as any;
+    const bindings = (options.bind as any) || {};
     bindings[TOOL_CALL_SAGA] = function* saga(): any {
       const action = yield take(
         (e: any) =>
