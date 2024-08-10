@@ -7,6 +7,7 @@
     "reagent": "./dist/reagent.js"
   },
   "scripts": {
+    "tsc:watch": "tsc --watch",
     "test": "vitest run",
     "build-client": "vite build -c vite.client.config.js",
     "build-bin": "vite build -c vite.bin.config.js",

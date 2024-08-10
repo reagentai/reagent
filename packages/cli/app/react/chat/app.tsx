@@ -41,7 +41,7 @@ const App = () => {
         {
           messages: {},
           url: "/api/chat/invoke",
-          nodes: workflowModule.nodes,
+          templates: workflowModule.nodes,
           middleware: {
             request(options) {
               setInvokeError(null);

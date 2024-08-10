@@ -4,6 +4,7 @@
   "description": "Thirdparty integrations for Reagent AI",
   "type": "module",
   "scripts": {
+    "tsc:watch": "tsc --watch",
     "build": "tsc",
     "prepublish": "rm -rf dist && pnpm build && cp package.json dist"
   },

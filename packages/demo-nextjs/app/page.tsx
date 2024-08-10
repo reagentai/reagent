@@ -13,7 +13,8 @@ const ChatAgent = () => {
   const store = createChatStore(
     {
       messages: {},
-      invokeUrl: "/api/chat",
+      url: "/api/chat",
+      templates: agent.nodes as any[],
       middleware: {
         request(options) {
           setInvokeError(null);

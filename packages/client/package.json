@@ -4,6 +4,7 @@
   "description": "Frontend client for Reagent workflows",
   "type": "module",
   "scripts": {
+    "tsc:watch": "tsc --watch",
     "build": "tsc",
     "prepublish": "rm -rf dist && pnpm build && cp package.json dist"
   },

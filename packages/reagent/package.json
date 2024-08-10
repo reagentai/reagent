@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "test": "vitest run",
+    "tsc:watch": "tsc --watch",
     "build": "tsc",
     "prepublish": "rm -rf dist && pnpm build && cp package.json dist"
   },
