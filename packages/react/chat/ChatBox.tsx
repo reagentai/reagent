@@ -56,7 +56,7 @@ const Chatbox = (props: {
     }
   }, [textareaRef.current, message]);
 
-  const theme = useChatTheme();
+  const { classNames: theme } = useChatTheme();
   return (
     <div className={clsx("chatbox-container", theme.chatboxContainer)}>
       <div className={clsx("chatbox relative", theme.chatbox)}>

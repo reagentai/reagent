@@ -9,6 +9,7 @@ import { useChatTheme } from "./theme.js";
 
 const ChatThread = (props: { store: ChatStore }) => {
   const theme = useChatTheme();
+  const { classNames } = theme;
   const messages = props.store((s) => s.messages);
   const sortedMessageIds = props.store((s) => s.sortedMessageIds);
   const sortedMessages = useMemo(() => {
@@ -44,19 +45,19 @@ const ChatThread = (props: { store: ChatStore }) => {
   return (
     <div
       ref={chatMessagesContainerRef}
-      className={clsx("chat-thread overflow-y-auto", theme.thread)}
+      className={clsx("chat-thread overflow-y-auto", classNames.thread)}
     >
       <div className="flex justify-center items-center">
         <div
           className={clsx(
             "chat-messages-container flex-1",
-            theme.messagesContainer
+            classNames.messagesContainer
           )}
         >
           {messages && (
             <div
               ref={chatMessagesRef}
-              className={clsx("chat-messages", theme.messages)}
+              className={clsx("chat-messages", classNames.messages)}
             >
               {sortedMessages.map((message, index) => {
                 const isLastMessage = index == sortedMessages.length - 1;
@@ -104,12 +105,18 @@ const ChatMessage = (props: {
   theme: ReturnType<typeof useChatTheme>;
 }) => {
   const theme = props.theme;
+  const { classNames } = theme;
   const markdownRef = useRef<HTMLDivElement>(null);
   const role = useMemo(() => {
     const id = props.message.role || "user";
     return {
       id,
-      name: id == "ai" ? "AI" : id == "system" ? null : "User",
+      name:
+        id == "ai"
+          ? theme.avatars.ai
+          : id == "system"
+            ? null
+            : theme.avatars.user,
     };
   }, [props.message.role]);
 
@@ -117,7 +124,7 @@ const ChatMessage = (props: {
     <div
       className={clsx(
         "chat-message-container group flex flex-row",
-        theme.messageContainer,
+        classNames.messageContainer,
         {
           "!mt-0": !props.showRole,
         }
@@ -125,22 +132,27 @@ const ChatMessage = (props: {
       data-role={role.id}
     >
       <div
-        className={clsx("role-container", role.id, theme.roleContainer)}
+        className={clsx("role-container", role.id, classNames.roleContainer)}
         data-role={role.id}
       >
         {props.showRole && role.name && (
-          <div className={clsx("role select-none text-center", theme.role)}>
+          <div
+            className={clsx("role select-none text-center", classNames.role)}
+          >
             {role.name}
           </div>
         )}
       </div>
       <div
-        className={clsx("chat-message flex-1 overflow-x-hidden", theme.message)}
+        className={clsx(
+          "chat-message flex-1 overflow-x-hidden",
+          classNames.message
+        )}
         data-message-id={props.message.id}
         data-role={role.id}
       >
         {props.message.ui && (
-          <div className={clsx("chat-message-ui", theme.messageUI)}>
+          <div className={clsx("chat-message-ui", classNames.messageUI)}>
             <AgentNodeRenderer
               messageId={props.message.id}
               store={props.store}
@@ -157,7 +169,7 @@ const ChatMessage = (props: {
               ref={markdownRef}
               className={clsx(
                 "chat-message-content prose select-text",
-                theme.messageContent
+                classNames.messageContent
               )}
               data-role={role.id}
             >

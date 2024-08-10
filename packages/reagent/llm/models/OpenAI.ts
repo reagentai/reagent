@@ -19,6 +19,16 @@ const models = [
     family: "openai:gpt-4",
     contextLength: 128_000,
   },
+  {
+    id: "gpt-4o",
+    family: "openai:gpt-4",
+    contextLength: 128_000,
+  },
+  {
+    id: "gpt-4o-mini",
+    family: "openai:gpt-4",
+    contextLength: 128_000,
+  },
 ] as const;
 
 type Options = Pick<ModelOptions, "apiKey"> & {
