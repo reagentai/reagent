@@ -8,7 +8,7 @@ import { virtualFiles } from "./plugins/virtual";
 
 type Options = { file: string; open: boolean; port: number };
 const dev = async (options: Options) => {
-  // @ts-expect-error
+  // @ts-ignore
   const server = await createServer({
     configFile: false,
     build: {
@@ -28,7 +28,7 @@ const dev = async (options: Options) => {
     css: {
       postcss: {
         plugins: [
-          // @ts-expect-error
+          // @ts-ignore
           tailwindcss({
             config: {
               darkMode: "class",
