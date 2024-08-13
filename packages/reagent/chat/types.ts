@@ -83,6 +83,17 @@ export namespace Chat {
       node: NodeMetadata;
       input: any;
     };
+    type Prompt = {
+      type: "PROMPT";
+      session: {
+        id: string;
+      };
+      node: NodeMetadata;
+      render: {
+        step: string;
+        data: any;
+      };
+    };
     type UpdateNodeState = {
       type: "UPDATE_NODE_STATE";
       node: NodeMetadata;
@@ -90,7 +101,7 @@ export namespace Chat {
     };
     export type WorkflowEvent = {
       type: "event";
-      data: ExecuteOnClient | UpdateNodeState;
+      data: ExecuteOnClient | UpdateNodeState | Prompt;
     };
   }
 

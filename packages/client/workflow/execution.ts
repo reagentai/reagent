@@ -5,10 +5,10 @@ import {
 } from "@reagentai/reagent/workflow/client";
 import { dset } from "dset/merge";
 
-import { WorkflowClient } from "./types";
+import { ExecutionClient } from "./types";
 
 const executeNode = async (
-  client: WorkflowClient,
+  client: ExecutionClient,
   options: {
     session: {
       id: string;
@@ -67,6 +67,9 @@ const executeNode = async (
           throw new Error("update unsupported on client side execution");
         },
       };
+    },
+    prompt() {
+      throw new Error("unsupported");
     },
     sendOutput(output: any) {
       // send output only when node execution is completed or

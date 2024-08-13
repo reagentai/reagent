@@ -92,7 +92,8 @@ const transformCreateAgentNodeExecuteMethod = {
     const isContextRender =
       t.isMemberExpression(callee.node) &&
       t.isIdentifier(callee.node.object, { name: this.contextName }) &&
-      t.isIdentifier(callee.node.property, { name: "render" });
+      (t.isIdentifier(callee.node.property, { name: "render" }) ||
+        t.isIdentifier(callee.node.property, { name: "prompt" }));
 
     if (!isContextRender) {
       return;
@@ -100,7 +101,7 @@ const transformCreateAgentNodeExecuteMethod = {
     this.renderCalls.push(
       t.arrayExpression([
         // add render id as the first argument
-        t.stringLiteral(`render-${this.renderCallCount++}`),
+        t.stringLiteral(`component-${this.renderCallCount++}`),
         path.node.arguments[0],
       ])
     );

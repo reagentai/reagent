@@ -34,6 +34,7 @@ import {
 } from "./types.js";
 
 const TOOL_CALL_SAGA = Symbol("TOOL_CALL_SAGA");
+const PROMPT_RESULT = Symbol("_PROMPT_RESULT_");
 
 type WorkflowStepOptions = {
   label?: string;
@@ -117,22 +118,31 @@ class WorkflowStepRef<
     });
   }
 
-  async #execute(options: { input: any; context: any }) {
+  *#execute(options: { input: any; context: any }): any {
     const { context, input } = options;
     try {
       const self = this;
       const generator = self.node.execute(context, input);
 
       const stepOutput = {};
-      let result = await generator.next();
+      let result = yield call(() => generator.next());
       while (!result.done) {
+        if (result.value == context.PENDING) {
+          const output = yield call(() => context[context.PENDING]);
+          return output;
+        } else if (result.value[PROMPT_RESULT]) {
+          const promptResult = result.value[PROMPT_RESULT];
+          result = yield call(() => generator.next(promptResult));
+          continue;
+        }
+
         Object.assign(stepOutput, result.value);
         context.sendOutput(result.value);
-        result = await generator.next();
+        result = yield call(() => generator.next());
       }
 
       if (result.value == context.PENDING) {
-        const output = await context[context.PENDING];
+        const output = yield call(() => context[context.PENDING]);
         return output as Output;
       } else {
         return stepOutput as Output;
@@ -210,6 +220,7 @@ class WorkflowStepRef<
           type: EventType.RUN_FAILED,
           session,
           node,
+          error: serializeError(e),
         });
         yield call(updateStepState, node, {
           "@@status": StepStatus.FAILED,
@@ -338,16 +349,18 @@ class WorkflowStepRef<
     const self = this;
     const node = {
       id: self.nodeId,
+      type: self.node.metadata.id,
+      version: self.node.metadata.version,
     };
 
+    const PENDING = Symbol("_PENDING_");
     let resolve: any;
     const pendingHook = new Promise((r) => (resolve = r));
-    const PENDING = Symbol("_PENDING_");
     const allOutput = {};
-    return {
+    const context: Context<any, any> = {
       session,
       node,
-      config: this.config || {},
+      config: self.config || {},
       PENDING,
       state,
       updateState(n: NodeMetadata, s: StepState) {
@@ -404,11 +417,6 @@ class WorkflowStepRef<
         // since this runs in server side,
         // render will be transpiled to only pass component id
         const stepId = step as unknown as string;
-        const node = {
-          id: self.nodeId,
-          type: self.node.metadata.id,
-          version: self.node.metadata.version,
-        };
         dispatch({
           type: EventType.RENDER,
           session,
@@ -432,9 +440,40 @@ class WorkflowStepRef<
           },
         };
       },
-      /* @ts-ignore */
+      prompt(step, data) {
+        // since this runs in server side,
+        // render will be transpiled to only pass prompt component id
+        const stepId = step as unknown as string;
+        const prompt = state!["@@prompt"]?.[stepId];
+        if (prompt) {
+          return Object.assign({ [PROMPT_RESULT]: prompt.result });
+        }
+        dispatch({
+          type: EventType.UPDATE_STATE,
+          node,
+          state: {
+            "@@status": StepStatus.STOPPED,
+            "@@data": {
+              input,
+            },
+          },
+        });
+        dispatch({
+          type: EventType.PROMPT,
+          session,
+          node,
+          render: {
+            step: stepId,
+            data,
+          },
+        });
+        context.stop();
+        return PENDING;
+      },
+      // @ts-expect-error
       [PENDING]: pendingHook,
     };
+    return context;
   }
 }
 

@@ -181,7 +181,8 @@ class WorkflowRun {
     function* eventsSubscriber(): any {
       while (1) {
         const event = yield take(
-          (e: any) => e.type == EventType.EXECUTE_ON_CLIENT
+          (e: any) =>
+            e.type == EventType.EXECUTE_ON_CLIENT || e.type == EventType.PROMPT
         );
         self.#streams["events"].next(event);
       }

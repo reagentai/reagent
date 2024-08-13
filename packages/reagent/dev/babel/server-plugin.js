@@ -24,7 +24,8 @@ const transformCreateAgentNodeRunMethod = {
     const isContextRender =
       t.isMemberExpression(callee.node) &&
       t.isIdentifier(callee.node.object, { name: this.contextName }) &&
-      t.isIdentifier(callee.node.property, { name: "render" });
+      (t.isIdentifier(callee.node.property, { name: "render" }) ||
+        t.isIdentifier(callee.node.property, { name: "prompt" }));
 
     if (!isContextRender) {
       return;
@@ -34,7 +35,7 @@ const transformCreateAgentNodeRunMethod = {
       // TODO: maybe use content hash of the render function as
       // render id instead of counter to guarantee component + state
       // consistency
-      t.stringLiteral(`render-${this.renderCallCount++}`),
+      t.stringLiteral(`component-${this.renderCallCount++}`),
     ];
     if (callArgs.length > 0) {
       args.push(...callArgs);

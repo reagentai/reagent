@@ -29,6 +29,7 @@ export enum EventType {
   TOOL_CALL = "TOOL_CALL",
   OUTPUT = "OUTPUT",
   RENDER = "RENDER",
+  PROMPT = "PROMPT",
   UPDATE_STATE = "UPDATE_STATE",
   EXECUTE_ON_CLIENT = "EXECUTE_ON_CLIENT",
   RUN_COMPLETED = "RUN_COMPLETED",
@@ -40,6 +41,7 @@ export enum EventType {
 export enum ClientEventType {
   INVOKE = EventType.INVOKE,
   OUTPUT = EventType.OUTPUT,
+  PROMPT = EventType.PROMPT,
   EXECUTE_ON_CLIENT = EventType.EXECUTE_ON_CLIENT,
   RUN_COMPLETED = EventType.RUN_COMPLETED,
   RUN_CANCELLED = EventType.RUN_CANCELLED,
@@ -123,14 +125,16 @@ export type StepState = (
       "@@data": {
         input: any;
       };
+      // prompt result by prompt id
+      "@@prompt": Record<string, { result: any }>;
     }
 ) &
   // for sub-workflow states
   Record<string, any>;
 
 export type WorkflowRunEvent =
-  | Omit<WorkflowEvent.Output, "session">
   | Omit<WorkflowEvent.Invoke, "session">
+  | Omit<WorkflowEvent.Output, "session">
   | Omit<WorkflowEvent.RunCompleted, "session">;
 
 export type WorkflowRunOptions = {

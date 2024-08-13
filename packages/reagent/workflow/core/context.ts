@@ -39,6 +39,13 @@ export type Context<
   ): {
     update(data: Data): void;
   };
+  prompt<Data, Value = any>(
+    Component: (props: {
+      data: Data;
+      submit: (value: Value) => void;
+    }) => JSX.Element,
+    data?: Data
+  ): void;
   // return 'PENDING' from 'execute' method if output will be sent later
   // using sendOutput. `context.done()` should be called when step is completed
   // if 'PENDING' is returned
