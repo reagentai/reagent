@@ -165,7 +165,11 @@ class ToolProvider<Input> extends AbstractValueProvider<Tool<Input, any>> {
     const dispatch = yield getContext("dispatch");
     const outputTask = yield spawn(function* (): any {
       const res = yield take(
-        (e: any) => e.type == EventType.OUTPUT && e.node.id == self.#ref.nodeId
+        (e: any) =>
+          (e.type == EventType.OUTPUT ||
+            // listen to RUN_COMPLETED in case a step doesn't return any output
+            e.type == EventType.RUN_COMPLETED) &&
+          e.node.id == self.#ref.nodeId
       );
       return res.output;
     });
