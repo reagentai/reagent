@@ -18,7 +18,7 @@ const createWorkflowClient = (
     showPrompt: options.showPrompt,
   });
   return {
-    start({ nodeId, input }: { nodeId: string; input: any }) {
+    start({ nodeId, input }) {
       const res = client.emit({
         events: [
           {
@@ -31,6 +31,9 @@ const createWorkflowClient = (
         ],
       });
       return res;
+    },
+    emit(options) {
+      return client.emit(options);
     },
   };
 };

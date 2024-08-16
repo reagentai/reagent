@@ -1,17 +1,17 @@
 import { Chatbox } from "./ChatBox.js";
 import { ChatThread } from "./ChatThread.js";
-import { ChatStore } from "./state.js";
+import { ChatStore, NewMessage } from "./state.js";
 
 const ReagentChat = (props: { store: ChatStore }) => {
   const sendNewMessage = props.store(
-    (s) => (input: any) =>
+    (s) => (input: NewMessage) =>
       s.invoke({
         nodeId: "input",
         input,
       })
   );
   const sendNewMessageMutation = {
-    mutate(input: any) {
+    mutate(input: NewMessage) {
       sendNewMessage(input);
     },
   };

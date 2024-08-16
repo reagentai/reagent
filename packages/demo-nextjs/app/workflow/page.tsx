@@ -33,7 +33,7 @@ export default function () {
     console.log("DONE!");
   }, []);
   return (
-    <ReagentContextProvider nodes={workflow.nodes}>
+    <ReagentContextProvider templates={workflow.nodes}>
       <div className="flex flex-col">
         <div>
           <button

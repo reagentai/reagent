@@ -1,28 +1,34 @@
 import { createContext, useContext, useMemo } from "react";
-import type { WorkflowNode } from "@reagentai/reagent/workflow";
+import type {
+  BaseReagentNodeOptions,
+  WorkflowNode,
+} from "@reagentai/reagent/workflow";
 
 type Context = {
-  nodesByTypeId: Record<string, WorkflowNode<any, any, any>>;
+  templatesById: Record<
+    string,
+    BaseReagentNodeOptions<any, any, any> & { components: [] }
+  >;
 };
 const AgentContext = createContext<Context>({
-  nodesByTypeId: {},
+  templatesById: {},
 });
 const useReagentContext = () => useContext(AgentContext)!;
 
 const ReagentContextProvider = (props: {
-  nodes: WorkflowNode<any, any, any>[];
+  templates: WorkflowNode<any, any, any>[];
   children: any;
 }) => {
-  const nodesByTypeId = useMemo(() => {
-    return props.nodes.reduce((agg, curr) => {
+  const templatesById = useMemo(() => {
+    return props.templates.reduce((agg, curr) => {
       // @ts-expect-error
       agg[curr.id] = curr;
       return agg;
     }, {});
-  }, [props.nodes]);
+  }, [props.templates]);
 
   return (
-    <AgentContext.Provider value={{ nodesByTypeId }}>
+    <AgentContext.Provider value={{ templatesById }}>
       {props.children}
     </AgentContext.Provider>
   );

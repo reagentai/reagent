@@ -41,4 +41,5 @@ export type WorkflowClientOptions = {
 
 export type WorkflowClient = {
   start(options: { nodeId: string; input: any }): EmitResult;
+  emit(emitOptions: EmitOptions): EmitResult;
 };

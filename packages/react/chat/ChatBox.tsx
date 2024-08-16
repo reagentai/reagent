@@ -10,7 +10,7 @@ const Chatbox = (props: {
   isChatLocked: boolean;
   sendNewMessage: (msg: {
     id: string;
-    message: { content: string };
+    query: string;
     regenerate: boolean;
   }) => void;
   onFocus?: () => void;
@@ -27,9 +27,7 @@ const Chatbox = (props: {
   const submitForm = () => {
     props.sendNewMessage({
       id: uniqueId(19),
-      message: {
-        content: message,
-      },
+      query: message,
       regenerate: false,
     });
     setMessage("");

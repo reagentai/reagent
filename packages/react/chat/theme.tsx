@@ -54,10 +54,13 @@ const ChatThemeContext = createContext<ChatTheme>(defaultTheme);
 const useChatTheme = () => useContext(ChatThemeContext)!;
 
 const ChatThemeProvider = (props: {
-  value: Partial<ChatTheme>;
+  value: {
+    classNames?: Partial<ChatTheme["classNames"]>;
+    avatars?: ChatTheme["avatars"];
+  };
   children: any;
 }) => {
-  const theme = deepmerge(props.value, defaultTheme);
+  const theme = deepmerge(defaultTheme, props.value) as ChatTheme;
   return (
     <ChatThemeContext.Provider value={theme}>
       {props.children}

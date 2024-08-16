@@ -46,8 +46,7 @@ const App = () => {
             request(options) {
               setInvokeError(null);
               return {
-                nodeId: options.nodeId,
-                input: options.input,
+                ...options,
                 model: llmModels.find((m) => m.id == llmModelId)?.model,
               };
             },
@@ -104,7 +103,9 @@ const App = () => {
                   </div>
                 )}
                 <div className="h-full">
-                  <ReagentContextProvider nodes={workflowModule.nodes || []}>
+                  <ReagentContextProvider
+                    templates={workflowModule.nodes || []}
+                  >
                     <ReagentChat store={store} />
                   </ReagentContextProvider>
                 </div>

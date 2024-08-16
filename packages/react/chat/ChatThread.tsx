@@ -40,7 +40,7 @@ const ChatThread = (props: { store: ChatStore }) => {
 
   useEffect(() => {
     scrollToBottom();
-  }, []);
+  }, [sortedMessages]);
 
   return (
     <div

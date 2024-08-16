@@ -1,14 +1,20 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { produce } from "immer";
-import { createWorkflowClient } from "@reagentai/client/workflow";
+import {
+  createWorkflowClient,
+  EventType,
+  type EmitOptions,
+} from "@reagentai/client/workflow";
 import type { Chat } from "@reagentai/reagent/chat";
-import type { BaseReagentNodeOptions } from "@reagentai/reagent";
+import type {
+  BaseReagentNodeOptions,
+  WorkflowRunEvent,
+} from "@reagentai/reagent";
 
-type NewMessage = {
+export type NewMessage = {
   id: string;
-  node: Chat.Message["node"];
-  message: { content: string };
+  query: string;
   regenerate: boolean;
 };
 
@@ -21,19 +27,16 @@ export type ChatState = {
   invoke: (options: { nodeId: string; input: NewMessage }) => void;
 };
 
-export type InvokeOptions = {
-  nodeId: string;
-  input: NewMessage;
-  state: ChatState;
-};
-
 type StoreInit = {
   messages: Record<string, Chat.Message>;
   // workflow execution url
   url: string;
   templates: BaseReagentNodeOptions<any, any, any>[];
   middleware?: {
-    request: (options: InvokeOptions) => { nodeId: string; input: any };
+    request: (
+      options: EmitOptions,
+      state: ChatState
+    ) => EmitOptions & Record<string, any>;
   };
   onInvokeError?: (res: Response) => void | Promise<void>;
 };
@@ -110,8 +113,7 @@ export const createChatStore = (
               const state = produce(s, (state) => {
                 state.messages[message.id] = {
                   id: message.id,
-                  message: message.message,
-                  node: message.node,
+                  message: { content: message.query },
                   role: "user",
                   createdAt: new Date().toISOString(),
                 };
@@ -122,14 +124,18 @@ export const createChatStore = (
               });
             });
 
-            const body = init.middleware?.request?.({
-              ...options,
-              state: get(),
-            }) || {
-              nodeId: options.nodeId,
-              input: options.input,
+            const emitOptions = {
+              events: [
+                {
+                  type: EventType.INVOKE,
+                  input: options.input,
+                  node: { id: options.nodeId },
+                },
+              ] as WorkflowRunEvent[],
             };
-            const result = client.start(body);
+            const body =
+              init.middleware?.request?.(emitOptions, get()) || emitOptions;
+            const result = client.emit(body);
             result.subscribe({
               next(msg) {
                 set((s) => {

@@ -41,8 +41,7 @@ const createHttpClient = (
         const res = await fetch(options.http.url, {
           method: "POST",
           body: JSON.stringify({
-            session: emitOptions.session,
-            events: emitOptions.events,
+            ...emitOptions,
             states: self.states,
           }),
           headers: options.http.headers,
@@ -71,7 +70,7 @@ const createHttpClient = (
                 (n1: any) => n1.id == event.node.type
               );
               if (!template) {
-                throw new Error(`Node template not found: ${event.node.id}`);
+                throw new Error(`Node template not found: ${event.node.type}`);
               }
 
               if (event.type == EventType.EXECUTE_ON_CLIENT) {
