@@ -12,6 +12,7 @@ import {
   put,
   take,
 } from "redux-saga/effects";
+import { deserializeError } from "serialize-error";
 
 import {
   NodeMetadata,
@@ -293,7 +294,9 @@ class WorkflowRun {
           e.type == EventType.RUN_FAILED
         );
       });
-      let workflowCompleted = true;
+      let result: { status: WorkflowStatus; error?: any } = {
+        status: WorkflowStatus.COMPLETED,
+      };
       const nodesCompleted = new Set();
       while (1) {
         const action = yield take(channel);
@@ -306,7 +309,9 @@ class WorkflowRun {
           action.type == EventType.RUN_PAUSED ||
           action.type == EventType.EXECUTE_ON_CLIENT
         ) {
-          workflowCompleted = false;
+          result = { status: WorkflowStatus.STOPPED };
+        } else if (action.type == EventType.RUN_FAILED) {
+          result = { status: WorkflowStatus.ERRORED, error: action.error };
         }
         nodesCompleted.add(action.node.id);
         if (nodesCompleted.size == nodesRef.length) {
@@ -316,7 +321,7 @@ class WorkflowRun {
             self.#streams[key].complete();
             channel.close();
           });
-          return workflowCompleted;
+          return result;
         }
       }
     }
@@ -339,16 +344,16 @@ class WorkflowRun {
         })
       );
       yield join([queueEvents, job3, job4, job6]);
-      const workflowCompleted = yield join(completionSaga);
+      const result = yield join(completionSaga);
       const output = dataBinding ? yield join(outputSaga) : undefined;
 
-      if (!workflowCompleted) {
-        self.#status = WorkflowStatus.STOPPED;
+      self.#status = result;
+      if (result.status == WorkflowStatus.STOPPED) {
         // cancel here so that task.isCancelled() returns true
         // if the workflow wasn't completed
         yield cancel();
-      } else {
-        self.#status = WorkflowStatus.COMPLETED;
+      } else if (result.status == WorkflowStatus.ERRORED) {
+        throw deserializeError(result.error);
       }
       return output?.value;
     };

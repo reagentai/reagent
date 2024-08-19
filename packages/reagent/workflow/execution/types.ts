@@ -15,6 +15,7 @@ export enum WorkflowStatus {
   // status is stopped if the workflow isn't completed yet
   // but the current run was finished
   STOPPED = "STOPPED",
+  ERRORED = "ERRORED",
   COMPLETED = "COMPLETED",
 }
 
