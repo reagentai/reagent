@@ -14,7 +14,7 @@ import { includeKeys } from "filter-obj";
 import { z } from "../core/zod.js";
 import { WorkflowStepRef } from "./WorkflowStep.js";
 import {
-  ClientEventType,
+  PublicEventType,
   EventType,
   type NodeDependency,
   type NodeMetadata,
@@ -260,7 +260,7 @@ class WorkflowToolProvider<Input> extends AbstractValueProvider<
             sessionId: session.id,
             events: [
               {
-                type: ClientEventType.INVOKE,
+                type: PublicEventType.INVOKE,
                 node: {
                   id: self.#options.nodeId,
                 },
@@ -332,6 +332,7 @@ class OutputValueProvider<Output> extends AbstractValueProvider<Output> {
 
     if (options.listener) {
       yield put(options.listener!, {
+        isReplay: action.isReplay,
         session: action.session,
         node: action.node,
         value,

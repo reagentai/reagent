@@ -11,6 +11,7 @@ const ChatThread = (props: { store: ChatStore }) => {
   const theme = useChatTheme();
   const { classNames } = theme;
   const messages = props.store((s) => s.messages);
+  const prompt = props.store((s) => s.prompt);
   const sortedMessageIds = props.store((s) => s.sortedMessageIds);
   const sortedMessages = useMemo(() => {
     return sortedMessageIds.map((id) => messages[id]);
@@ -41,7 +42,6 @@ const ChatThread = (props: { store: ChatStore }) => {
   useEffect(() => {
     scrollToBottom();
   }, [sortedMessages]);
-
   return (
     <div
       ref={chatMessagesContainerRef}
@@ -90,6 +90,19 @@ const ChatThread = (props: { store: ChatStore }) => {
                   />
                 </div>
               )}
+
+              {prompt?.Component && (
+                <ChatMessage
+                  message={{
+                    id: "prompt",
+                    role: "ai",
+                    prompt,
+                  }}
+                  store={props.store}
+                  showRole={false}
+                  theme={theme}
+                />
+              )}
             </div>
           )}
         </div>
@@ -99,7 +112,18 @@ const ChatThread = (props: { store: ChatStore }) => {
 };
 
 const ChatMessage = (props: {
-  message: Pick<Chat.Message, "id" | "message" | "ui" | "role" | "node">;
+  message:
+    | (Pick<Chat.Message, "id" | "message" | "ui" | "role" | "node"> & {
+        prompt?: undefined;
+      })
+    | {
+        id: string;
+        role: "ai";
+        prompt: any;
+        ui?: undefined;
+        message?: undefined;
+        node?: undefined;
+      };
   store: ChatStore;
   showRole: boolean;
   theme: ReturnType<typeof useChatTheme>;
@@ -179,6 +203,9 @@ const ChatMessage = (props: {
             </div>
           )
         }
+        {props.message.prompt && (
+          <props.message.prompt.Component {...props.message.prompt.props} />
+        )}
       </div>
     </div>
   );

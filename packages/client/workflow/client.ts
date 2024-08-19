@@ -19,7 +19,7 @@ const createWorkflowClient = (
   });
   return {
     start({ nodeId, input }) {
-      const res = client.emit({
+      const res = client.send({
         events: [
           {
             type: EventType.INVOKE,
@@ -32,8 +32,8 @@ const createWorkflowClient = (
       });
       return res;
     },
-    emit(options) {
-      return client.emit(options);
+    send(options) {
+      return client.send(options);
     },
   };
 };

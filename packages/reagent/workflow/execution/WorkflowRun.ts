@@ -163,9 +163,13 @@ class WorkflowRun {
           return (function* saga() {
             yield fork(function* saga() {
               while (1) {
-                const value = yield take(listener);
-                // @ts-expect-error
-                self.#streams[key].next(value);
+                const value: any = yield take(listener);
+                // don't emit old output values that are re-emitted
+                // when the workflow is resumed
+                if (!value.isReplay) {
+                  // @ts-expect-error
+                  self.#streams[key].next(value);
+                }
               }
             });
             yield all(
@@ -179,12 +183,20 @@ class WorkflowRun {
     }
 
     function* eventsSubscriber(): any {
+      const channel = yield actionChannel(
+        (e: any) =>
+          e.type == EventType.EXECUTE_ON_CLIENT ||
+          e.type == EventType.PROMPT ||
+          e.type == EventType.SUB_RENDER
+      );
       while (1) {
-        const event = yield take(
-          (e: any) =>
-            e.type == EventType.EXECUTE_ON_CLIENT || e.type == EventType.PROMPT
-        );
-        self.#streams["events"].next(event);
+        const event = yield take(channel);
+        if (event.type == EventType.SUB_RENDER) {
+          const { type, ...rest } = event;
+          self.#streams["ui"].next(rest);
+        } else {
+          self.#streams["events"].next(event);
+        }
       }
     }
 
@@ -233,6 +245,7 @@ class WorkflowRun {
               session,
               node: { id: nodeId },
               output: data.output,
+              isReplay: true,
             });
             self.#channel.put({
               type: EventType.RUN_COMPLETED,

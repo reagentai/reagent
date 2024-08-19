@@ -34,7 +34,7 @@ const executeNode = async (
       },
     });
 
-    client.emit({
+    client.send({
       session,
       events: [],
       states,

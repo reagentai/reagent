@@ -16,12 +16,9 @@ const ChatAgent = () => {
       url: "/api/chat",
       templates: agent.nodes as any[],
       middleware: {
-        request(options) {
+        request(request) {
           setInvokeError(null);
-          return {
-            nodeId: options.nodeId,
-            input: options.input,
-          };
+          return request;
         },
       },
       async onInvokeError(res) {
@@ -44,7 +41,7 @@ const ChatAgent = () => {
               </div>
             )}
             <div className="h-full">
-              <ReagentContextProvider nodes={agent.nodes || []}>
+              <ReagentContextProvider templates={agent.nodes || []}>
                 <ReagentChat store={store} />
               </ReagentContextProvider>
             </div>

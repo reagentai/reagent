@@ -36,9 +36,11 @@ export enum EventType {
   RUN_PAUSED = "RUN_PAUSED",
   RUN_CANCELLED = "RUN_CANCELLED",
   RUN_FAILED = "RUN_FAILED",
+  // "SUB_" prefix is used for events that sub-workflows can emit
+  SUB_RENDER = "SUB_RENDER",
 }
 
-export enum ClientEventType {
+export enum PublicEventType {
   INVOKE = EventType.INVOKE,
   OUTPUT = EventType.OUTPUT,
   PROMPT = EventType.PROMPT,
@@ -46,6 +48,8 @@ export enum ClientEventType {
   RUN_COMPLETED = EventType.RUN_COMPLETED,
   RUN_CANCELLED = EventType.RUN_CANCELLED,
   RUN_FAILED = EventType.RUN_FAILED,
+  // "SUB_" prefix is used for events that sub-workflows can emit
+  SUB_RENDER = EventType.SUB_RENDER,
 }
 
 export type NodeMetadata = {
@@ -69,7 +73,7 @@ export type Session = {
 
 namespace WorkflowEvent {
   export type Invoke = {
-    type: ClientEventType.INVOKE;
+    type: PublicEventType.INVOKE;
     session: {
       id: string;
     };
@@ -78,7 +82,7 @@ namespace WorkflowEvent {
   };
 
   export type Output = {
-    type: ClientEventType.OUTPUT;
+    type: PublicEventType.OUTPUT;
     session: {
       id: string;
     };
@@ -87,7 +91,7 @@ namespace WorkflowEvent {
   };
 
   export type RunCompleted = {
-    type: ClientEventType.RUN_COMPLETED;
+    type: PublicEventType.RUN_COMPLETED;
     session: {
       id: string;
     };

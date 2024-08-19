@@ -9,12 +9,12 @@ export type Subscriber = {
   error?(error: Response | any): void;
 };
 
-type EmitResult = {
+type SendResult = {
   subscribe(subscriber: Subscriber): void;
   toPromise(): Promise<void>;
 };
 
-export type EmitOptions = {
+export type SendRequest = {
   session?: { id: string };
   events: WorkflowRunEvent[];
   // updated stated by node id
@@ -22,7 +22,7 @@ export type EmitOptions = {
 };
 
 export type ExecutionClient = {
-  emit(emitOptions: EmitOptions): EmitResult;
+  send(request: SendRequest): SendResult;
 };
 
 export type WorkflowClientOptions = {
@@ -30,7 +30,7 @@ export type WorkflowClientOptions = {
   // showPrompt(...) is called with `undefined` to clear
   // the prompt after a prompt is shown
   showPrompt?: (
-    options:
+    prompt:
       | {
           Component: any;
           props: { data: any; submit: (value: any) => void };
@@ -40,6 +40,6 @@ export type WorkflowClientOptions = {
 };
 
 export type WorkflowClient = {
-  start(options: { nodeId: string; input: any }): EmitResult;
-  emit(emitOptions: EmitOptions): EmitResult;
+  start(options: { nodeId: string; input: any }): SendResult;
+  send(emitOptions: SendRequest): SendResult;
 };

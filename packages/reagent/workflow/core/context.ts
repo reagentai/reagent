@@ -27,6 +27,11 @@ export type Context<
   render<Data>(
     Component: (props: {
       data: Data;
+      React: {
+        useEffect: any;
+        useContext: any;
+      };
+      AppContext?: any;
       useAgentNode<State = any>(): {
         state: State | undefined;
         setState(state: ((prev: State | undefined) => State) | State): void;

@@ -5,7 +5,7 @@
 export { BaseReagentNodeOptions } from "./core/types.js";
 export {
   NodeMetadata,
-  ClientEventType as EventType,
+  PublicEventType as EventType,
   StepStatus,
   StepState,
 } from "./execution/types.js";

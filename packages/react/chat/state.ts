@@ -5,6 +5,7 @@ import {
   createWorkflowClient,
   EventType,
   type EmitOptions,
+  type WorkflowClientOptions,
 } from "@reagentai/client/workflow";
 import type { Chat } from "@reagentai/reagent/chat";
 import type {
@@ -22,6 +23,7 @@ export type ChatState = {
   messages: Record<string, Chat.Message>;
   persistentStateByMessageId: Record<string, any>;
   sortedMessageIds: string[];
+  prompt: Parameters<Required<WorkflowClientOptions>["showPrompt"]>[0];
   setMessages: (messages: Record<string, Chat.Message>) => void;
   setPersistentState(options: { messageId: string; state: any }): void;
   invoke: (options: { nodeId: string; input: NewMessage }) => void;
@@ -47,16 +49,6 @@ export const createChatStore = (
     persistKey?: string;
   }
 ) => {
-  const client = createWorkflowClient({
-    http: {
-      url: init.url,
-      headers: {
-        "content-type": "application/json",
-      },
-    },
-    templates: init.templates,
-  });
-
   const withPerisist: typeof persist = options?.persistKey
     ? persist
     : (x: any) => {
@@ -65,6 +57,23 @@ export const createChatStore = (
   return create(
     withPerisist<ChatState>(
       (set, get) => {
+        const client = createWorkflowClient({
+          http: {
+            url: init.url,
+            headers: {
+              "content-type": "application/json",
+            },
+          },
+          templates: init.templates,
+          showPrompt(prompt) {
+            set(
+              produce((state) => {
+                state.prompt = prompt;
+              })
+            );
+          },
+        });
+
         const sortMessages = (messages: Record<string, Chat.Message>) => {
           return Object.values(messages)
             .sort((m1, m2) => {
@@ -90,6 +99,7 @@ export const createChatStore = (
             // [messageId]: state
           },
           sortedMessageIds: sortMessages(init.messages),
+          prompt: undefined,
           setMessages(messages: Record<string, Chat.Message>) {
             set(
               produce((state) => {
@@ -135,7 +145,7 @@ export const createChatStore = (
             };
             const body =
               init.middleware?.request?.(emitOptions, get()) || emitOptions;
-            const result = client.emit(body);
+            const result = client.send(body);
             result.subscribe({
               next(msg) {
                 set((s) => {

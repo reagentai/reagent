@@ -14,7 +14,7 @@ import {
   ValueProvider,
   WorkflowToolProvider,
 } from "./WorkflowStepOutput.js";
-import { ClientEventType, EventType, WorkflowEvent } from "./types.js";
+import { PublicEventType, EventType, WorkflowEvent } from "./types.js";
 import { uniqueId } from "../../utils/uniqueId.js";
 
 type WorkflowConfig = {
@@ -85,21 +85,21 @@ class InternalWorkflowRef {
     });
 
     for (const event of options.events) {
-      if (event.type == ClientEventType.OUTPUT) {
+      if (event.type == PublicEventType.OUTPUT) {
         run.queueEvents({
-          type: ClientEventType.OUTPUT,
+          type: PublicEventType.OUTPUT,
           node: event.node,
           output: event.output,
         });
-      } else if (event.type == ClientEventType.INVOKE) {
+      } else if (event.type == PublicEventType.INVOKE) {
         run.queueEvents({
-          type: ClientEventType.INVOKE,
+          type: PublicEventType.INVOKE,
           node: event.node,
           input: event.input,
         });
-      } else if (event.type == ClientEventType.RUN_COMPLETED) {
+      } else if (event.type == PublicEventType.RUN_COMPLETED) {
         run.queueEvents({
-          type: ClientEventType.RUN_COMPLETED,
+          type: PublicEventType.RUN_COMPLETED,
           node: event.node,
         });
       } else {
@@ -200,7 +200,7 @@ class Workflow {
       ...options,
       events: [
         {
-          type: ClientEventType.INVOKE,
+          type: PublicEventType.INVOKE,
           node: options.node,
           input: options.input,
         },
