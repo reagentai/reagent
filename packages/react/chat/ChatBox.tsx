@@ -44,6 +44,8 @@ const Chatbox = (props: {
     ) {
       submitForm();
       e.preventDefault();
+    }
+    if (!e.metaKey) {
       e.stopPropagation();
     }
   };
