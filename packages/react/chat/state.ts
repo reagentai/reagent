@@ -27,6 +27,7 @@ export type ChatState = {
   setMessages: (messages: Record<string, Chat.Message>) => void;
   setPersistentState(options: { messageId: string; state: any }): void;
   invoke: (options: { nodeId: string; input: NewMessage }) => void;
+  reset(): Promise<void>;
 };
 
 type StoreInit = {
@@ -56,7 +57,7 @@ export const createChatStore = (
       };
   return create(
     withPerisist<ChatState>(
-      (set, get) => {
+      (set, get, store) => {
         const client = createWorkflowClient({
           http: {
             url: init.url,
@@ -189,6 +190,16 @@ export const createChatStore = (
                 init.onInvokeError?.(error);
               },
             });
+          },
+          async reset() {
+            store.persist.clearStorage();
+            set({
+              messages: {},
+              persistentStateByMessageId: {},
+              sortedMessageIds: [],
+              prompt: undefined,
+            });
+            await store.persist.rehydrate();
           },
         };
       },
