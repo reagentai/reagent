@@ -22,7 +22,7 @@ const ReagentChat = (props: { store: ChatStore }) => {
         <div className="h-full text-xs">
           <ChatThread store={props.store} />
         </div>
-        <div className="chatbox-container absolute bottom-0 w-full px-4 pb-4 flex justify-center pointer-events-none">
+        <div className="chatbox-container absolute bottom-0 w-full px-4 flex justify-center pointer-events-none">
           <div className="flex-1 pb-4 min-w-[200px] max-w-[750px] rounded-lg pointer-events-auto backdrop-blur-xl space-y-1">
             <div className="bg-gray-400/10 rounded">
               <Chatbox
