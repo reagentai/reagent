@@ -35,7 +35,7 @@ const defaultTheme: ChatTheme = {
     message: "space-y-2",
     messageUI: "px-4 py-2",
     messageContent:
-      "px-4 py-3 rounded-lg leading-6 space-y-2 tracking-[0.1px] group-has-[.user]:bg-[hsl(60_28%_95%)] dark:group-has-[.user]:bg-gray-500 dark:text-gray-100 group-has-[.ai]:text-gray-800",
+      "px-4 py-3 rounded-lg leading-6 space-y-2 tracking-[0.1px] group-has-[.user]:bg-[hsl(60_28%_95%)] dark:group-has-[.user]:bg-gray-500 dark:data-[role=user]:text-gray-100 dark:data-[role=ai]:text-gray-200",
     chatboxContainer: "min-w-[200px] max-w-[750px] space-y-1 rounded-md",
     chatbox:
       "px-2 py-2 rounded-lg bg-gray-50 dark:bg-gray-500 border border-gray-200 dark:border-gray-500 shadow-sm",
