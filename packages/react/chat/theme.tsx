@@ -28,7 +28,7 @@ const defaultTheme: ChatTheme = {
   classNames: {
     thread: "h-full space-y-6",
     messagesContainer: "min-w-[350px] max-w-[750px] px-4 text-sm",
-    messages: "pt-2 space-y-5 pb-24",
+    messages: "pt-2 space-y-4 pb-24",
     roleContainer: "w-8 mr-5",
     role: "mt-2 text-[0.6rem] font-medium leading-8 rounded border overflow-hidden dark:border-gray-400 text-gray-600 dark:text-gray-300",
     messageContainer: "w-full",
