@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useStore } from "zustand";
 import clsx from "clsx";
 import Markdown from "react-markdown";
 import type { Chat } from "@reagentai/reagent/chat";
@@ -10,9 +11,7 @@ import { useChatTheme } from "./theme.js";
 const ChatThread = (props: { store: ChatStore }) => {
   const theme = useChatTheme();
   const { classNames } = theme;
-  const messages = props.store((s) => s.messages);
-  const prompt = props.store((s) => s.prompt);
-  const sortedMessageIds = props.store((s) => s.sortedMessageIds);
+  const { messages, sortedMessageIds, prompt } = useStore(props.store);
   const sortedMessages = useMemo(() => {
     return sortedMessageIds.map((id) => messages[id]);
   }, [messages, sortedMessageIds]);

@@ -1,4 +1,5 @@
 import { useContext, useEffect, useMemo } from "react";
+import { useStore } from "zustand";
 import type { Chat } from "@reagentai/reagent/chat";
 
 import { useReagentContext } from "../workflow/context.js";
@@ -53,19 +54,14 @@ const AgentNodeRenderer = (
       }}
       AppContext={AppContext}
       useAgentNode={() => {
-        const state = props.store(
-          (s) => s.persistentStateByMessageId[props.messageId]
-        );
-        const setState = props.store((s) => s.setPersistentState);
+        const { persistentStateByMessageId, setPersistentState: setState } =
+          useStore(props.store);
+        const state = persistentStateByMessageId[props.messageId];
         return {
           state,
           setState(state: any) {
             if (typeof state == "function") {
-              state = state(
-                props.store(
-                  (s) => s.persistentStateByMessageId[props.messageId]
-                )
-              );
+              state = state(persistentStateByMessageId[props.messageId]);
             }
             setState({
               messageId: props.messageId,
