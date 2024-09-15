@@ -17,14 +17,14 @@ const ReagentChat = (props: { store: ChatStore }) => {
   };
 
   return (
-    <div className="chat flex relative flex-1 h-full overflow-hidden">
-      <div className="relative flex-1 h-full min-w-[300px] overflow-hidden">
+    <div className="chat relative flex-1 h-full overflow-hidden">
+      <div className="relative h-full min-w-[300px] overflow-hidden">
         <div className="h-full text-xs">
           <ChatThread store={props.store} />
         </div>
-        <div className="chatbox-container absolute bottom-0 w-full px-4 flex justify-center pointer-events-none">
-          <div className="flex-1 min-w-[200px] max-w-[750px] rounded-lg pointer-events-auto backdrop-blur-xl space-y-1">
-            <div className="mb-4 bg-gray-400/10 rounded">
+        <div className="chatbox-container absolute bottom-0 w-full px-4 pb-4 flex justify-center pointer-events-none">
+          <div className="flex-1 pb-4 min-w-[200px] max-w-[750px] rounded-lg pointer-events-auto backdrop-blur-xl space-y-1">
+            <div className="bg-gray-400/10 rounded">
               <Chatbox
                 isChatLocked={false}
                 sendNewMessage={(input) => sendNewMessageMutation.mutate(input)}
