@@ -1,8 +1,13 @@
+import React from "react";
+
 import { Chatbox } from "./ChatBox.js";
 import { ChatThread } from "./ChatThread.js";
 import { ChatStore, NewMessage } from "./state.js";
 
-const ReagentChat = (props: { store: ChatStore }) => {
+const ReagentChat = (props: {
+  store: ChatStore;
+  emptyScreen?: () => React.ReactElement;
+}) => {
   const sendNewMessage = props.store(
     (s) => (input: NewMessage) =>
       s.invoke({
@@ -20,7 +25,7 @@ const ReagentChat = (props: { store: ChatStore }) => {
     <div className="chat relative flex-1 h-full overflow-hidden">
       <div className="relative h-full min-w-[300px] overflow-hidden">
         <div className="h-full text-xs">
-          <ChatThread store={props.store} />
+          <ChatThread store={props.store} emptyScreen={props.emptyScreen} />
         </div>
         <div className="chatbox-container absolute bottom-0 w-full px-4 flex justify-center pointer-events-none">
           <div className="flex-1 pb-4 min-w-[200px] max-w-[750px] rounded-lg pointer-events-auto backdrop-blur-xl space-y-1">

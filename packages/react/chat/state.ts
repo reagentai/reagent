@@ -24,9 +24,13 @@ export type ChatState = {
   persistentStateByMessageId: Record<string, any>;
   sortedMessageIds: string[];
   prompt: Parameters<Required<WorkflowClientOptions>["showPrompt"]>[0];
+  inflightRequest: {
+    // response message that's being streamed
+    response: Chat.Message | null;
+  } | null;
   setMessages: (messages: Record<string, Chat.Message>) => void;
   setPersistentState(options: { messageId: string; state: any }): void;
-  invoke: (options: { nodeId: string; input: NewMessage }) => void;
+  invoke: (options: { nodeId: string; input: NewMessage }) => Promise<void>;
   reset(): Promise<void>;
 };
 
@@ -101,6 +105,7 @@ export const createChatStore = (
           },
           sortedMessageIds: sortMessages(init.messages),
           prompt: undefined,
+          inflightRequest: null,
           setMessages(messages: Record<string, Chat.Message>) {
             set(
               produce((state) => {
@@ -127,6 +132,9 @@ export const createChatStore = (
                   message: { content: message.query },
                   role: "user",
                   createdAt: new Date().toISOString(),
+                };
+                state.inflightRequest = {
+                  response: null,
                 };
               });
 
@@ -188,6 +196,13 @@ export const createChatStore = (
               },
               error(error) {
                 init.onInvokeError?.(error);
+              },
+              complete() {
+                set((s) => {
+                  return produce(s, (state) => {
+                    state.inflightRequest = null;
+                  });
+                });
               },
             });
           },

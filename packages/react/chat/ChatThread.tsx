@@ -8,7 +8,10 @@ import { AgentNodeRenderer } from "./node.js";
 import { ChatStore } from "./state.js";
 import { useChatTheme } from "./theme.js";
 
-const ChatThread = (props: { store: ChatStore }) => {
+const ChatThread = (props: {
+  store: ChatStore;
+  emptyScreen?: () => React.ReactElement;
+}) => {
   const theme = useChatTheme();
   const { classNames } = theme;
   const { messages, sortedMessageIds, prompt } = useStore(props.store);
@@ -38,6 +41,11 @@ const ChatThread = (props: { store: ChatStore }) => {
     }
   };
 
+  const EmptyScreen = useMemo(
+    () => (props.emptyScreen ? props.emptyScreen : () => <></>),
+    [props.emptyScreen]
+  );
+
   useEffect(() => {
     scrollToBottom();
   }, [sortedMessages]);
@@ -53,14 +61,14 @@ const ChatThread = (props: { store: ChatStore }) => {
             classNames.messagesContainer
           )}
         >
-          {messages && (
+          {sortedMessageIds.length == 0 && <EmptyScreen />}
+          {sortedMessages.length > 0 && (
             <div
               ref={chatMessagesRef}
               className={clsx("chat-messages", classNames.messages)}
             >
               {sortedMessages.map((message, index) => {
                 const isLastMessage = index == sortedMessages.length - 1;
-
                 if (isLastMessage && lastMessage !== message) {
                   setLastMessage(message as any);
                   scrollToBottom();
@@ -149,7 +157,7 @@ const ChatMessage = (props: {
         "chat-message-container group flex flex-row",
         classNames.messageContainer,
         {
-          "!mt-0": !props.showRole,
+          "!mt-0 pt-2": !props.showRole,
         }
       )}
       data-role={role.id}
