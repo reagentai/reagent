@@ -473,9 +473,11 @@ class WorkflowStepRef<
       async step(stepId, fn) {
         let step = state!["@@steps"]?.[stepId];
         if (step) {
-          return step.result;
-        }
-        if (!step) {
+          return {
+            result: step.result,
+            cached: true,
+          };
+        } else {
           const result = await Promise.resolve(fn());
           dispatch({
             type: EventType.UPDATE_STATE,
@@ -486,7 +488,7 @@ class WorkflowStepRef<
               },
             },
           });
-          return result;
+          return { result };
         }
       },
     } satisfies Context<any, any>;
