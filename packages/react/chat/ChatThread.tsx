@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { useStore } from "zustand";
 import clsx from "clsx";
 import Markdown from "react-markdown";
@@ -41,10 +41,7 @@ const ChatThread = (props: {
     }
   };
 
-  const EmptyScreen = useMemo(
-    () => (props.emptyScreen ? props.emptyScreen : () => <></>),
-    [props.emptyScreen]
-  );
+  const EmptyScreen = memo(props.emptyScreen ? props.emptyScreen : () => <></>);
 
   useEffect(() => {
     scrollToBottom();
