@@ -132,6 +132,8 @@ export type StepState = (
       };
       // prompt result by prompt id
       "@@prompt": Record<string, { result: any }>;
+      // step result by stepId
+      "@@steps": Record<string, { result: any }>;
     }
 ) &
   // for sub-workflow states

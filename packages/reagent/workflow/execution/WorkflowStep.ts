@@ -34,7 +34,7 @@ import {
 } from "./types.js";
 
 const TOOL_CALL_SAGA = Symbol("TOOL_CALL_SAGA");
-const PROMPT_RESULT = Symbol("_PROMPT_RESULT_");
+const STEP_RESULT = Symbol("_STEP_RESULT_");
 
 type WorkflowStepOptions = {
   label?: string;
@@ -130,8 +130,8 @@ class WorkflowStepRef<
         if (result.value == context.PENDING) {
           const output = yield call(() => context[context.PENDING]);
           return output;
-        } else if (result.value[PROMPT_RESULT]) {
-          const promptResult = result.value[PROMPT_RESULT];
+        } else if (result.value[STEP_RESULT]) {
+          const promptResult = result.value[STEP_RESULT];
           result = yield call(() => generator.next(promptResult));
           continue;
         }
@@ -446,7 +446,7 @@ class WorkflowStepRef<
         const stepId = step as unknown as string;
         const prompt = state!["@@prompt"]?.[stepId];
         if (prompt) {
-          return Object.assign({ [PROMPT_RESULT]: prompt.result });
+          return Object.assign({ [STEP_RESULT]: prompt.result });
         }
         dispatch({
           type: EventType.UPDATE_STATE,
@@ -470,9 +470,29 @@ class WorkflowStepRef<
         context.stop();
         return PENDING;
       },
-      // @ts-expect-error
+      async step(stepId, fn) {
+        let step = state!["@@steps"]?.[stepId];
+        if (step) {
+          return step.result;
+        }
+        if (!step) {
+          const result = await Promise.resolve(fn());
+          dispatch({
+            type: EventType.UPDATE_STATE,
+            node,
+            state: {
+              "@@steps": {
+                [stepId]: { result },
+              },
+            },
+          });
+          return result;
+        }
+      },
+    } satisfies Context<any, any>;
+    Object.assign(context, {
       [PENDING]: pendingHook,
-    };
+    });
     return context;
   }
 }

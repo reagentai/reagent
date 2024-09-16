@@ -51,6 +51,7 @@ export type Context<
     }) => JSX.Element,
     data?: Data
   ): void;
+  step<O = void>(stepId: string, fn: () => O | Promise<O>): Promise<O>;
   // return 'PENDING' from 'execute' method if output will be sent later
   // using sendOutput. `context.done()` should be called when step is completed
   // if 'PENDING' is returned
