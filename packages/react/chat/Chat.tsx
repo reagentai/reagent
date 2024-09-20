@@ -1,4 +1,5 @@
 import React from "react";
+import { useStore } from "zustand";
 
 import { Chatbox } from "./ChatBox.js";
 import { ChatThread } from "./ChatThread.js";
@@ -6,18 +7,16 @@ import { ChatStore, NewMessage } from "./state.js";
 
 const ReagentChat = (props: {
   store: ChatStore;
-  emptyScreen?: () => React.ReactElement;
+  EmptyScreen?: () => React.ReactElement;
+  Loader?: () => React.ReactElement;
 }) => {
-  const sendNewMessage = props.store(
-    (s) => (input: NewMessage) =>
-      s.invoke({
-        nodeId: "input",
-        input,
-      })
-  );
+  const { invoke } = useStore(props.store);
   const sendNewMessageMutation = {
     mutate(input: NewMessage) {
-      sendNewMessage(input);
+      invoke({
+        nodeId: "input",
+        input,
+      });
     },
   };
 
@@ -25,7 +24,11 @@ const ReagentChat = (props: {
     <div className="chat relative flex-1 h-full overflow-hidden">
       <div className="relative h-full min-w-[300px] overflow-hidden">
         <div className="h-full text-xs">
-          <ChatThread store={props.store} emptyScreen={props.emptyScreen} />
+          <ChatThread
+            store={props.store}
+            EmptyScreen={props.EmptyScreen}
+            Loader={props.Loader}
+          />
         </div>
         <div className="chatbox-container absolute bottom-0 w-full px-4 flex justify-center pointer-events-none">
           <div className="flex-1 pb-4 min-w-[200px] max-w-[750px] rounded-lg pointer-events-auto backdrop-blur-xl space-y-1">

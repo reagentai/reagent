@@ -10,22 +10,20 @@ import { useChatTheme } from "./theme.js";
 
 const ChatThread = (props: {
   store: ChatStore;
-  emptyScreen?: () => React.ReactElement;
+  EmptyScreen?: () => React.ReactElement;
+  Loader?: () => React.ReactElement;
 }) => {
   const theme = useChatTheme();
   const { classNames } = theme;
-  const { messages, sortedMessageIds, prompt } = useStore(props.store);
+  const { messages, sortedMessageIds, prompt, inflightRequest } = useStore(
+    props.store
+  );
   const sortedMessages = useMemo(() => {
     return sortedMessageIds.map((id) => messages[id]);
   }, [messages, sortedMessageIds]);
 
   let chatMessagesContainerRef = useRef<HTMLDivElement>(null);
   let chatMessagesRef = useRef<HTMLDivElement>(null);
-
-  const sendNewMessage = {
-    isIdle: false,
-    isPending: false,
-  };
 
   const [lastMessage, setLastMessage] = useState(null);
   const scrollToBottom = () => {
@@ -41,7 +39,7 @@ const ChatThread = (props: {
     }
   };
 
-  const EmptyScreen = memo(props.emptyScreen ? props.emptyScreen : () => <></>);
+  const EmptyScreen = memo(props.EmptyScreen ? props.EmptyScreen : () => <></>);
 
   useEffect(() => {
     scrollToBottom();
@@ -83,17 +81,20 @@ const ChatThread = (props: {
                   />
                 );
               })}
-              {sendNewMessage.isPending && !sendNewMessage.isIdle && (
-                <div>
+              {props.Loader &&
+                inflightRequest &&
+                !inflightRequest.responseReceived && (
                   <ChatMessage
-                    // @ts-expect-error
-                    message={sendNewMessage.input}
+                    message={{
+                      id: "loading",
+                      role: "ai",
+                      Loader: props.Loader,
+                    }}
                     store={props.store}
-                    showRole={false}
+                    showRole={true}
                     theme={theme}
                   />
-                </div>
-              )}
+                )}
 
               {prompt?.Component && (
                 <ChatMessage
@@ -118,12 +119,14 @@ const ChatThread = (props: {
 const ChatMessage = (props: {
   message:
     | (Pick<Chat.Message, "id" | "message" | "ui" | "role" | "node"> & {
+        Loader?: () => React.ReactElement;
         prompt?: undefined;
       })
     | {
         id: string;
         role: "ai";
-        prompt: any;
+        Loader?: () => React.ReactElement;
+        prompt?: any;
         ui?: undefined;
         message?: undefined;
         node?: undefined;
@@ -179,6 +182,14 @@ const ChatMessage = (props: {
         data-message-id={props.message.id}
         data-role={role.id}
       >
+        {props.message.Loader && (
+          <div
+            className={clsx("chat-message-loading", classNames.messageContent)}
+            data-role={role.id}
+          >
+            {props.message.Loader()}
+          </div>
+        )}
         {props.message.ui && (
           <div className={clsx("chat-message-ui", classNames.messageUI)}>
             <AgentNodeRenderer

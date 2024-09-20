@@ -23,6 +23,7 @@
     "@reagentai/serve": "workspace:^",
     "clsx": "^2.1.1",
     "deepmerge": "^4.3.1",
+    "filter-obj": "^6.1.0",
     "highlight.js": "^11.9.0",
     "immer": "^10.0.3",
     "lucide-react": "^0.379.0",

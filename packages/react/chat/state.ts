@@ -1,6 +1,7 @@
-import { create } from "zustand";
+import { createStore } from "zustand";
 import { persist } from "zustand/middleware";
 import { produce } from "immer";
+import { includeKeys } from "filter-obj";
 import {
   createWorkflowClient,
   EventType,
@@ -25,8 +26,7 @@ export type ChatState = {
   sortedMessageIds: string[];
   prompt: Parameters<Required<WorkflowClientOptions>["showPrompt"]>[0];
   inflightRequest: {
-    // response message that's being streamed
-    response: Chat.Message | null;
+    responseReceived: boolean;
   } | null;
   setMessages: (messages: Record<string, Chat.Message>) => void;
   setPersistentState(options: { messageId: string; state: any }): void;
@@ -59,7 +59,7 @@ export const createChatStore = (
     : (x: any) => {
         return x;
       };
-  return create(
+  return createStore(
     withPerisist<ChatState>(
       (set, get, store) => {
         const client = createWorkflowClient({
@@ -134,7 +134,7 @@ export const createChatStore = (
                   createdAt: new Date().toISOString(),
                 };
                 state.inflightRequest = {
-                  response: null,
+                  responseReceived: false,
                 };
               });
 
@@ -189,7 +189,8 @@ export const createChatStore = (
                       "unknown message type:" + (msg as any).type
                     );
                   }
-                  return produce(state, (state: any) => {
+                  return produce(state, (state) => {
+                    state.inflightRequest = { responseReceived: true };
                     state.sortedMessageIds = sortMessages(state.messages);
                   });
                 });
@@ -220,6 +221,14 @@ export const createChatStore = (
       },
       {
         name: options?.persistKey!,
+        // @ts-expect-error
+        partialize(state) {
+          return includeKeys(state, [
+            "messages",
+            "persistentStateByMessageId",
+            "sortedMessageIds",
+          ]);
+        },
       }
     )
   );
