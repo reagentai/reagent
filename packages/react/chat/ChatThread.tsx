@@ -43,7 +43,11 @@ const ChatThread = (props: {
 
   useEffect(() => {
     scrollToBottom();
-  }, [sortedMessages]);
+  }, [
+    sortedMessages,
+    chatMessagesRef.current,
+    chatMessagesContainerRef.current,
+  ]);
   return (
     <div
       ref={chatMessagesContainerRef}
