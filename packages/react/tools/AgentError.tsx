@@ -12,7 +12,9 @@ const AgentError = createReagentNode({
     context.render(
       (props) => <div className="text-red-700">Error: {props.data.error}</div>,
       {
-        error: input.error,
+        data: {
+          error: input.error,
+        },
       }
     );
   },

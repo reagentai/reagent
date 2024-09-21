@@ -24,8 +24,10 @@ const CodeInterpreter = createReagentNode({
     const render = context.render(
       (props) => <CodeInterpreterComponent {...props} />,
       {
-        code: input.code,
-      } as CodeInterpreterData
+        data: {
+          code: input.code,
+        } as CodeInterpreterData,
+      }
     );
 
     const codeInterpreter = await E2BCodeInterpreter.create();

@@ -1,6 +1,6 @@
 import { Suspense, lazy, useEffect, useMemo, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import { create } from "zustand";
+import { create, useStore } from "zustand";
 import { persist } from "zustand/middleware";
 import { ReagentChat, createChatStore } from "@reagentai/react/chat";
 import { ReagentContextProvider } from "@reagentai/react/workflow";
@@ -63,7 +63,7 @@ const App = () => {
       ),
     []
   );
-  const messages = store((s) => s.messages);
+  const { messages } = useStore(store);
 
   if (!workflow) {
     return <div className="text-xs text-gray-600">Loading...</div>;

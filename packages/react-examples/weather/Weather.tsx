@@ -37,9 +37,12 @@ const GetWeather = createReagentNode({
       country: input.country,
       unit: input.unit,
     };
-    context.render((props) => {
-      return <Component {...props.data} />;
-    }, weather);
+    context.render(
+      (props) => {
+        return <Component {...props.data} />;
+      },
+      { data: weather }
+    );
 
     yield weather;
   },
