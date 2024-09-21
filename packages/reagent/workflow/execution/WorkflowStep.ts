@@ -413,7 +413,8 @@ class WorkflowStepRef<
           output,
         });
       },
-      render(step, data) {
+      render(step, options) {
+        const key = options?.key || "0";
         // since this runs in server side,
         // render will be transpiled to only pass component id
         const stepId = step as unknown as string;
@@ -423,7 +424,8 @@ class WorkflowStepRef<
           node,
           render: {
             step: stepId,
-            data,
+            key,
+            data: options?.data,
           },
         });
         return {
@@ -434,17 +436,19 @@ class WorkflowStepRef<
               node,
               render: {
                 step: stepId,
+                key,
                 data,
               },
             });
           },
         };
       },
-      prompt(step, data) {
+      prompt(step, options) {
+        const key = options?.key || "0";
         // since this runs in server side,
         // render will be transpiled to only pass prompt component id
         const stepId = step as unknown as string;
-        const prompt = state!["@@prompt"]?.[stepId];
+        const prompt = state!["@@prompt"]?.[stepId]?.[key];
         if (prompt) {
           return Object.assign({ [STEP_RESULT]: prompt.result });
         }
@@ -464,7 +468,8 @@ class WorkflowStepRef<
           node,
           render: {
             step: stepId,
-            data,
+            key,
+            data: options?.data,
           },
         });
         context.stop();

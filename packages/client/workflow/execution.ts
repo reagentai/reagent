@@ -71,6 +71,9 @@ const executeNode = async (
     prompt() {
       throw new Error("unsupported");
     },
+    step() {
+      throw new Error("unsupported");
+    },
     sendOutput(output: any) {
       // send output only when node execution is completed or
       // 'done' is called for PENDING node

@@ -8,6 +8,7 @@ export namespace Chat {
 
   export type UIRenderData = {
     step: string;
+    key: string;
     data: any;
   };
 
@@ -91,6 +92,7 @@ export namespace Chat {
       node: NodeMetadata;
       render: {
         step: string;
+        key: string;
         data: any;
       };
     };

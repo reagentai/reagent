@@ -40,7 +40,10 @@ export type Context<
     // additional props that's passed directly to component
     // props is evaludated on the server and only value is sent
     // to the client
-    data?: Data
+    options?: {
+      key?: string;
+      data?: Data;
+    }
   ): {
     update(data: Data): void;
   };
@@ -49,7 +52,10 @@ export type Context<
       data: Data;
       submit: (value: Value) => void;
     }) => JSX.Element,
-    data?: Data
+    options?: {
+      key?: string;
+      data?: Data;
+    }
   ): void;
   step<O = void>(
     stepId: string,

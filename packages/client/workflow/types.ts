@@ -7,6 +7,7 @@ import type {
 export type Subscriber = {
   next?(value: any): void;
   error?(error: Response | any): void;
+  complete?(): void;
 };
 
 type SendResult = {

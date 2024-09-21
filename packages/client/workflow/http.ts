@@ -133,7 +133,9 @@ const createHttpClient = (
                   dset(states, path, {
                     "@@prompt": {
                       [render.step]: {
-                        result,
+                        [render.key]: {
+                          result,
+                        },
                       },
                     },
                   });
@@ -151,6 +153,7 @@ const createHttpClient = (
         );
         options.showPrompt(undefined);
       }
+      subscribers.forEach((subscriber) => subscriber.complete?.());
     })();
     return {
       subscribe(subscriber: Subscriber) {
