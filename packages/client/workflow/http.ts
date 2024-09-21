@@ -123,11 +123,16 @@ const createHttpClient = (
 
             let resolve: any;
             const pending = new Promise((r) => (resolve = r));
+            let submitted = false;
             options.showPrompt!({
               Component,
               props: {
                 data: render.data,
                 submit(result) {
+                  if (submitted) {
+                    return;
+                  }
+                  submitted = true;
                   const path = node.path || [];
                   path.push(node.id);
                   dset(states, path, {
@@ -140,11 +145,11 @@ const createHttpClient = (
                     },
                   });
 
-                  send.bind({ states, subscribers })({
+                  const { toPromise } = send.bind({ states, subscribers })({
                     events: [],
                     states,
                   });
-                  resolve();
+                  toPromise().then(resolve);
                 },
               },
             });
