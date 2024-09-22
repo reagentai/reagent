@@ -233,7 +233,7 @@ class WorkflowRun {
               });
             } else if (status == StepStatus.STOPPED) {
               self.#channel.put({
-                type: EventType.RESUME,
+                type: EventType.INVOKE,
                 session,
                 node: { id: nodeId },
                 input: data.input,

@@ -307,6 +307,16 @@ class WorkflowStepRef<
         Object.assign(input, toolCallInput);
       }
 
+      const runCompletion = yield actionChannel((e: any) => {
+        return (
+          (e.type == EventType.RUN_COMPLETED ||
+            e.type == EventType.RUN_CANCELLED ||
+            e.type == EventType.SKIP_RUN ||
+            e.type == EventType.EXECUTE_ON_CLIENT) &&
+          e.node.id == self.nodeId
+        );
+      });
+
       yield put({
         type: EventType.INVOKE,
         node: {
@@ -317,15 +327,7 @@ class WorkflowStepRef<
       // if the node was invoked, wait for the run to complete
       // before cleaning up
       yield fork(function* saga() {
-        yield take((e: any) => {
-          return (
-            (e.type == EventType.RUN_COMPLETED ||
-              e.type == EventType.RUN_CANCELLED ||
-              e.type == EventType.SKIP_RUN ||
-              e.type == EventType.EXECUTE_ON_CLIENT) &&
-            e.node.id == self.nodeId
-          );
-        });
+        yield take(runCompletion);
         cleanups.forEach((cleanup) => cleanup());
       });
       return input;

@@ -23,7 +23,6 @@ export enum EventType {
   // emitted when a workflow is started
   START = "START",
   INVOKE = "INVOKE",
-  RESUME = "RESUME",
   NO_BINDINGS = "NO_BINDINGS",
   SKIP_INVOKE = "SKIP_INVOKE",
   SKIP_RUN = "SKIP_RUN",
