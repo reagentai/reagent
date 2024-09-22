@@ -128,32 +128,63 @@ class WorkflowStepRef<
     });
   }
 
-  *#execute(options: { input: any; context: any }): any {
-    const { context, input } = options;
+  *#runGenerator(options: {
+    context: any;
+    generator: any;
+    isTask?: boolean;
+  }): any {
+    const self = this;
+    const { context, generator, isTask = false } = options;
     try {
-      const self = this;
-      const generator = self.node.execute(context, input);
-
       const stepOutput = {};
       let result = yield call(() => generator.next());
       while (!result.done) {
+        if (!result.value) {
+          result = yield call(() => generator.next());
+          continue;
+        }
         if (result.value == context.PENDING) {
           const output = yield call(() => context[context.PENDING]);
           return output;
+        } else if (result.value && result.value[context.TASK]) {
+          const { fn, args } = result.value[context.TASK];
+          const output = yield call(self.#runGenerator.bind(self), {
+            context: {
+              PENDING: context.PENDING,
+              [context.PENDING]: context[context.PENDING],
+              done() {},
+            },
+            generator: fn(...args),
+            isTask: true,
+          });
+
+          if (output == context.PENDING) {
+            const output = yield call(() => context[context.PENDING]);
+            return output as Output;
+          } else {
+            result = yield call(() => generator.next(output));
+            continue;
+          }
         } else if (result.value[STEP_RESULT]) {
           const promptResult = result.value[STEP_RESULT];
           result = yield call(() => generator.next(promptResult));
           continue;
         }
 
-        Object.assign(stepOutput, result.value);
-        context.sendOutput(result.value);
+        // dont send output for subtask spawn using `context.task(...)`
+        if (!isTask) {
+          Object.assign(stepOutput, result.value);
+          context.sendOutput(result.value);
+        }
         result = yield call(() => generator.next());
       }
 
       if (result.value == context.PENDING) {
         const output = yield call(() => context[context.PENDING]);
         return output as Output;
+      } else if (isTask) {
+        // if it's a sub task, return the return value
+        return result.value;
       } else {
         return stepOutput as Output;
       }
@@ -203,9 +234,11 @@ class WorkflowStepRef<
           input: action.input,
           state,
         });
-        const output = yield call(self.#execute.bind(self), {
-          input: action.input,
+
+        const generator = self.node.execute(context, action.input);
+        const output = yield call(self.#runGenerator.bind(self), {
           context,
+          generator,
         });
         if (output != context.PENDING) {
           dispatch({
@@ -359,6 +392,7 @@ class WorkflowStepRef<
     };
 
     const PENDING = Symbol("_PENDING_");
+    const TASK = Symbol("_TASK_");
     let resolve: any;
     const pendingHook = new Promise((r) => (resolve = r));
     const allOutput = {};
@@ -367,6 +401,7 @@ class WorkflowStepRef<
       node,
       config: self.config || {},
       PENDING,
+      TASK,
       state,
       updateState(n: NodeMetadata, s: StepState) {
         const path = [...(n.path ?? []), n.id];
@@ -500,6 +535,11 @@ class WorkflowStepRef<
           });
           return { result };
         }
+      },
+      task(fn, ...args) {
+        return {
+          [TASK]: { fn, args },
+        } as unknown as Symbol;
       },
     } satisfies Context<any, any>;
     Object.assign(context, {

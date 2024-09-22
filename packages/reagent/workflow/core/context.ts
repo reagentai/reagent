@@ -65,10 +65,20 @@ export type Context<
     // set to true if the step was already run and cached result is returned
     cached?: boolean;
   }>;
+
+  // this can be used to execute child async generator called "task" such that
+  // those children tasks can also pause workflows if needed. For example, when
+  // using context.prompt(...)
+  task<Fn extends (...args: any[]) => any>(
+    fn: Fn,
+    ...args: Parameters<Fn>
+  ): Symbol;
+
   // return 'PENDING' from 'execute' method if output will be sent later
   // using sendOutput. `context.done()` should be called when step is completed
   // if 'PENDING' is returned
   PENDING: Symbol;
+  TASK: Symbol;
 };
 
 export type RenderContext<State = void> = {};

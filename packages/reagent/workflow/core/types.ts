@@ -49,5 +49,5 @@ export type BaseReagentNodeOptions<
   execute(
     context: Context<Config, Output>,
     input: WithDefaultEmpty<Input>
-  ): ExecutionResult<AtLeastOne<Output>>;
+  ): ExecutionResult<AtLeastOne<Output> | Symbol>;
 };

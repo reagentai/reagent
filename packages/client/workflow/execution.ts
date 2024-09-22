@@ -1,3 +1,4 @@
+import type { Context } from "@reagentai/reagent";
 import {
   NodeMetadata,
   BaseReagentNodeOptions,
@@ -79,7 +80,10 @@ const executeNode = async (
       // 'done' is called for PENDING node
       Object.assign(stepOutput, output);
     },
-  };
+    run(_generator) {
+      throw new Error("unsupported");
+    },
+  } satisfies Context<any, any>;
 
   const iterator = template.execute(context, input);
   let result = await iterator.next();
