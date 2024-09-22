@@ -1,4 +1,4 @@
-import { memo, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useStore } from "zustand";
 import clsx from "clsx";
 import Markdown from "react-markdown";
@@ -223,7 +223,14 @@ const ChatMessage = (props: {
           )
         }
         {props.message.prompt && (
-          <props.message.prompt.Component {...props.message.prompt.props} />
+          <props.message.prompt.Component
+            {...props.message.prompt.props}
+            React={{
+              useContext,
+              useEffect,
+              useMemo,
+            }}
+          />
         )}
       </div>
     </div>

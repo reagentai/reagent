@@ -50,6 +50,11 @@ export type Context<
   prompt<Data, Value = any>(
     Component: (props: {
       data: Data;
+      React: {
+        useEffect: any;
+        useContext: any;
+        useMemo: any;
+      };
       submit: (value: Value) => void;
     }) => JSX.Element,
     options?: {
