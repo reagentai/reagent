@@ -114,7 +114,11 @@ class WorkflowRun {
         channel: self.#channel,
         context: {
           session: self.#session,
-          getStepState: options.getStepState,
+          async getStepState(nodeId: string) {
+            if (options.getStepState) {
+              return await options.getStepState(nodeId);
+            }
+          },
           async updateStepState(node: NodeMetadata, state: StepState) {
             if (options.updateStepState) {
               if (!stepStates[node.id]) {
@@ -123,7 +127,7 @@ class WorkflowRun {
                   : {};
               }
               stepStates[node.id] = deepmerge(
-                stepStates[node.id],
+                stepStates[node.id] || {},
                 state as any
               );
               options.updateStepState(node, stepStates[node.id]);

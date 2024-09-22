@@ -8,6 +8,7 @@ import {
   cancel,
   join,
   cancelled,
+  actionChannel,
 } from "redux-saga/effects";
 import { serializeError } from "serialize-error";
 import { dset } from "dset";
@@ -92,10 +93,18 @@ class WorkflowStepRef<
     });
 
     yield fork(function* saga(): any {
+      const invokeChannel = yield actionChannel((e: any) => {
+        return (
+          (e.type == EventType.NO_BINDINGS ||
+            e.type == EventType.INVOKE ||
+            e.type == EventType.SKIP_INVOKE ||
+            e.type == EventType.EXECUTE_ON_CLIENT) &&
+          e.node.id == self.nodeId
+        );
+      });
+
       const getStepState = yield getContext("getStepState");
-      const state: StepState = getStepState
-        ? yield call(getStepState, self.nodeId)
-        : undefined;
+      const state: StepState = yield call(getStepState, self.nodeId);
 
       const { "@@status": status } = state || {};
       if (
@@ -108,7 +117,8 @@ class WorkflowStepRef<
       const bindings = yield fork(self.#bindingsResolver.bind(self));
       const invoke = yield fork(
         self.#invokeListenerSaga.bind(self),
-        state || {}
+        state || {},
+        invokeChannel
       );
       try {
         yield join([invoke, bindings]);
@@ -153,16 +163,9 @@ class WorkflowStepRef<
     }
   }
 
-  *#invokeListenerSaga(state: StepState | undefined): any {
+  *#invokeListenerSaga(state: StepState | undefined, invokeChannel: any): any {
     const self = this;
-    const action = yield take(
-      (e: any) =>
-        (e.type == EventType.NO_BINDINGS ||
-          e.type == EventType.INVOKE ||
-          e.type == EventType.SKIP_INVOKE ||
-          e.type == EventType.EXECUTE_ON_CLIENT) &&
-        e.node.id == self.nodeId
-    );
+    const action = yield take(invokeChannel);
     if (action.type != EventType.INVOKE) {
       return;
     }
