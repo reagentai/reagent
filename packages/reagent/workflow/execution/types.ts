@@ -151,7 +151,7 @@ export type StepState = (
     | Record<
         // render key
         string,
-        { rendered: boolean }
+        { rendered: boolean; updated: Record<string, boolean> }
       >
     | undefined
   >;

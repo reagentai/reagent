@@ -483,7 +483,7 @@ class WorkflowStepRef<
         return {
           update(data, options) {
             const updateKey = options?.key || "0";
-            if (!stepRender?.[key]?.updates?.[updateKey]) {
+            if (!stepRender?.[key]?.updated?.[updateKey]) {
               dispatch({
                 type: EventType.UPDATE_STATE,
                 node,
@@ -491,7 +491,7 @@ class WorkflowStepRef<
                   "@@renders": {
                     [stepId]: {
                       [key]: {
-                        updates: {
+                        updated: {
                           [updateKey]: true,
                         },
                       },
