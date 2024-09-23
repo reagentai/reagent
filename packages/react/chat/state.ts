@@ -182,7 +182,16 @@ export const createChatStore = (
                   } else if (msg.type == "message/ui/update") {
                     const data = msg.data;
                     state = produce(s, (state) => {
-                      state.messages[data.id] = data;
+                      const prev = s.messages[data.id]?.ui || [];
+                      state.messages[data.id] = {
+                        ...data,
+                        ui: Array.from(
+                          // unique items by render key
+                          new Map(
+                            [...prev, data.ui].map((ui) => [ui["key"], ui])
+                          ).values()
+                        ),
+                      };
                     });
                   } else {
                     throw new Error(

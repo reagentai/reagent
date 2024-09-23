@@ -54,6 +54,7 @@ export type Context<
       }
     ): void;
   };
+  // `context.prompt(...)` must be yielded
   prompt<Data, Value = any>(
     Component: (props: {
       data: Data;
@@ -68,7 +69,7 @@ export type Context<
       key?: string;
       data?: Data;
     }
-  ): void;
+  ): Value;
   step<O = void>(
     stepId: string,
     fn: () => O | Promise<O>
@@ -81,6 +82,7 @@ export type Context<
   // this can be used to execute child async generator called "task" such that
   // those children tasks can also pause workflows if needed. For example, when
   // using context.prompt(...)
+  // `context.task(...)` must be yielded
   task<Fn extends (...args: any[]) => any>(
     fn: Fn,
     ...args: Parameters<Fn>

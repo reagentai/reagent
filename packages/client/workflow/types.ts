@@ -34,7 +34,7 @@ export type WorkflowClientOptions = {
     prompt:
       | {
           Component: any;
-          props: { data: any; submit: (value: any) => void };
+          props: { key: string; data: any; submit: (value: any) => void };
         }
       | undefined
   ) => void;

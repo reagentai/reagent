@@ -30,12 +30,12 @@ const triggerReagentWorkflow = (
   });
   run.output.ui.subscribe({
     next(output: any) {
-      const { node, value } = output;
+      const { session, node, value } = output;
       const createdAt = new Date();
       workflowOutputStream.next({
         type: "message/ui/update" as const,
         data: {
-          id: run.id + "-" + node.id,
+          id: [session.id, node.id].join("/"),
           node,
           ui: value,
           role: "ai",

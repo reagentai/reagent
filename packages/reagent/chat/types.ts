@@ -18,7 +18,7 @@ export namespace Chat {
     message?: {
       content: string;
     };
-    ui?: UIRenderData;
+    ui?: UIRenderData[];
     role: string;
     createdAt: string;
   };

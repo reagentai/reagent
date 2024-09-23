@@ -110,9 +110,10 @@ const createHttpClient = (
           );
         })
       );
+
       if (pendingPrompts.length > 0 && options.showPrompt) {
         await Promise.all(
-          pendingPrompts.map(({ template, render, node }) => {
+          pendingPrompts.map(({ session, template, render, node }) => {
             const [_, Component] =
               (template as any).components.find(
                 (c: any) => c[0] == render.step
@@ -127,6 +128,7 @@ const createHttpClient = (
             options.showPrompt!({
               Component,
               props: {
+                key: render.key,
                 data: render.data,
                 submit(result) {
                   if (submitted) {
@@ -146,6 +148,7 @@ const createHttpClient = (
                   });
 
                   const { toPromise } = send.bind({ states, subscribers })({
+                    session: { id: session.id },
                     events: [],
                     states,
                   });

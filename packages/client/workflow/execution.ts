@@ -47,6 +47,7 @@ const executeNode = async (
     config: {},
     state: undefined,
     PENDING: Symbol("__PENDING__"),
+    TASK: Symbol("__TASK__"),
     updateState() {
       throw new Error("unsupported");
     },
@@ -80,7 +81,7 @@ const executeNode = async (
       // 'done' is called for PENDING node
       Object.assign(stepOutput, output);
     },
-    run(_generator) {
+    task(_generator, ...args) {
       throw new Error("unsupported");
     },
   } satisfies Context<any, any>;

@@ -8,7 +8,7 @@ import { ChatStore } from "./state.js";
 const AgentNodeRenderer = (
   props: {
     messageId: string;
-    render: Chat.UIRenderData;
+    ui: Chat.UIRenderData;
     store: ChatStore;
   } & Pick<Chat.Message, "node">
 ) => {
@@ -33,8 +33,8 @@ const AgentNodeRenderer = (
   }, [props.node.type, templatesById]);
 
   const Component = useMemo(() => {
-    return components[props.render.step];
-  }, [props.render.step, components]);
+    return components[props.ui.step];
+  }, [props.ui.step, components]);
 
   if (!Component) {
     return <></>;
@@ -42,7 +42,7 @@ const AgentNodeRenderer = (
   return (
     <Component
       // @ts-expect-error
-      data={props.render.data}
+      data={props.ui.data}
       context={{
         sendOutput(output: any) {
           throw new Error("unsupported");

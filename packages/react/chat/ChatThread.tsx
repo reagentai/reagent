@@ -194,16 +194,17 @@ const ChatMessage = (props: {
             {props.message.Loader()}
           </div>
         )}
-        {props.message.ui && (
-          <div className={clsx("chat-message-ui", classNames.messageUI)}>
-            <AgentNodeRenderer
-              messageId={props.message.id}
-              store={props.store}
-              node={props.message.node}
-              render={props.message.ui!}
-            />
-          </div>
-        )}
+        {props.message.ui &&
+          props.message.ui.map((ui, index) => (
+            <div className="chat-message-ui" key={index}>
+              <AgentNodeRenderer
+                messageId={props.message.id}
+                store={props.store}
+                node={props.message.node}
+                ui={ui}
+              />
+            </div>
+          ))}
         {
           // node isn't set for user message
           (Boolean(props.message.message) ||
