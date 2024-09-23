@@ -6,7 +6,7 @@ export type AtLeastOne<T> = {
 }[keyof T];
 
 export type AsyncGeneratorWithField<T> = AsyncGenerator<
-  T | void,
+  T | void | any,
   Symbol | void,
   void | never
 >;

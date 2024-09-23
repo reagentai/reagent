@@ -57,13 +57,14 @@ export type Context<
   // `context.prompt(...)` must be yielded
   prompt<Data, Value = any>(
     Component: (props: {
+      key: string;
       data: Data;
       React: {
         useEffect: any;
         useContext: any;
         useMemo: any;
       };
-      submit: (value: Value) => void;
+      submit(value: Value): void;
     }) => JSX.Element,
     options?: {
       key?: string;
