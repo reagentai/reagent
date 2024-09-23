@@ -45,7 +45,14 @@ export type Context<
       data?: Data;
     }
   ): {
-    update(data: Data): void;
+    update(
+      data: Data,
+      options?: {
+        // update key; render update is applied once per key
+        // default: "0"
+        key?: string;
+      }
+    ): void;
   };
   prompt<Data, Value = any>(
     Component: (props: {

@@ -458,28 +458,58 @@ class WorkflowStepRef<
         // since this runs in server side,
         // render will be transpiled to only pass component id
         const stepId = step as unknown as string;
-        dispatch({
-          type: EventType.RENDER,
-          session,
-          node,
-          render: {
-            step: stepId,
-            key,
-            data: options?.data,
-          },
-        });
-        return {
-          update(data) {
-            dispatch({
-              type: EventType.RENDER,
-              session,
-              node,
-              render: {
-                step: stepId,
-                key,
-                data,
+        let stepRender = state!["@@renders"]?.[stepId];
+        if (!stepRender?.[key]?.rendered) {
+          dispatch({
+            type: EventType.UPDATE_STATE,
+            node,
+            state: {
+              "@@renders": {
+                [stepId]: { [key]: { rendered: true } },
               },
-            });
+            },
+          });
+          dispatch({
+            type: EventType.RENDER,
+            session,
+            node,
+            render: {
+              step: stepId,
+              key,
+              data: options?.data,
+            },
+          });
+        }
+        return {
+          update(data, options) {
+            const updateKey = options?.key || "0";
+            if (!stepRender?.[key]?.updates?.[updateKey]) {
+              dispatch({
+                type: EventType.UPDATE_STATE,
+                node,
+                state: {
+                  "@@renders": {
+                    [stepId]: {
+                      [key]: {
+                        updates: {
+                          [updateKey]: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              });
+              dispatch({
+                type: EventType.RENDER,
+                session,
+                node,
+                render: {
+                  step: stepId,
+                  key,
+                  data,
+                },
+              });
+            }
           },
         };
       },

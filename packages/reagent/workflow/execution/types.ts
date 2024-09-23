@@ -129,14 +129,33 @@ export type StepState = (
       "@@data": {
         input: any;
       };
-      // prompt result by prompt id
-      "@@prompt": Record<string, { result: any }>;
-      // step result by stepId
-      "@@steps": Record<string, { result: any }>;
     }
-) &
-  // for sub-workflow states
-  Record<string, any>;
+) & {
+  "@@prompt"?: Record<
+    // prompt component id
+    string,
+    Record<
+      // prompt key id
+      string,
+      { result: any }
+    >
+  >;
+  "@@steps"?: Record<
+    // step id
+    string,
+    { result: any }
+  >;
+  "@@renders"?: Record<
+    // render step id
+    string,
+    | Record<
+        // render key
+        string,
+        { rendered: boolean }
+      >
+    | undefined
+  >;
+} & Record<string, any>; // for sub-workflow states
 
 export type WorkflowRunEvent =
   | Omit<WorkflowEvent.Invoke, "session">
