@@ -11,6 +11,7 @@ import {
 import type { Chat } from "@reagentai/reagent/chat";
 import type {
   BaseReagentNodeOptions,
+  WorkflowNode,
   WorkflowRunEvent,
 } from "@reagentai/reagent";
 
@@ -38,7 +39,11 @@ type StoreInit = {
   messages: Record<string, Chat.Message>;
   // workflow execution url
   url: string;
-  templates: BaseReagentNodeOptions<any, any, any>[];
+  templates:
+    | BaseReagentNodeOptions<any, any, any>[]
+    // during build, WorkflowNode will be converted to BaseReagentNodeOptions
+    // for client bundle, using `WorkflowNode` here only for type safety
+    | WorkflowNode<any, any, any>[];
   middleware?: {
     request: (
       options: EmitOptions,
@@ -69,7 +74,7 @@ export const createChatStore = (
               "content-type": "application/json",
             },
           },
-          templates: init.templates,
+          templates: init.templates as BaseReagentNodeOptions<any, any, any>[],
           showPrompt(prompt) {
             set(
               produce((state) => {
