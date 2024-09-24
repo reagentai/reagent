@@ -38,7 +38,7 @@ const tranformCreateAgentNode = {
     ) {
       path.traverse({
         Identifier(path) {
-          path.__reagentNodeRemoved = true;
+          path.__reagentNodeRemoved = Boolean(!path.__reagentSkipTreeshake);
         },
       });
       path.remove();
@@ -50,7 +50,7 @@ const tranformCreateAgentNode = {
     if (path.node.key.name != "execute") {
       path.traverse({
         Identifier(path) {
-          path.__reagentNodeRemoved = true;
+          path.__reagentNodeRemoved = Boolean(!path.__reagentSkipTreeshake);
         },
       });
       path.remove();
@@ -67,7 +67,9 @@ const tranformCreateAgentNode = {
     if (!this.state.targetClient) {
       path.traverse({
         Identifier(path) {
-          path.__reagentNodeRemoved = true;
+          if (!path.__reagentSkipTreeshake) {
+            path.__reagentNodeRemoved = Boolean(!path.__reagentSkipTreeshake);
+          }
         },
       });
       path.remove();
@@ -108,6 +110,13 @@ const transformCreateAgentNodeExecuteMethod = {
     if (!isContextRender) {
       return;
     }
+
+    // dont treeshake the identifiers inside context.render/prompt
+    path.traverse({
+      Identifier(path) {
+        path.__reagentSkipTreeshake = true;
+      },
+    });
     this.renderCalls.push(
       t.arrayExpression([
         // add render id as the first argument

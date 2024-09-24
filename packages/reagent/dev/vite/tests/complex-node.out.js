@@ -1,4 +1,6 @@
 import { Loader, CircleCheckBig } from "lucide-react";
+import ky from "ky";
+
 const CopilotNode = {
   id: "input",
   name: "Copilot",

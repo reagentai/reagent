@@ -21,6 +21,7 @@ const filterRegex = new RegExp(
  * @property {boolean} [ssr] - set this to true to transpile files for frontend
  * @property {string[]} [include] - glob pattern to include files
  * @property {string[]} [exclude] - glob pattern to exclude files; include takes precedence
+ * @property {string[]} [preserveImports] - imports to preserve; i.e. dont treeshake
  * @property {any[]} [presets] - babel presets
  * @property {any[]} [plugins] - babel plugins
  */
@@ -63,7 +64,11 @@ const createPlugin = (options = {}) => {
         ...(options.plugins || []),
       ];
       if (!ssr) {
-        plugins.push(createRemoveDefaultExportPlugin({}));
+        plugins.push(
+          createRemoveDefaultExportPlugin({
+            preserveImports: options.preserveImports,
+          })
+        );
       }
       const { code: transformedCode, map } = transformSync(code, {
         configFile: false,
