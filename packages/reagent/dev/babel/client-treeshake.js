@@ -65,6 +65,26 @@ const treeshake = {
       path.skip();
     }
   },
+  ClassDeclaration(path) {
+    if (!this.state.isReagentaiAgentModule) {
+      return;
+    }
+    if (
+      // since only imports are treeshook, dont need to check scope?
+      // TODO: if scope needs to be checked, find a way to do it accurately
+      // path.scope == this.state.scope &&
+      !this.state.exportedIdentifiers.has(path.node.id.name)
+    ) {
+      path.traverse({
+        Identifier(path) {
+          path.__reagentNodeRemoved = true;
+        },
+      });
+      path.remove();
+    } else {
+      path.skip();
+    }
+  },
 };
 
 /**

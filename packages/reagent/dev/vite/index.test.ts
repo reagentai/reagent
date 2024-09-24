@@ -1,3 +1,5 @@
+import path from "path";
+import fs from "fs";
 import { expect, test } from "vitest";
 import { transformSync } from "@babel/core";
 // @ts-ignore
@@ -70,7 +72,25 @@ test("test vite plugin - should remove default export", () => {
   const { code } = vitePlugin.transform(source, "file.tsx", {
     ssr: false,
   })!;
-  expect(code).to.equal(expected);
+  expect(cleanUpCode(code)).to.equal(expected);
+});
+
+test("only keep used imports - complex-node.js", () => {
+  const expected = cleanUpCode(
+    fs.readFileSync(
+      path.join(__dirname, "./tests/complex-node.out.js"),
+      "utf-8"
+    )
+  );
+
+  const { code: transformedCode } = vitePlugin.transform(
+    fs.readFileSync(path.join(__dirname, "./tests/complex-node.js"), "utf-8"),
+    "file.tsx",
+    {
+      ssr: false,
+    }
+  )!;
+  expect(cleanUpCode(transformedCode)).to.equal(expected);
 });
 
 const cleanUpCode = (code: string) => {
@@ -78,8 +98,11 @@ const cleanUpCode = (code: string) => {
     transformSync(code, {
       filename: "test.tsx",
       ast: true,
-      plugins: ["@babel/plugin-syntax-jsx"],
-    })?.ast
+      plugins: ["@babel/plugin-transform-react-jsx"],
+    })?.ast,
+    {
+      concise: true,
+    }
   );
   return generated;
 };

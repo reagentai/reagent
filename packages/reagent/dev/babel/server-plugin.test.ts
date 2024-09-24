@@ -31,7 +31,7 @@ test("dont transpile createReagentNode in server if no render is used", () => {
   expect(transformedCode).toBe(cleanUpCode(codeToTransform));
 });
 
-test("add render-id to nested render calls", () => {
+test("add component-id to nested render calls", () => {
   const expected = cleanUpCode(`
     import { createReagentNode, z } from "@reagentai/reagent/agent";
     const GetWeather = createReagentNode({
@@ -44,13 +44,13 @@ test("add render-id to nested render calls", () => {
       }),
       output: outputSchema,
       async *execute(context, input) {
-        const gen = context.render("render-0",
+        const gen = context.render("component-0",
           {
             sql: input.sql,
           }
         );
         if (input.msg.length > 10) {
-          context.render("render-1");
+          context.render("component-1");
         }
         yield { msg: "Hello" };
       },

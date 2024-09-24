@@ -48,6 +48,11 @@ const tranformCreateAgentNode = {
   },
   ObjectMethod(path) {
     if (path.node.key.name != "execute") {
+      path.traverse({
+        Identifier(path) {
+          path.__reagentNodeRemoved = true;
+        },
+      });
       path.remove();
       return;
     }
@@ -60,6 +65,11 @@ const tranformCreateAgentNode = {
     path.traverse(transformCreateAgentNodeExecuteMethod, this.state);
 
     if (!this.state.targetClient) {
+      path.traverse({
+        Identifier(path) {
+          path.__reagentNodeRemoved = true;
+        },
+      });
       path.remove();
     } else {
       path.skip();

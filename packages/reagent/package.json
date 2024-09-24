@@ -109,6 +109,7 @@
     "zustand": "^4.5.2"
   },
   "devDependencies": {
+    "@babel/plugin-transform-react-jsx": "^7.25.2",
     "@types/babel__core": "^7.20.5",
     "@types/dlv": "^1.1.4",
     "@types/lodash-es": "^4.17.12",

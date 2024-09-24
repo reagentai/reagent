@@ -114,10 +114,10 @@ test("extract only render calls from createReagentNode", () => {
       name: "Get weather",
       version: "0.0.1",
       components: [
-        ["render-0", props => {
+        ["component-0", props => {
           return <div>FIRST</div>;
         }],
-        ["render-1", props => {
+        ["component-1", props => {
           return <div>SECOND</div>;
         }]
       ]
@@ -166,7 +166,7 @@ test("extract only render calls from createReagentNode when using variable", () 
       name: "Get weather",
       version: "0.0.1",
       components: [
-        ["render-0", props => <QueryComponent {...props.data} />]
+        ["component-0", props => <QueryComponent {...props.data} />]
       ]
     };
   `);
@@ -207,7 +207,7 @@ test("leave execute method intact if target is client", () => {
         yield { msg: "Hello" };
       },
       components: [
-        ["render-0", props => <div>NICE</div>]
+        ["component-0", props => <div>NICE</div>]
       ]
     };
   `);
