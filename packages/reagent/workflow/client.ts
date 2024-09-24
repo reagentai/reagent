@@ -2,10 +2,12 @@
 // so, be careful about exporting from files that are
 // meant for server side code
 
-export { BaseReagentNodeOptions } from "./core/types.js";
+export type { Context, RenderContext } from "./core/context.js";
+export type { BaseReagentNodeOptions } from "./core/types.js";
 export {
-  NodeMetadata,
+  type NodeMetadata,
   PublicEventType as EventType,
   StepStatus,
-  StepState,
+  type StepState,
+  type WorkflowRunEvent,
 } from "./execution/types.js";

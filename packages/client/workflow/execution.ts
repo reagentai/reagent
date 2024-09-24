@@ -1,4 +1,4 @@
-import type { Context } from "@reagentai/reagent";
+import type { Context } from "@reagentai/reagent/workflow/client";
 import {
   NodeMetadata,
   BaseReagentNodeOptions,

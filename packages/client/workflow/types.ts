@@ -2,7 +2,7 @@ import type {
   BaseReagentNodeOptions,
   StepState,
   WorkflowRunEvent,
-} from "@reagentai/reagent";
+} from "@reagentai/reagent/workflow/client";
 
 export type Subscriber = {
   next?(value: any): void;
