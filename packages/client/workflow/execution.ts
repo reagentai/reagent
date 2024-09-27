@@ -1,12 +1,11 @@
-import type { Context } from "@reagentai/reagent/workflow/client";
 import {
+  Context,
   NodeMetadata,
-  BaseReagentNodeOptions,
   StepStatus,
 } from "@reagentai/reagent/workflow/client";
 import { dset } from "dset/merge";
 
-import { ExecutionClient } from "./types";
+import { ExecutionClient, WorkflowClientOptions } from "./types";
 
 const executeNode = async (
   client: ExecutionClient,
@@ -15,7 +14,7 @@ const executeNode = async (
       id: string;
     };
     node: NodeMetadata;
-    template: BaseReagentNodeOptions<any, any, any>;
+    template: WorkflowClientOptions["templates"][number];
     input: any;
   }
 ) => {

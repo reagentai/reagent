@@ -82,6 +82,11 @@ export const createChatStore = (
               })
             );
           },
+          middleware: {
+            request(options) {
+              return init.middleware?.request?.(options, get()) || options;
+            },
+          },
         });
 
         const sortMessages = (messages: Record<string, Chat.Message>) => {
@@ -148,7 +153,7 @@ export const createChatStore = (
               });
             });
 
-            const emitOptions = {
+            const result = client.send({
               events: [
                 {
                   type: EventType.INVOKE,
@@ -156,10 +161,7 @@ export const createChatStore = (
                   node: { id: options.nodeId },
                 },
               ] as WorkflowRunEvent[],
-            };
-            const body =
-              init.middleware?.request?.(emitOptions, get()) || emitOptions;
-            const result = client.send(body);
+            });
             result.subscribe({
               next(msg) {
                 set((s) => {

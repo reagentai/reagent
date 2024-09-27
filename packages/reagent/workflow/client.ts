@@ -4,6 +4,7 @@
 
 export type { Context, RenderContext } from "./core/context.js";
 export type { BaseReagentNodeOptions } from "./core/types.js";
+export type { WorkflowNode } from "./core/node.js";
 export {
   type NodeMetadata,
   PublicEventType as EventType,

@@ -1,13 +1,11 @@
-import {
-  EventType,
-  type BaseReagentNodeOptions,
-} from "@reagentai/reagent/workflow/client";
+import { EventType } from "@reagentai/reagent/workflow/client";
 import type { Chat } from "@reagentai/reagent/chat";
 import { jsonStreamToAsyncIterator } from "@reagentai/reagent/utils";
 import { dset } from "dset/merge";
 
 import { executeNode } from "./execution.js";
 import type {
+  EmitOptions,
   ExecutionClient,
   Subscriber,
   WorkflowClientOptions,
@@ -21,8 +19,7 @@ export type HttpOptions = {
 const createHttpClient = (
   options: {
     http: HttpOptions;
-    templates: BaseReagentNodeOptions<any, any, any>[];
-  } & Pick<WorkflowClientOptions, "showPrompt">
+  } & WorkflowClientOptions
 ): ExecutionClient => {
   function send(request: {
     session?: { id: string };
@@ -38,12 +35,17 @@ const createHttpClient = (
         dset(self.states, [key], value);
       });
 
+      let body: EmitOptions = {
+        ...request,
+        states: self.states,
+      };
+      if (options.middleware?.request) {
+        body = options.middleware.request(body);
+      }
+
       const res = await fetch(options.http.url, {
         method: "POST",
-        body: JSON.stringify({
-          ...request,
-          states: self.states,
-        }),
+        body: JSON.stringify(body),
         headers: options.http.headers,
       });
 

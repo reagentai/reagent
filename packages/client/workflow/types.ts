@@ -1,5 +1,6 @@
 import type {
   BaseReagentNodeOptions,
+  WorkflowNode,
   StepState,
   WorkflowRunEvent,
 } from "@reagentai/reagent/workflow/client";
@@ -15,7 +16,7 @@ type SendResult = {
   toPromise(): Promise<void>;
 };
 
-export type SendRequest = {
+export type EmitOptions = {
   session?: { id: string };
   events: WorkflowRunEvent[];
   // updated stated by node id
@@ -23,11 +24,13 @@ export type SendRequest = {
 };
 
 export type ExecutionClient = {
-  send(request: SendRequest): SendResult;
+  send(request: EmitOptions): SendResult;
 };
 
 export type WorkflowClientOptions = {
-  templates: BaseReagentNodeOptions<any, any, any>[];
+  templates:
+    | BaseReagentNodeOptions<any, any, any>[]
+    | WorkflowNode<any, any, any>[];
   // showPrompt(...) is called with `undefined` to clear
   // the prompt after a prompt is shown
   showPrompt?: (
@@ -38,9 +41,12 @@ export type WorkflowClientOptions = {
         }
       | undefined
   ) => void;
+  middleware?: {
+    request: (options: EmitOptions) => EmitOptions & Record<string, any>;
+  };
 };
 
 export type WorkflowClient = {
   start(options: { nodeId: string; input: any }): SendResult;
-  send(emitOptions: SendRequest): SendResult;
+  send(emitOptions: EmitOptions): SendResult;
 };

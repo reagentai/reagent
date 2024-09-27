@@ -113,5 +113,5 @@ const createReagentNode = <
   >;
 };
 
-export type { WorkflowNode, BaseReagentNodeOptions };
+export type { WorkflowNode };
 export { IS_AGENT_NODE, AbstractWorkflowNode, createReagentNode };
