@@ -8,5 +8,5 @@ export type {
   WorkflowClient,
   WorkflowClientOptions,
   ExecutionClient,
-  SendRequest as EmitOptions,
+  EmitOptions,
 } from "./types.js";
