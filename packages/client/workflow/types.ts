@@ -5,18 +5,22 @@ import type {
   WorkflowRunEvent,
 } from "@reagentai/reagent/workflow/client";
 
-export type Subscriber = {
-  next?(value: any): void;
-  error?(error: Response | any): void;
-  complete?(): void;
-};
+export namespace ExecutionResponse {
+  export type Error = Response | { error?: string };
 
-type SendResult = {
-  subscribe(subscriber: Subscriber): void;
+  export type Subscriber = {
+    next?(value: any): void;
+    error?(error: Error): void;
+    complete?(): void;
+  };
+}
+
+type ExecutionResponse = {
+  subscribe(subscriber: ExecutionResponse.Subscriber): void;
   toPromise(): Promise<void>;
 };
 
-export type EmitOptions = {
+export type ExecutionRequest = {
   session?: { id: string };
   events: WorkflowRunEvent[];
   // updated stated by node id
@@ -24,7 +28,7 @@ export type EmitOptions = {
 };
 
 export type ExecutionClient = {
-  send(request: EmitOptions): SendResult;
+  send(request: ExecutionRequest): ExecutionResponse;
 };
 
 export type WorkflowClientOptions = {
@@ -42,11 +46,13 @@ export type WorkflowClientOptions = {
       | undefined
   ) => void;
   middleware?: {
-    request: (options: EmitOptions) => EmitOptions & Record<string, any>;
+    request: (
+      options: ExecutionRequest
+    ) => ExecutionRequest & Record<string, any>;
   };
 };
 
 export type WorkflowClient = {
-  start(options: { nodeId: string; input: any }): SendResult;
-  send(emitOptions: EmitOptions): SendResult;
+  start(options: { nodeId: string; input: any }): ExecutionResponse;
+  send(emitOptions: ExecutionRequest): ExecutionResponse;
 };

@@ -1,12 +1,13 @@
 import { createStore } from "zustand";
 import { persist } from "zustand/middleware";
-import { produce } from "immer";
+import { produce, WritableDraft } from "immer";
 import { includeKeys } from "filter-obj";
 import {
   createWorkflowClient,
   EventType,
-  type EmitOptions,
   type WorkflowClientOptions,
+  type ExecutionRequest,
+  type ExecutionResponse,
 } from "@reagentai/client/workflow";
 import type { Chat } from "@reagentai/reagent/chat";
 import type {
@@ -29,6 +30,8 @@ export type ChatState = {
   inflightRequest: {
     responseReceived: boolean;
   } | null;
+  error?: string;
+  resetError(): void;
   setMessages: (messages: Record<string, Chat.Message>) => void;
   setPersistentState(options: { messageId: string; state: any }): void;
   invoke: (options: { nodeId: string; input: NewMessage }) => Promise<void>;
@@ -45,12 +48,16 @@ type StoreInit = {
     // for client bundle, using `WorkflowNode` here only for type safety
     | WorkflowNode<any, any, any>[];
   middleware?: {
-    request: (
-      options: EmitOptions,
+    request?: (
+      options: ExecutionRequest,
       state: ChatState
-    ) => EmitOptions & Record<string, any>;
+    ) => ExecutionRequest & Record<string, any>;
+    response?: {
+      error?: (
+        error: ExecutionResponse.Error
+      ) => Promise<string | undefined> | string | undefined;
+    };
   };
-  onInvokeError?: (res: Response) => void | Promise<void>;
 };
 
 export const createChatStore = (
@@ -67,6 +74,12 @@ export const createChatStore = (
   return createStore(
     withPerisist<ChatState>(
       (set, get, store) => {
+        const setProduce = (
+          producer: (state: WritableDraft<ChatState>) => void
+        ) => {
+          set(produce(producer));
+        };
+
         const client = createWorkflowClient({
           http: {
             url: init.url,
@@ -76,11 +89,9 @@ export const createChatStore = (
           },
           templates: init.templates as BaseReagentNodeOptions<any, any, any>[],
           showPrompt(prompt) {
-            set(
-              produce((state) => {
-                state.prompt = prompt;
-              })
-            );
+            setProduce((state) => {
+              state.prompt = prompt;
+            });
           },
           middleware: {
             request(options) {
@@ -116,21 +127,22 @@ export const createChatStore = (
           sortedMessageIds: sortMessages(init.messages),
           prompt: undefined,
           inflightRequest: null,
+          resetError() {
+            setProduce((state) => {
+              state.error = undefined;
+            });
+          },
           setMessages(messages: Record<string, Chat.Message>) {
-            set(
-              produce((state) => {
-                state.messages = messages;
-                state.sortedMessageIds = sortMessages(messages);
-              })
-            );
+            setProduce((state) => {
+              state.messages = messages;
+              state.sortedMessageIds = sortMessages(messages);
+            });
           },
           setPersistentState(options: { messageId: string; state: any }) {
-            set((s) => {
-              // TODO: pass the state to server since the state is persistent
-              return produce(s, (draft) => {
-                draft.persistentStateByMessageId[options.messageId] =
-                  options.state;
-              });
+            // TODO: pass the state to server since the state is persistent
+            setProduce((state) => {
+              state.persistentStateByMessageId[options.messageId] =
+                options.state;
             });
           },
           async invoke(options: { nodeId: string; input: NewMessage }) {
@@ -211,14 +223,16 @@ export const createChatStore = (
                   });
                 });
               },
-              error(error) {
-                init.onInvokeError?.(error);
+              async error(error) {
+                const err = await init.middleware?.response?.error?.(error);
+                setProduce((state) => {
+                  state.inflightRequest = null;
+                  state.error = err;
+                });
               },
               complete() {
-                set((s) => {
-                  return produce(s, (state) => {
-                    state.inflightRequest = null;
-                  });
+                setProduce((state) => {
+                  state.inflightRequest = null;
                 });
               },
             });

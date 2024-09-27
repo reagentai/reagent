@@ -15,9 +15,8 @@ const ChatThread = (props: {
 }) => {
   const theme = useChatTheme();
   const { classNames } = theme;
-  const { messages, sortedMessageIds, prompt, inflightRequest } = useStore(
-    props.store
-  );
+  const { messages, sortedMessageIds, prompt, inflightRequest, error } =
+    useStore(props.store);
   const sortedMessages = useMemo(() => {
     return sortedMessageIds.map((id) => messages[id]);
   }, [messages, sortedMessageIds]);
@@ -111,6 +110,11 @@ const ChatThread = (props: {
                   showRole={false}
                   theme={theme}
                 />
+              )}
+              {error && (
+                <div className="px-4 py-3 text-center text-base text-red-700 overflow-hidden text-ellipsis">
+                  Error sending message: {error}
+                </div>
               )}
             </div>
           )}

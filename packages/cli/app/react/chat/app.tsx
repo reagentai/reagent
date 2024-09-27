@@ -25,7 +25,6 @@ const WorkflowGraph = lazy(() => import("./graph.tsx"));
 
 const App = () => {
   const workflowId = "default";
-  const [invokeError, setInvokeError] = useState<string | null>(null);
   const [isAgentGraphVisible, setAgentGraphVisiblity] = useState(false);
   const [workflow, setWorkflow] = useState<any>();
   const llmModelId = useTopBarStore((s: any) => s.llmModelId);
@@ -44,17 +43,19 @@ const App = () => {
           templates: workflowModule.nodes,
           middleware: {
             request(options) {
-              setInvokeError(null);
               return {
                 ...options,
                 model: llmModels.find((m) => m.id == llmModelId)?.model,
               };
             },
-          },
-          async onInvokeError(res) {
-            if (res instanceof Response) {
-              setInvokeError((await res.text()) || res.statusText);
-            }
+            response: {
+              async error(error) {
+                if (error instanceof Response) {
+                  return (await error.text()) || error.statusText;
+                }
+                return error.error;
+              },
+            },
           },
         },
         {
@@ -95,11 +96,6 @@ const App = () => {
                         {workflow.description}
                       </div>
                     </div>
-                  </div>
-                )}
-                {invokeError && (
-                  <div className="py-3 text-center text-base text-red-700">
-                    Error sending message: {invokeError}
                   </div>
                 )}
                 <div className="h-full">

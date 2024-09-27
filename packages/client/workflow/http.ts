@@ -5,10 +5,10 @@ import { dset } from "dset/merge";
 
 import { executeNode } from "./execution.js";
 import type {
-  EmitOptions,
+  ExecutionRequest,
   ExecutionClient,
-  Subscriber,
   WorkflowClientOptions,
+  ExecutionResponse,
 } from "./types.js";
 
 export type HttpOptions = {
@@ -28,14 +28,14 @@ const createHttpClient = (
   }) {
     // @ts-expect-error
     const self = this as any;
-    const subscribers: Subscriber[] = [...self.subscribers];
+    const subscribers: ExecutionResponse.Subscriber[] = [...self.subscribers];
     const promise = (async () => {
       self.states = self.states || {};
       Object.entries(request.states || {}).forEach(([key, value]) => {
         dset(self.states, [key], value);
       });
 
-      let body: EmitOptions = {
+      let body: ExecutionRequest = {
         ...request,
         states: self.states,
       };
@@ -43,12 +43,23 @@ const createHttpClient = (
         body = options.middleware.request(body);
       }
 
-      const res = await fetch(options.http.url, {
-        method: "POST",
-        body: JSON.stringify(body),
-        headers: options.http.headers,
-      });
+      const { url } = options.http;
 
+      let res: Response;
+      try {
+        res = await fetch(url, {
+          method: "POST",
+          body: JSON.stringify(body),
+          headers: options.http.headers,
+        });
+      } catch (e) {
+        subscribers.forEach((subscriber) =>
+          subscriber.error?.({
+            error: `Error sending request to: ${url}`,
+          })
+        );
+        return;
+      }
       if (res.status != 200) {
         subscribers.forEach((subscriber) => subscriber.error?.(res));
         return;
@@ -166,7 +177,7 @@ const createHttpClient = (
       subscribers.forEach((subscriber) => subscriber.complete?.());
     })();
     return {
-      subscribe(subscriber: Subscriber) {
+      subscribe(subscriber: ExecutionResponse.Subscriber) {
         subscribers.push(subscriber);
       },
       toPromise() {
