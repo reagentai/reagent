@@ -10,8 +10,8 @@ import { useChatTheme } from "./theme.js";
 
 const ChatThread = (props: {
   store: ChatStore;
-  EmptyScreen?: () => React.ReactElement;
-  Loader?: () => React.ReactElement;
+  EmptyScreen?: React.ReactNode;
+  Loader?: React.ReactNode;
 }) => {
   const theme = useChatTheme();
   const { classNames } = theme;
@@ -38,8 +38,6 @@ const ChatThread = (props: {
     }
   };
 
-  const EmptyScreen = memo(props.EmptyScreen ? props.EmptyScreen : () => <></>);
-
   useEffect(() => {
     scrollToBottom();
   }, [
@@ -59,7 +57,7 @@ const ChatThread = (props: {
             classNames.messagesContainer
           )}
         >
-          {sortedMessageIds.length == 0 && <EmptyScreen />}
+          {sortedMessageIds.length == 0 && props.EmptyScreen}
           {sortedMessages.length > 0 && (
             <div
               ref={chatMessagesRef}
@@ -127,13 +125,13 @@ const ChatThread = (props: {
 const ChatMessage = (props: {
   message:
     | (Pick<Chat.Message, "id" | "message" | "ui" | "role" | "node"> & {
-        Loader?: () => React.ReactElement;
+        Loader?: React.ReactNode;
         prompt?: undefined;
       })
     | {
         id: string;
         role: "ai";
-        Loader?: () => React.ReactElement;
+        Loader?: React.ReactNode;
         prompt?: any;
         ui?: undefined;
         message?: undefined;
@@ -195,7 +193,7 @@ const ChatMessage = (props: {
             className={clsx("chat-message-loading", classNames.messageContent)}
             data-role={role.id}
           >
-            {props.message.Loader()}
+            {props.message.Loader}
           </div>
         )}
         {props.message.ui &&

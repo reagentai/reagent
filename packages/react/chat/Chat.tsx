@@ -7,8 +7,8 @@ import { ChatStore, NewMessage } from "./state.js";
 
 const ReagentChat = (props: {
   store: ChatStore;
-  EmptyScreen?: () => React.ReactElement;
-  Loader?: () => React.ReactElement;
+  EmptyScreen?: React.ReactNode;
+  Loader?: React.ReactNode;
 }) => {
   const { invoke } = useStore(props.store);
   const sendNewMessageMutation = {
