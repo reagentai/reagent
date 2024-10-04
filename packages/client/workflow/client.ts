@@ -16,6 +16,7 @@ const createWorkflowClient = (
     http: (options as any).http,
     templates: options.templates,
     showPrompt: options.showPrompt,
+    middleware: options.middleware,
   });
   return {
     start({ nodeId, input }) {
