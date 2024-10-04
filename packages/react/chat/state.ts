@@ -94,8 +94,8 @@ export const createChatStore = (
             });
           },
           middleware: {
-            request(options) {
-              return init.middleware?.request?.(options, get()) || options;
+            request(req) {
+              return init.middleware?.request?.(req, get()) || req;
             },
           },
         });
@@ -149,6 +149,7 @@ export const createChatStore = (
             set((s) => {
               const message = options.input;
               const state = produce(s, (state) => {
+                state.error = undefined;
                 state.messages[message.id] = {
                   id: message.id,
                   message: { content: message.query },
