@@ -148,21 +148,27 @@ class WorkflowStepRef<
           return output;
         } else if (result.value && result.value[context.TASK]) {
           const { fn, args } = result.value[context.TASK];
-          const output = yield call(self.#runGenerator.bind(self), {
-            context: {
-              PENDING: context.PENDING,
-              [context.PENDING]: context[context.PENDING],
-              done() {},
-            },
-            generator: fn(...args),
-            isTask: true,
-          });
+          const tasgGenerator = fn(...args);
 
-          if (output == context.PENDING) {
-            const output = yield call(() => context[context.PENDING]);
-            return output as Output;
-          } else {
-            result = yield call(() => generator.next(output));
+          try {
+            const output = yield call(self.#runGenerator.bind(self), {
+              context: {
+                PENDING: context.PENDING,
+                [context.PENDING]: context[context.PENDING],
+                done() {},
+              },
+              generator: tasgGenerator,
+              isTask: true,
+            });
+            if (output == context.PENDING) {
+              const output = yield call(() => context[context.PENDING]);
+              return output as Output;
+            } else {
+              result = yield call(() => generator.next(output));
+              continue;
+            }
+          } catch (e) {
+            result = yield call(() => generator.throw(e));
             continue;
           }
         } else if (result.value[STEP_RESULT]) {

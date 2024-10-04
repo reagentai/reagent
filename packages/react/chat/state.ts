@@ -245,6 +245,7 @@ export const createChatStore = (
               persistentStateByMessageId: {},
               sortedMessageIds: [],
               prompt: undefined,
+              error: undefined,
             });
             await store.persist.rehydrate();
           },

@@ -9,7 +9,7 @@ import {
   Task,
   WorkflowRunOptions,
   WorkflowRun,
-} from "@reagentai/reagent";
+} from "@reagentai/reagent/workflow";
 import { uniqueId } from "@reagentai/reagent/utils";
 import type { Chat } from "@reagentai/reagent/chat";
 
@@ -25,9 +25,12 @@ const triggerReagentWorkflow = (
 ) => {
   const workflowOutputStream = new ReplaySubject<Chat.Response>();
   const run = workflow.emit(options);
-  run.task.toPromise().finally(() => {
-    workflowOutputStream.complete();
-  });
+  run.task
+    .toPromise()
+    .catch(() => {})
+    .finally(() => {
+      workflowOutputStream.complete();
+    });
   run.output.ui.subscribe({
     next(output: any) {
       const { session, node, value } = output;

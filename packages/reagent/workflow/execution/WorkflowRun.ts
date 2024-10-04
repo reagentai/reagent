@@ -317,6 +317,7 @@ class WorkflowRun {
         } else if (action.type == EventType.RUN_FAILED) {
           result = { status: WorkflowStatus.ERRORED, error: action.error };
         }
+
         nodesCompleted.add(action.node.id);
         if (nodesCompleted.size == nodesRef.length) {
           self.#channel.close();
@@ -332,22 +333,25 @@ class WorkflowRun {
     return function* root(): any {
       self.#status = WorkflowStatus.IN_PROGRESS;
       const incomingEvents = yield actionChannel("INCOMING_EVENT");
-      const queueEvents = yield fork(startWorkflow, incomingEvents);
+      const _queueEvents = yield fork(startWorkflow, incomingEvents);
       const completionSaga = yield fork(allNodesRunCompletion);
-      const job3 = yield fork(eventsSubscriber);
-      const job4 = yield fork(outputSubscribers);
-      const job6 = yield fork(updateState);
+      const _job3 = yield fork(eventsSubscriber);
+      const _job4 = yield fork(outputSubscribers);
+      const _job6 = yield fork(updateState);
 
       const dataBinding = self.#ref.outputBindings?.["data"];
       const outputSaga = dataBinding
         ? yield fork((dataBinding as any).saga.bind(dataBinding))
         : undefined;
+
       yield all(
         nodesRef.map((ref) => {
           return ref.saga.bind(ref)();
         })
       );
-      yield join([queueEvents, job3, job4, job6]);
+
+      // yield join([queueEvents, job3, job4, job6]);
+
       const result = yield join(completionSaga);
       const output = dataBinding ? yield join(outputSaga) : undefined;
 
