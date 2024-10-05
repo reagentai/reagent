@@ -28,7 +28,10 @@ const createHttpClient = (
   }) {
     // @ts-expect-error
     const self = this as any;
-    const subscribers: ExecutionResponse.Subscriber[] = [...self.subscribers];
+    const localSubscribers: ExecutionResponse.Subscriber[] = [];
+    const workflowSubscribers: ExecutionResponse.Subscriber[] = [
+      ...self.workflowSubscribers,
+    ];
     const promise = (async () => {
       self.states = self.states || {};
       Object.entries(request.states || {}).forEach(([key, value]) => {
@@ -53,7 +56,12 @@ const createHttpClient = (
           headers: options.http.headers,
         });
       } catch (e) {
-        subscribers.forEach((subscriber) =>
+        workflowSubscribers.forEach((subscriber) =>
+          subscriber.error?.({
+            error: `Error sending request to: ${url}`,
+          })
+        );
+        localSubscribers.forEach((subscriber) =>
           subscriber.error?.({
             error: `Error sending request to: ${url}`,
           })
@@ -61,7 +69,8 @@ const createHttpClient = (
         return;
       }
       if (res.status != 200) {
-        subscribers.forEach((subscriber) => subscriber.error?.(res));
+        workflowSubscribers.forEach((subscriber) => subscriber.error?.(res));
+        localSubscribers.forEach((subscriber) => subscriber.error?.(res));
         return;
       }
 
@@ -105,17 +114,24 @@ const createHttpClient = (
             dset(states, path, event.state);
           }
         } else {
-          subscribers.forEach((subscriber) => subscriber.next?.(json));
+          workflowSubscribers.forEach((subscriber) => subscriber.next?.(json));
+          // Note: no need to call next for localSubscribers
         }
       }
-      await Promise.all(
+      if (pendingExecutions.length == 0 && pendingPrompts.length == 0) {
+        if (options.showPrompt) {
+          options.showPrompt(undefined);
+        }
+        workflowSubscribers.forEach((subscriber) => subscriber.complete?.());
+      }
+      await Promise.allSettled(
         pendingExecutions.map((execution) => {
           return executeNode(
             {
               send(...args) {
                 return send.bind({
                   states,
-                  subscribers,
+                  workflowSubscribers,
                 })(...args);
               },
             },
@@ -125,63 +141,75 @@ const createHttpClient = (
       );
 
       if (pendingPrompts.length > 0 && options.showPrompt) {
-        await Promise.all(
+        await Promise.allSettled(
           pendingPrompts.map(({ session, template, render, node }) => {
-            const [_, Component] =
-              (template as any).components.find(
-                (c: any) => c[0] == render.step
-              ) || [];
-            if (!Component) {
-              throw new Error(`missing prompt component`);
-            }
+            return new Promise((resolve) => {
+              const [_, Component] =
+                (template as any).components.find(
+                  (c: any) => c[0] == render.step
+                ) || [];
+              if (!Component) {
+                throw new Error(`missing prompt component`);
+              }
 
-            let resolve: any;
-            const pending = new Promise((r) => (resolve = r));
-            let submitted = false;
-            options.showPrompt!({
-              Component,
-              props: {
-                key: render.key,
-                data: render.data,
-                submit(result) {
-                  if (submitted) {
-                    return;
-                  }
-                  submitted = true;
-                  const path = node.path || [];
-                  path.push(node.id);
-                  dset(states, path, {
-                    "@@prompt": {
-                      [render.step]: {
-                        [render.key]: {
-                          result,
+              let submitted = false;
+              options.showPrompt!({
+                Component,
+                props: {
+                  render: {
+                    key: render.key,
+                  },
+                  data: render.data,
+                  submit(result) {
+                    if (submitted) {
+                      return;
+                    }
+                    submitted = true;
+                    const path = node.path || [];
+                    path.push(node.id);
+                    dset(states, path, {
+                      "@@prompt": {
+                        [render.step]: {
+                          [render.key]: {
+                            result,
+                          },
                         },
                       },
-                    },
-                  });
+                    });
 
-                  const { toPromise } = send.bind({ states, subscribers })({
-                    session: { id: session.id },
-                    events: [],
-                    states,
-                  });
-                  toPromise().then(resolve);
+                    const res = send.bind({ states, workflowSubscribers })({
+                      session: { id: session.id },
+                      events: [],
+                      states,
+                    });
+                    res.subscribe({
+                      complete() {
+                        resolve(null);
+                      },
+                      error(error) {
+                        resolve(null);
+                      },
+                    });
+                  },
                 },
-              },
+              });
             });
-            return pending;
           })
         );
-        options.showPrompt(undefined);
       }
-      subscribers.forEach((subscriber) => subscriber.complete?.());
+      localSubscribers.forEach((subscriber) => subscriber.complete?.());
     })();
+    promise.catch((e) => {
+      // this catch should never be called
+      console.error("Unexpected error: ", e);
+    });
     return {
       subscribe(subscriber: ExecutionResponse.Subscriber) {
-        subscribers.push(subscriber);
-      },
-      toPromise() {
-        return promise;
+        if (self.topLevel) {
+          workflowSubscribers.push(subscriber);
+        } else {
+          localSubscribers.push(subscriber);
+        }
       },
     };
   }
@@ -189,8 +217,9 @@ const createHttpClient = (
   return {
     send(...args) {
       return send.bind({
+        topLevel: true,
         states: undefined,
-        subscribers: [],
+        workflowSubscribers: [],
       })(...args);
     },
   };

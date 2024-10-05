@@ -17,7 +17,6 @@ export namespace ExecutionResponse {
 
 type ExecutionResponse = {
   subscribe(subscriber: ExecutionResponse.Subscriber): void;
-  toPromise(): Promise<void>;
 };
 
 export type ExecutionRequest = {
@@ -41,7 +40,11 @@ export type WorkflowClientOptions = {
     prompt:
       | {
           Component: any;
-          props: { key: string; data: any; submit: (value: any) => void };
+          props: {
+            render: { key: string };
+            data: any;
+            submit: (value: any) => void;
+          };
         }
       | undefined
   ) => void;

@@ -57,7 +57,10 @@ export type Context<
   // `context.prompt(...)` must be yielded
   prompt<Data, Value = any>(
     Component: (props: {
-      key: string;
+      render: {
+        // need to pass key under render since key is a reserved React prop
+        key: string;
+      };
       data: Data;
       React: {
         useEffect: any;
