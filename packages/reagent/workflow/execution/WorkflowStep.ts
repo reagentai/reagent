@@ -97,6 +97,7 @@ class WorkflowStepRef<
         return (
           (e.type == EventType.NO_BINDINGS ||
             e.type == EventType.INVOKE ||
+            e.type == EventType.RESUME ||
             e.type == EventType.SKIP_INVOKE ||
             e.type == EventType.EXECUTE_ON_CLIENT) &&
           e.node.id == self.nodeId
@@ -203,8 +204,23 @@ class WorkflowStepRef<
   *#invokeListenerSaga(state: StepState | undefined, invokeChannel: any): any {
     const self = this;
     const action = yield take(invokeChannel);
-    if (action.type != EventType.INVOKE) {
+    if (action.type != EventType.INVOKE && action.type != EventType.RESUME) {
       return;
+    }
+    if (action.type == EventType.RESUME && self.bindings) {
+      // if the step is resumed, get the values for input that are
+      // not AbstractValueProvider
+      const partialInput = Object.fromEntries(
+        Object.entries(self.bindings)
+          .filter(
+            ([_key, value]: any) =>
+              !AbstractValueProvider.isValueProvider(value)
+          )
+          .map(([key, value]: any) => {
+            return [key, lazy.isLazy(value) ? value() : value];
+          })
+      );
+      Object.assign(action.input, partialInput);
     }
 
     const dispatch = yield getContext("dispatch");
