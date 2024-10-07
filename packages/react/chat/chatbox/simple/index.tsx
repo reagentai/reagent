@@ -1,20 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import clsx from "clsx";
+import { useStore } from "zustand";
 import { HiOutlinePaperAirplane } from "react-icons/hi";
 import { uniqueId } from "@reagentai/reagent/utils";
 
-import { adjustTextareaHeight } from "../utils/textarea.js";
-import { useChatTheme } from "./theme.js";
+import { adjustTextareaHeight } from "../../../utils/textarea.js";
+import { useChatTheme } from "../../theme.js";
+import { useReagentChatContext } from "../../Chat.js";
 
-const Chatbox = (props: {
-  isChatLocked: boolean;
-  sendNewMessage: (msg: {
-    id: string;
-    query: string;
-    regenerate: boolean;
-  }) => void;
-  onFocus?: () => void;
-}) => {
+const Chatbox = () => {
+  const { store } = useReagentChatContext();
+  const { invoke } = useStore(store);
   const [message, setMessage] = useState("");
   let textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -25,10 +21,13 @@ const Chatbox = (props: {
   }, [textareaRef.current]);
 
   const submitForm = () => {
-    props.sendNewMessage({
-      id: uniqueId(19),
-      query: message,
-      regenerate: false,
+    invoke({
+      nodeId: "input",
+      input: {
+        id: uniqueId(19),
+        query: message,
+        regenerate: false,
+      },
     });
     setMessage("");
     textareaRef.current?.focus();
@@ -36,12 +35,7 @@ const Chatbox = (props: {
 
   const keydownHandler = (e: any) => {
     const value = e.target.value;
-    if (
-      e.key == "Enter" &&
-      !e.shiftKey &&
-      !props.isChatLocked &&
-      value.trim().length > 0
-    ) {
+    if (e.key == "Enter" && !e.shiftKey && value.trim().length > 0) {
       submitForm();
       e.preventDefault();
     }
@@ -77,11 +71,8 @@ const Chatbox = (props: {
             value={message}
             onInput={(e: any) => setMessage(e.target.value)}
             onKeyDown={keydownHandler}
-            onFocus={() => {
-              props.onFocus?.();
-            }}
           ></textarea>
-          <div className={theme.chatboxButtonContainer}>
+          <div className={clsx("flex items-end", theme.chatboxButtonContainer)}>
             <button
               className={clsx(
                 "chatbox-button outline-none",
