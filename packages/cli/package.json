@@ -65,6 +65,7 @@
     "@types/dagre": "^0.7.52",
     "@types/react": "^18.3.2",
     "@types/react-dom": "^18.3.0",
+    "rollup": "^4.24.0",
     "typescript": "5.4.5",
     "vite-plugin-static-copy": "^1.0.5",
     "vitest": "^1.6.0"
