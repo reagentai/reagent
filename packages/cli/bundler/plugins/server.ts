@@ -29,6 +29,7 @@ export function devServer(): VitePlugin {
       const agents = new Map();
       app.route(
         "/api/chat",
+        // @ts-ignore
         createChatWorkflowRouter(agents as any, {
           streamStateUpdatesToClient: true,
         })

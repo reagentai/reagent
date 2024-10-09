@@ -59,6 +59,7 @@
   "devDependencies": {
     "@babel/generator": "^7.24.5",
     "@babel/preset-typescript": "^7.24.1",
+    "@rollup/rollup-darwin-x64": "^4.24.0",
     "@types/babel__core": "^7.20.5",
     "@types/babel__generator": "^7.6.8",
     "@types/dagre": "^0.7.52",
