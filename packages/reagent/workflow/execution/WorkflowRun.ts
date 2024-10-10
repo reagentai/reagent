@@ -337,7 +337,7 @@ class WorkflowRun {
       const completionSaga = yield fork(allNodesRunCompletion);
       const _job3 = yield fork(eventsSubscriber);
       const _job4 = yield fork(outputSubscribers);
-      const _job6 = yield fork(updateState);
+      const updateStateJob = yield fork(updateState);
 
       const dataBinding = self.#ref.outputBindings?.["data"];
       const outputSaga = dataBinding
@@ -350,6 +350,8 @@ class WorkflowRun {
         })
       );
 
+      // wait for update state job to make sure state update is completed
+      yield join([updateStateJob]);
       // yield join([queueEvents, job3, job4, job6]);
 
       const result = yield join(completionSaga);
