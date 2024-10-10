@@ -1,6 +1,7 @@
 import { EventType, z } from "@reagentai/reagent";
 import { OpenAI } from "@reagentai/reagent/llm/models";
 import { triggerReagentWorkflow } from "@reagentai/serve";
+
 import workflow from "../../workflow/workflow";
 
 const invokeSchema = z.object({
@@ -52,5 +53,14 @@ export async function POST(request: Request) {
       });
     },
   });
+  workflowOutput.task.toPromise().then(
+    (e) => {
+      console.log("DONE RESULT: ", e);
+      // console.log("ERROR =", );
+    },
+    (e) => {
+      console.log("DONE ERROR: ", e);
+    }
+  );
   return workflowOutput.toResponse();
 }

@@ -6,9 +6,11 @@ import {
   ReagentChat,
   createChatStore,
 } from "@reagentai/react/chat";
-import * as agent from "@reagentai/react-examples/e2b";
+
+import * as agent from "./workflow/workflow";
 
 const ChatAgent = () => {
+  console.log("agent.nodes =", agent.nodes);
   const [invokeError, setInvokeError] = useState<string | null>(null);
   const store = createChatStore(
     {
@@ -20,9 +22,15 @@ const ChatAgent = () => {
           setInvokeError(null);
           return request;
         },
-      },
-      async onInvokeError(res) {
-        setInvokeError((await res.text()) || res.statusText);
+        response: {
+          async error(res) {
+            if (res instanceof Response) {
+              return (await res.text()) || res.statusText;
+            } else {
+              return res.error;
+            }
+          },
+        },
       },
     },
     {

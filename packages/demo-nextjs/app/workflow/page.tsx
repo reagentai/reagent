@@ -1,7 +1,6 @@
 "use client";
 import { useCallback, useState } from "react";
 import { createWorkflowClient } from "@reagentai/client/workflow";
-import type { BaseReagentNodeOptions } from "@reagentai/reagent";
 
 import * as workflow from "./workflow";
 import { ReagentContextProvider } from "@reagentai/react/workflow";
@@ -14,11 +13,7 @@ export default function () {
     http: {
       url: "/api/chat",
     },
-    templates: workflow.nodes as unknown as BaseReagentNodeOptions<
-      any,
-      any,
-      any
-    >[],
+    templates: workflow.nodes,
     showPrompt(options) {
       setPrompt(options);
     },
@@ -29,8 +24,11 @@ export default function () {
       nodeId: "input",
       input: {},
     });
-    await run.toPromise();
-    console.log("DONE!");
+    run.subscribe({
+      complete() {
+        console.log("WORKFLOW DONE");
+      },
+    });
   }, []);
   return (
     <ReagentContextProvider templates={workflow.nodes}>

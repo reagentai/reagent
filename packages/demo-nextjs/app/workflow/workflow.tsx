@@ -10,11 +10,10 @@ const FirstStep = createReagentNode({
   description: `Description for step 1`,
   version: "0.0.1",
   input: z.object({}),
-  // target: "client",
+  target: "client",
   output: outputSchema,
   async *execute(context, input) {
     console.log("EXECUTING STEP 1");
-    context.render(() => <div>YO!</div>);
     yield { done: true };
   },
 });
@@ -45,6 +44,7 @@ const ThirdStep = createReagentNode({
   // target: "client",
   input: z.object({
     start: z.boolean(),
+    date: z.date(),
   }),
   output: z.object({
     done: z.boolean(),
@@ -52,23 +52,44 @@ const ThirdStep = createReagentNode({
   async *execute(context, input): any {
     console.log("EXECUTING STEP 3: input =", input);
 
-    const value = yield context.prompt((props) => (
-      <form
-        onSubmit={(e: any) => {
-          e.preventDefault();
-          var formData = new FormData(e.target);
-          props.submit(Object.fromEntries(formData.entries()));
-        }}
-        className="p-4 border border-gray-100"
-      >
-        <div>Enter some text</div>
-        <input
-          name="text"
-          className="px-3 py-1 border border-gray-200"
-          placeholder="Enter some text..."
-        />
-      </form>
-    ));
+    const s = await context.step("step1", () => {
+      console.log("EXECUTING STEP 3: sub step 1");
+      return "STEP_1_RESULT";
+    });
+    console.log("RESULT OF STEP 3: sub step 1 =", s);
+
+    let value = null;
+    for (let i = 0; i < 3; i++) {
+      value = yield context.prompt(
+        (props) => {
+          // <form
+          //   onSubmit={(e: any) => {
+          //     e.preventDefault();
+          //     var formData = new FormData(e.target);
+          //     props.submit(Object.fromEntries(formData.entries()));
+          //   }}
+          //   className="p-4 border border-gray-100"
+          // >
+          //   <div>Enter some text</div>
+          //   <input
+          //     name="text"
+          //     className="px-3 py-1 border border-gray-200"
+          //     placeholder="Enter some text..."
+          //   />
+          // </form>
+
+          setTimeout(() => {
+            props.submit("VALUE " + props.data);
+          }, 2_000);
+          return <div>Running step 3, prompt index = {props.data}</div>;
+        },
+        {
+          key: "prompt-" + i,
+          data: i,
+        }
+      );
+      console.log("value =", value);
+    }
     console.log("PROMPT value =", value);
     yield { done: true };
   },
@@ -108,6 +129,7 @@ step2.bind({
 
 step3.bind({
   start: step2.output.done,
+  date: new Date(),
 });
 
 step4.bind({
@@ -117,59 +139,6 @@ step4.bind({
 workflow.bind({
   ui: [step2.renderOutput, step3.renderOutput],
 });
-
-// const run = workflow.start({
-//   node: {
-//     id: "step-1",
-//   },
-//   input: {},
-//   updateStepState(nodeId, state) {
-//     console.log("UPDATING STATE:", nodeId, ", state =", state);
-//   },
-// });
-
-// const run = workflow.emit({
-//   sessionId: "1",
-//   events: [
-//     // {
-//     //   type: EventType.OUTPUT,
-//     //   node: {
-//     //     id: "step-2",
-//     //   },
-//     //   output: { done: true },
-//     // },
-//     // {
-//     //   type: EventType.RUN_COMPLETED,
-//     //   node: {
-//     //     id: "step-2",
-//     //   },
-//     // },
-//     { type: EventType.OUTPUT, node: { id: "step-3" }, output: { done: true } },
-//     { type: EventType.RUN_COMPLETED, node: { id: "step-3" } },
-//   ],
-//   getStepState(nodeId) {
-//     if (nodeId == "step-1") {
-//       return {
-//         status: StepStatus.COMPLETED,
-//         output: {},
-//       };
-//     } else if (nodeId == "step-2") {
-//       return {
-//         status: StepStatus.COMPLETED,
-//         output: {},
-//       };
-//     }
-//   },
-//   updateStepState(nodeId, state) {
-//     console.log("UPDATING STATE:", nodeId, ", state =", state);
-//   },
-// });
-
-// await run.task.toPromise();
-// console.log("WORKFLOW DONE!");
-// run.events.subscribe((data) => {
-//   console.log("JSON =", data);
-// });
 
 export default workflow;
 export const nodes = [FirstStep, SecondStep, ThirdStep, FourthStep];
