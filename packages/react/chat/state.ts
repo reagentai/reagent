@@ -63,6 +63,9 @@ type StoreInit = {
 export const createChatStore = (
   init: StoreInit,
   options?: {
+    client?: {
+      headers?: Record<string, string>;
+    };
     persistKey?: string;
   }
 ) => {
@@ -85,6 +88,7 @@ export const createChatStore = (
             url: init.url,
             headers: {
               "content-type": "application/json",
+              ...(options?.client?.headers || {}),
             },
           },
           templates: init.templates as BaseReagentNodeOptions<any, any, any>[],
