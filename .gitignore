@@ -1,7 +1,7 @@
 node_modules
 .DS_Store
 
-.tsbuildinfo
+*.tsbuildinfo
 
 dist 
 .env
