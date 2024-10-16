@@ -38,9 +38,9 @@ const defaultTheme: ChatTheme = {
       "px-4 py-3 rounded-lg leading-6 space-y-2 tracking-[0.1px] group-has-[.user]:bg-[hsl(60_28%_95%)] dark:group-has-[.user]:bg-gray-600 dark:data-[role=user]:text-gray-100 dark:data-[role=ai]:text-gray-200",
     chatboxContainer: "min-w-[200px] max-w-[750px] space-y-1 rounded-md",
     chatbox:
-      "px-2 py-2 rounded-lg bg-gray-50 dark:bg-gray-500 border border-gray-200 dark:border-gray-500 shadow-sm",
+      "px-2 py-2 max-h-[180px] rounded-lg bg-gray-50 dark:bg-gray-500 border border-gray-200 dark:border-gray-500 shadow-sm",
     chatboxTextarea:
-      "py-1 max-h-[180px] px-2 text-sm text-gray-800 dark:text-gray-100 bg-transparent outline-none focus:outline-none placeholder:text-gray-500 dark:placeholder:text-gray-300",
+      "py-1 px-2 text-sm text-gray-800 dark:text-gray-100 bg-transparent outline-none focus:outline-none placeholder:text-gray-500 dark:placeholder:text-gray-300",
     chatboxButtonContainer: "px-2 pt-1",
     chatboxButton:
       "p-1 rounded text-white bg-indigo-500 data-[empty=true]:text-gray-500 data-[empty=true]:bg-indigo-200",
