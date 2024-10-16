@@ -13,6 +13,7 @@
     "build-bin": "vite build -c vite.bin.config.js",
     "build-check": "tsc --noEmit",
     "build": "pnpm run \"/^build-[client|bin|check]/\"",
+    "clean": "rm -rf node_modules && rm -rf dist",
     "prepublish": "rm -rf dist && pnpm build && cp package.json dist"
   },
   "exports": {

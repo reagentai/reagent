@@ -6,6 +6,7 @@
   "scripts": {
     "tsc:watch": "tsc --watch",
     "build": "tsc",
+    "clean": "rm -rf node_modules && rm -rf dist",
     "prepublish": "rm -rf dist && pnpm build && cp package.json dist"
   },
   "publishConfig": {

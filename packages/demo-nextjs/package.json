@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "Next.js demo of @reagentai/reagent",
   "type": "module",
+  "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",

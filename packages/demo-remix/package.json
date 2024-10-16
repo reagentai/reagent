@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Remix demo for @reagentai/reagent",
   "type": "module",
+  "private": true,
   "scripts": {
     "dev": "node ./server.js"
   },

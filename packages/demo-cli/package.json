@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "Reagent cli demo",
   "type": "module",
+  "private": true,
   "scripts": {
     "dev": "reagent dev ./data-agent.ts"
   },
