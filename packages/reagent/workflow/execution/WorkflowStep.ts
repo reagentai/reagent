@@ -542,7 +542,11 @@ class WorkflowStepRef<
         const stepId = step as unknown as string;
         const prompt = state!["@@prompt"]?.[stepId]?.[key];
         if (prompt) {
-          return Object.assign({ [STEP_RESULT]: prompt.result });
+          let result = prompt.result;
+          if (options?.transform) {
+            result = options.transform(result);
+          }
+          return Object.assign({ [STEP_RESULT]: result });
         }
         dispatch({
           type: EventType.UPDATE_STATE,

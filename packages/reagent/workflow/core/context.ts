@@ -55,7 +55,7 @@ export type Context<
     ): void;
   };
   // `context.prompt(...)` must be yielded
-  prompt<Data, Value = any>(
+  prompt<Data, Value = any, TransformedValue = Value>(
     Component: (props: {
       render: {
         // need to pass key under render since key is a reserved React prop
@@ -72,8 +72,9 @@ export type Context<
     options?: {
       key?: string;
       data?: Data;
+      transform?: (value: Value) => TransformedValue;
     }
-  ): Value;
+  ): TransformedValue;
   step<O = void>(
     stepId: string,
     fn: () => O | Promise<O>
