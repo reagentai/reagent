@@ -64,7 +64,7 @@ const Chatbox = () => {
           ref={textareaRef}
           placeholder="Send a message"
           className={clsx(
-            "chatbox-textarea flex-1 resize-none",
+            "chatbox-textarea flex-1 my-auto resize-none",
             theme.chatboxTextarea
           )}
           value={message}
