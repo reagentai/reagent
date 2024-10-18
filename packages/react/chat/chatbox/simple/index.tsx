@@ -53,38 +53,33 @@ const Chatbox = () => {
   const { classNames: theme } = useChatTheme();
   return (
     <div className={clsx("chatbox-container", theme.chatboxContainer)}>
-      <div className={clsx("chatbox relative", theme.chatbox)}>
-        <form
-          className="flex p-0 m-0"
-          onSubmit={(e) => {
-            submitForm();
-            e.preventDefault();
-          }}
-        >
-          <textarea
-            ref={textareaRef}
-            placeholder="Send a message"
-            className={clsx(
-              "chatbox-textarea flex-1 resize-none",
-              theme.chatboxTextarea
-            )}
-            value={message}
-            onInput={(e: any) => setMessage(e.target.value)}
-            onKeyDown={keydownHandler}
-          ></textarea>
-          <div className={clsx("flex items-end", theme.chatboxButtonContainer)}>
-            <button
-              className={clsx(
-                "chatbox-button outline-none",
-                theme.chatboxButton
-              )}
-              data-empty={message.trim().length == 0}
-            >
-              <HiOutlinePaperAirplane size="14px" className="rotate-90" />
-            </button>
-          </div>
-        </form>
-      </div>
+      <form
+        className={clsx("chatbox relative flex", theme.chatbox)}
+        onSubmit={(e) => {
+          submitForm();
+          e.preventDefault();
+        }}
+      >
+        <textarea
+          ref={textareaRef}
+          placeholder="Send a message"
+          className={clsx(
+            "chatbox-textarea flex-1 resize-none",
+            theme.chatboxTextarea
+          )}
+          value={message}
+          onInput={(e: any) => setMessage(e.target.value)}
+          onKeyDown={keydownHandler}
+        ></textarea>
+        <div className={clsx("flex items-end", theme.chatboxButtonContainer)}>
+          <button
+            className={clsx("chatbox-button outline-none", theme.chatboxButton)}
+            data-empty={message.trim().length == 0}
+          >
+            <HiOutlinePaperAirplane size="14px" className="rotate-90" />
+          </button>
+        </div>
+      </form>
     </div>
   );
 };

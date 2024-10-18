@@ -14,6 +14,7 @@
     "lib": ["dom", "dom.iterable", "esnext"],
     "skipLibCheck": true,
     "incremental": true,
+    "checkJs": false,
     "types": ["vite/client"]
   },
   "exclude": ["node_modules"]

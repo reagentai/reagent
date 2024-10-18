@@ -149,7 +149,7 @@ class WorkflowStepRef<
           return output;
         } else if (result.value && result.value[context.TASK]) {
           const { fn, args } = result.value[context.TASK];
-          const tasgGenerator = fn(...args);
+          const taskGenerator = fn(...args);
 
           try {
             const output = yield call(self.#runGenerator.bind(self), {
@@ -158,7 +158,7 @@ class WorkflowStepRef<
                 [context.PENDING]: context[context.PENDING],
                 done() {},
               },
-              generator: tasgGenerator,
+              generator: taskGenerator,
               isTask: true,
             });
             if (output == context.PENDING) {
