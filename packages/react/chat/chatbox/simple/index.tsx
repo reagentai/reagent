@@ -46,7 +46,8 @@ const Chatbox = () => {
 
   useEffect(() => {
     if (textareaRef.current) {
-      adjustTextareaHeight(textareaRef.current, message);
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
   }, [textareaRef.current, message]);
 
@@ -62,6 +63,7 @@ const Chatbox = () => {
       >
         <textarea
           ref={textareaRef}
+          rows={1}
           placeholder="Send a message"
           className={clsx(
             "chatbox-textarea flex-1 my-auto resize-none",
