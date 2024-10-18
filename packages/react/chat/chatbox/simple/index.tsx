@@ -4,7 +4,6 @@ import { useStore } from "zustand";
 import { HiOutlinePaperAirplane } from "react-icons/hi";
 import { uniqueId } from "@reagentai/reagent/utils";
 
-import { adjustTextareaHeight } from "../../../utils/textarea.js";
 import { useChatTheme } from "../../theme.js";
 import { useReagentChatContext } from "../../Chat.js";
 
@@ -45,7 +44,7 @@ const Chatbox = () => {
   };
 
   useEffect(() => {
-    if (textareaRef.current) {
+    if (textareaRef.current && textareaRef.current.scrollHeight > 0) {
       textareaRef.current.style.height = "auto";
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
