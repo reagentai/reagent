@@ -32,9 +32,15 @@ const tranformCreateAgentNode = {
       this.state.targetClient = true;
     }
     if (
-      !["id", "version", "name", "target", "components", "execute"].includes(
-        path.node.key.name
-      )
+      ![
+        "id",
+        "version",
+        "name",
+        "target",
+        "components",
+        "client",
+        "execute",
+      ].includes(path.node.key.name)
     ) {
       path.traverse({
         Identifier(path) {

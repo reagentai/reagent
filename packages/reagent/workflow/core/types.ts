@@ -46,6 +46,9 @@ export type BaseReagentNodeOptions<
   version: string;
   name: string;
   target?: "client";
+  // this field won't be treeshaken from client bundle and
+  // can be used to store data that client needs
+  client?: any;
   execute(
     context: Context<Config, Output>,
     input: WithDefaultEmpty<Input>
