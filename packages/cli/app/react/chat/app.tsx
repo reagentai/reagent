@@ -3,7 +3,6 @@ import { ErrorBoundary } from "react-error-boundary";
 import { create, useStore } from "zustand";
 import { persist } from "zustand/middleware";
 import { ReagentChat, createChatStore } from "@reagentai/react/chat";
-import { ReagentContextProvider } from "@reagentai/react/workflow";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -99,11 +98,10 @@ const App = () => {
                   </div>
                 )}
                 <div className="h-full">
-                  <ReagentContextProvider
+                  <ReagentChat
+                    store={store}
                     templates={workflowModule.nodes || []}
-                  >
-                    <ReagentChat store={store} />
-                  </ReagentContextProvider>
+                  />
                 </div>
               </ErrorBoundary>
             </div>

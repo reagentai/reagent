@@ -2,8 +2,8 @@ import { useContext, useEffect, useMemo } from "react";
 import { useStore } from "zustand";
 import type { Chat } from "@reagentai/reagent/chat";
 
-import { useReagentContext } from "../workflow/context.js";
 import { ChatStore } from "./state.js";
+import { useReagentChatContext } from "./Chat.js";
 
 const AgentNodeRenderer = (
   props: {
@@ -16,7 +16,7 @@ const AgentNodeRenderer = (
   if (!props.node) {
     return null;
   }
-  const { templatesById, AppContext } = useReagentContext();
+  const { templatesById } = useReagentChatContext();
   const components = useMemo(() => {
     const template = templatesById[props.node!.type];
     // ignore UI rendering if agent node not found
@@ -52,7 +52,6 @@ const AgentNodeRenderer = (
         useContext,
         useEffect,
       }}
-      AppContext={AppContext}
       useAgentNode={() => {
         const { persistentStateByMessageId, setPersistentState: setState } =
           useStore(props.store);

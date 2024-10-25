@@ -1,4 +1,5 @@
-import React, { createContext, useContext } from "react";
+import React, { createContext, useContext, useMemo } from "react";
+import { BaseReagentNodeOptions, WorkflowNode } from "@reagentai/reagent";
 
 import { Chatbox } from "./chatbox/simple/index.js";
 import { ChatThread } from "./ChatThread.js";
@@ -6,6 +7,10 @@ import { ChatStore } from "./state.js";
 
 type ReagentChatContext = {
   store: ChatStore;
+  templatesById: Record<
+    string,
+    BaseReagentNodeOptions<any, any, any> & { components: [] }
+  >;
 };
 
 const ReagentChatContext = createContext<ReagentChatContext>({} as any);
@@ -14,12 +19,21 @@ const useReagentChatContext = () => useContext(ReagentChatContext)!;
 
 const ReagentChat = (props: {
   store: ChatStore;
+  templates: WorkflowNode<any, any, any>[];
   EmptyScreen?: React.ReactNode;
   Loader?: React.ReactNode;
   ChatBox?: React.ReactNode;
 }) => {
+  const templatesById = useMemo(() => {
+    return props.templates.reduce((agg, curr) => {
+      // @ts-expect-error
+      agg[curr.id] = curr;
+      return agg;
+    }, {});
+  }, [props.templates]);
+
   return (
-    <ReagentChatContext.Provider value={{ store: props.store }}>
+    <ReagentChatContext.Provider value={{ store: props.store, templatesById }}>
       <div className="chat relative flex-1 h-full overflow-hidden">
         <div className="relative h-full min-w-[300px] overflow-hidden">
           <div className="h-full text-xs">
