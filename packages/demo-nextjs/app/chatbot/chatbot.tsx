@@ -2,7 +2,6 @@
 import {
   ReagentChat,
   ChatThemeProvider,
-  ReagentContextProvider,
   ChatStore,
 } from "@reagentai/react/chat";
 import { useChatTheme } from "@reagentai/react/chat/theme";
@@ -15,37 +14,36 @@ const ChatIsland = (props: {
 }) => {
   const theme = useChatTheme();
   return (
-    <ReagentContextProvider templates={props.templates}>
-      <ChatThemeProvider
-        value={{
-          classNames: {
-            messageContent:
-              theme.classNames.messageContent +
-              " !px-3 !py-2 selection:bg-blue-300",
-            messagesContainer: theme.classNames.messagesContainer + " !px-2",
-            messages: theme.classNames.messages + " !pt-6 !space-y-3",
-            roleContainer: theme.classNames.roleContainer + " !mr-2 !w-6",
-            role:
-              theme.classNames.role +
-              " !mt-2 !border-0 group-has-[.user]:!border",
-          },
-          avatars: {
-            ai: <Sparkle className="w-full h-full p-0.5" />,
-            user: <UserRound className="w-full h-full p-0.5" />,
-          },
-        }}
-      >
-        <ReagentChat
-          store={props.store}
-          EmptyScreen={props.EmptyScreen}
-          Loader={
-            <div className="pt-0.5">
-              <Loader className="w-4 h-4 animate-spin" />
-            </div>
-          }
-        />
-      </ChatThemeProvider>
-    </ReagentContextProvider>
+    <ChatThemeProvider
+      value={{
+        classNames: {
+          messageContent:
+            theme.classNames.messageContent +
+            " !px-3 !py-2 selection:bg-blue-300",
+          messagesContainer: theme.classNames.messagesContainer + " !px-2",
+          messages: theme.classNames.messages + " !pt-6 !space-y-3",
+          roleContainer: theme.classNames.roleContainer + " !mr-2 !w-6",
+          role:
+            theme.classNames.role +
+            " !mt-2 !border-0 group-has-[.user]:!border",
+        },
+        avatars: {
+          ai: <Sparkle className="w-full h-full p-0.5" />,
+          user: <UserRound className="w-full h-full p-0.5" />,
+        },
+      }}
+    >
+      <ReagentChat
+        store={props.store}
+        templates={props.templates}
+        EmptyScreen={props.EmptyScreen}
+        Loader={
+          <div className="pt-0.5">
+            <Loader className="w-4 h-4 animate-spin" />
+          </div>
+        }
+      />
+    </ChatThemeProvider>
   );
 };
 
