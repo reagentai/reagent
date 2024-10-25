@@ -3,6 +3,7 @@ import type {
   WorkflowNode,
   StepState,
   WorkflowRunEvent,
+  Context,
 } from "@reagentai/reagent/workflow/client";
 
 export namespace ExecutionResponse {
@@ -27,7 +28,16 @@ export type ExecutionRequest = {
 };
 
 export type ExecutionClient = {
+  isIdle: boolean;
   send(request: ExecutionRequest): ExecutionResponse;
+  resumePendingTasks(tasks: PendingTasks): Promise<void>;
+  subscribe(subscriber: ExecutionResponse.Subscriber): void;
+};
+
+export type PendingTasks = {
+  states: any;
+  pendingExecutions: any[];
+  pendingPrompts: any[];
 };
 
 export type WorkflowClientOptions = {
@@ -40,22 +50,27 @@ export type WorkflowClientOptions = {
     prompt:
       | {
           Component: any;
-          props: {
-            render: { key: string };
-            data: any;
-            submit: (value: any) => void;
-          };
+          props: Pick<
+            Context.PromptProps<any, any>,
+            "render" | "data" | "submit"
+          >;
         }
       | undefined
   ) => void;
+  // defaults to true
+  autoRunPendingTasks?: boolean;
   middleware?: {
-    request: (
+    onPendingTasks?: (tasks: PendingTasks) => void;
+    request?: (
       options: ExecutionRequest
     ) => ExecutionRequest & Record<string, any>;
   };
 };
 
 export type WorkflowClient = {
+  isIdle: boolean;
   start(options: { nodeId: string; input: any }): ExecutionResponse;
   send(emitOptions: ExecutionRequest): ExecutionResponse;
+  resumePendingTasks(tasks: PendingTasks): void;
+  subscribe(subscriber: ExecutionResponse.Subscriber): void;
 };

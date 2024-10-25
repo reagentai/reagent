@@ -13,12 +13,17 @@ const createWorkflowClient = (
   options: WorkflowClientOptions & ({ http: HttpOptions } | WebsocketOptions)
 ): WorkflowClient => {
   const client = createHttpClient({
+    // set autoRunPendingTasks to true if not set
+    autoRunPendingTasks: options.autoRunPendingTasks !== false,
     http: (options as any).http,
     templates: options.templates,
     showPrompt: options.showPrompt,
     middleware: options.middleware,
   });
   return {
+    get isIdle() {
+      return client.isIdle;
+    },
     start({ nodeId, input }) {
       const res = client.send({
         events: [
@@ -36,6 +41,10 @@ const createWorkflowClient = (
     send(options) {
       return client.send(options);
     },
+    resumePendingTasks(tasks) {
+      client.resumePendingTasks(tasks);
+    },
+    subscribe: client.subscribe,
   };
 };
 

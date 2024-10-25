@@ -8,7 +8,7 @@ import { dset } from "dset/merge";
 import { ExecutionClient, WorkflowClientOptions } from "./types";
 
 const executeNode = async (
-  client: ExecutionClient,
+  client: Pick<ExecutionClient, "send">,
   options: {
     session: {
       id: string;

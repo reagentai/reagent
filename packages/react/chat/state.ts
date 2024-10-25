@@ -1,4 +1,4 @@
-import { createStore } from "zustand";
+import { createStore } from "zustand/vanilla";
 import { persist } from "zustand/middleware";
 import { produce, WritableDraft } from "immer";
 import { includeKeys } from "filter-obj";
@@ -8,6 +8,7 @@ import {
   type WorkflowClientOptions,
   type ExecutionRequest,
   type ExecutionResponse,
+  WorkflowClient,
 } from "@reagentai/client/workflow";
 import type { Chat } from "@reagentai/reagent/chat";
 import type {
@@ -23,6 +24,7 @@ export type NewMessage = {
 };
 
 export type ChatState = {
+  client: WorkflowClient;
   messages: Record<string, Chat.Message>;
   persistentStateByMessageId: Record<string, any>;
   sortedMessageIds: string[];
@@ -47,7 +49,9 @@ type StoreInit = {
     // during build, WorkflowNode will be converted to BaseReagentNodeOptions
     // for client bundle, using `WorkflowNode` here only for type safety
     | WorkflowNode<any, any, any>[];
+  autoRunPendingTasks?: boolean;
   middleware?: {
+    onPendingTasks?: Required<WorkflowClientOptions>["middleware"]["onPendingTasks"];
     request?: (
       options: ExecutionRequest,
       state: ChatState
@@ -84,6 +88,7 @@ export const createChatStore = (
         };
 
         const client = createWorkflowClient({
+          autoRunPendingTasks: init.autoRunPendingTasks,
           http: {
             url: init.url,
             headers: {
@@ -98,6 +103,7 @@ export const createChatStore = (
             });
           },
           middleware: {
+            onPendingTasks: init.middleware?.onPendingTasks,
             request(req) {
               return init.middleware?.request?.(req, get()) || req;
             },
@@ -121,6 +127,7 @@ export const createChatStore = (
         };
 
         return {
+          client,
           messages: init.messages,
           // persistent state of a node
           // since each message can have only one UI node, store
@@ -200,8 +207,9 @@ export const createChatStore = (
                       }
                     });
                   } else if (msg.type == "message/ui") {
+                    const data = msg.data;
                     state = produce(s, (state) => {
-                      state.messages[options.input.id] = msg.data;
+                      state.messages[data.id] = msg.data;
                     });
                   } else if (msg.type == "message/ui/update") {
                     const data = msg.data;

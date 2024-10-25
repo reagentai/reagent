@@ -1,5 +1,20 @@
 import { NodeMetadata, StepState } from "../client.js";
 
+export namespace Context {
+  export type PromptProps<Data, Value = any> = {
+    render: {
+      // need to pass key under render since key is a reserved React prop
+      key: string;
+    };
+    data: Data;
+    React: {
+      useEffect: any;
+      useContext: any;
+      useMemo: any;
+    };
+    submit(value: Value): void;
+  };
+}
 export type Context<
   Config extends Record<string, unknown> | void,
   Output extends Record<string, unknown>,
@@ -56,19 +71,7 @@ export type Context<
   };
   // `context.prompt(...)` must be yielded
   prompt<Data, Value = any, TransformedValue = Value>(
-    Component: (props: {
-      render: {
-        // need to pass key under render since key is a reserved React prop
-        key: string;
-      };
-      data: Data;
-      React: {
-        useEffect: any;
-        useContext: any;
-        useMemo: any;
-      };
-      submit(value: Value): void;
-    }) => JSX.Element,
+    Component: (props: Context.PromptProps<Data, Value>) => JSX.Element,
     options?: {
       key?: string;
       data?: Data;

@@ -9,6 +9,7 @@ import type {
   ExecutionClient,
   WorkflowClientOptions,
   ExecutionResponse,
+  PendingTasks,
 } from "./types.js";
 
 export type HttpOptions = {
@@ -21,6 +22,107 @@ const createHttpClient = (
     http: HttpOptions;
   } & WorkflowClientOptions
 ): ExecutionClient => {
+  const state = {
+    isIdle: true,
+  };
+
+  const onPendingTasks = options.middleware?.onPendingTasks;
+  const globalSubscribers: ExecutionResponse.Subscriber[] = [];
+
+  function getTemplate(node: { type: string }) {
+    const template = options.templates.find((n1: any) => n1.id == node.type);
+    if (!template) {
+      throw new Error(`Node template not found: ${node.type}`);
+    }
+    return template;
+  }
+
+  async function resumePendingTasks(tasks: PendingTasks) {
+    const { states, pendingExecutions, pendingPrompts } = tasks;
+
+    await Promise.allSettled(
+      pendingExecutions.map((execution) => {
+        return executeNode(
+          {
+            send(...args) {
+              return send.bind({
+                states,
+                workflowSubscribers: [...globalSubscribers],
+              })(...args);
+            },
+          },
+          {
+            ...execution,
+            template: getTemplate(execution.node),
+          }
+        );
+      })
+    );
+
+    if (pendingPrompts.length > 1) {
+      throw new Error(
+        "Expected only one prompt but received: " + pendingPrompts.length
+      );
+    }
+    if (pendingPrompts.length > 0 && options.showPrompt) {
+      const { session, render, node } = pendingPrompts[0];
+      const template = getTemplate(node);
+      await new Promise((resolve) => {
+        const [_, Component] =
+          (template as any).components.find((c: any) => c[0] == render.step) ||
+          [];
+        if (!Component) {
+          throw new Error(`missing prompt component`);
+        }
+
+        let submitted = false;
+        options.showPrompt!({
+          Component,
+          props: {
+            render: {
+              key: render.key,
+            },
+            data: render.data,
+            submit(result) {
+              if (submitted) {
+                return;
+              }
+              submitted = true;
+              const path = node.path || [];
+              path.push(node.id);
+              dset(states, path, {
+                "@@prompt": {
+                  [render.step]: {
+                    [render.key]: {
+                      result,
+                    },
+                  },
+                },
+              });
+
+              const res = send.bind({
+                states,
+                workflowSubscribers: [...globalSubscribers],
+              })({
+                session: { id: session.id },
+                events: [],
+                states,
+              });
+              res.subscribe({
+                complete() {
+                  resolve(null);
+                },
+                error(error) {
+                  resolve(null);
+                },
+              });
+            },
+          },
+        });
+      });
+    }
+  }
+
   function send(request: {
     session?: { id: string };
     events: any[];
@@ -48,6 +150,7 @@ const createHttpClient = (
 
       const { url } = options.http;
 
+      state.isIdle = false;
       let res: Response;
       try {
         res = await fetch(url, {
@@ -88,25 +191,14 @@ const createHttpClient = (
             event.type == EventType.EXECUTE_ON_CLIENT ||
             event.type == EventType.PROMPT
           ) {
-            const template = options.templates.find(
-              (n1: any) => n1.id == event.node.type
-            );
-            if (!template) {
-              throw new Error(`Node template not found: ${event.node.type}`);
-            }
-
             if (event.type == EventType.EXECUTE_ON_CLIENT) {
               pendingExecutions.push({
                 node: event.node,
                 session: event.session,
-                template,
                 input: event.input,
               });
             } else if (event.type == EventType.PROMPT) {
-              pendingPrompts.push({
-                ...event,
-                template,
-              });
+              pendingPrompts.push(event);
             }
           } else if (event.type == "UPDATE_NODE_STATE") {
             const path = event.node.path || [];
@@ -118,84 +210,36 @@ const createHttpClient = (
           // Note: no need to call next for localSubscribers
         }
       }
+      state.isIdle = true;
       if (pendingExecutions.length == 0 && pendingPrompts.length == 0) {
         if (options.showPrompt) {
           options.showPrompt(undefined);
         }
         workflowSubscribers.forEach((subscriber) => subscriber.complete?.());
       }
-      await Promise.allSettled(
-        pendingExecutions.map((execution) => {
-          return executeNode(
-            {
-              send(...args) {
-                return send.bind({
-                  states,
-                  workflowSubscribers,
-                })(...args);
-              },
-            },
-            execution
+
+      if (!options.autoRunPendingTasks) {
+        if (!onPendingTasks) {
+          throw new Error(
+            "onPendingTasks should be passed if autoRunPendingTasks is false"
           );
-        })
-      );
-
-      if (pendingPrompts.length > 0 && options.showPrompt) {
-        await Promise.allSettled(
-          pendingPrompts.map(({ session, template, render, node }) => {
-            return new Promise((resolve) => {
-              const [_, Component] =
-                (template as any).components.find(
-                  (c: any) => c[0] == render.step
-                ) || [];
-              if (!Component) {
-                throw new Error(`missing prompt component`);
-              }
-
-              let submitted = false;
-              options.showPrompt!({
-                Component,
-                props: {
-                  render: {
-                    key: render.key,
-                  },
-                  data: render.data,
-                  submit(result) {
-                    if (submitted) {
-                      return;
-                    }
-                    submitted = true;
-                    const path = node.path || [];
-                    path.push(node.id);
-                    dset(states, path, {
-                      "@@prompt": {
-                        [render.step]: {
-                          [render.key]: {
-                            result,
-                          },
-                        },
-                      },
-                    });
-
-                    const res = send.bind({ states, workflowSubscribers })({
-                      session: { id: session.id },
-                      events: [],
-                      states,
-                    });
-                    res.subscribe({
-                      complete() {
-                        resolve(null);
-                      },
-                      error(error) {
-                        resolve(null);
-                      },
-                    });
-                  },
-                },
-              });
-            });
-          })
+        } else {
+          onPendingTasks({
+            states,
+            pendingExecutions,
+            pendingPrompts,
+          });
+        }
+      } else if (onPendingTasks) {
+        throw new Error(
+          "onPendingTasks can't be passed when autoRunPendingTasks is false"
         );
+      } else {
+        await resumePendingTasks({
+          states,
+          pendingExecutions,
+          pendingPrompts,
+        });
       }
       localSubscribers.forEach((subscriber) => subscriber.complete?.());
     })();
@@ -215,12 +259,19 @@ const createHttpClient = (
   }
 
   return {
+    get isIdle() {
+      return state.isIdle;
+    },
     send(...args) {
       return send.bind({
         topLevel: true,
         states: undefined,
-        workflowSubscribers: [],
+        workflowSubscribers: [...globalSubscribers],
       })(...args);
+    },
+    resumePendingTasks,
+    subscribe(subscriber) {
+      globalSubscribers.push(subscriber);
     },
   };
 };
