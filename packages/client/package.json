@@ -1,6 +1,6 @@
 {
   "name": "@reagentai/client",
-  "version": "0.7.3",
+  "version": "0.7.4",
   "description": "Frontend client for Reagent workflows",
   "type": "module",
   "scripts": {
