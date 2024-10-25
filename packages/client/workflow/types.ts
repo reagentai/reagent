@@ -30,7 +30,7 @@ export type ExecutionRequest = {
 
 export type ExecutionClient = {
   isIdle: boolean;
-  send(request: ExecutionRequest): ExecutionResponse;
+  send(request: ExecutionRequest): void;
   resumePendingTasks(tasks: PendingTasks): Promise<void>;
   subscribe(subscriber: ExecutionResponse.Subscriber): void;
 };
@@ -73,8 +73,8 @@ export type WorkflowClientOptions = {
 
 export type WorkflowClient = {
   isIdle: boolean;
-  start(options: { nodeId: string; input: any }): ExecutionResponse;
-  send(emitOptions: ExecutionRequest): ExecutionResponse;
+  start(options: { nodeId: string; input: any }): void;
+  send(emitOptions: ExecutionRequest): void;
   resumePendingTasks(tasks: PendingTasks): void;
   subscribe(subscriber: ExecutionResponse.Subscriber): void;
 };

@@ -110,6 +110,68 @@ export const createChatStore = (
           },
         });
 
+        client.subscribe({
+          next(msg) {
+            set((s) => {
+              let state: ChatState;
+              if (msg.type == "message/content") {
+                const message = msg.data;
+                state = produce(s, (state) => {
+                  state.messages[message.id] = message;
+                });
+              } else if (msg.type == "message/content/delta") {
+                const data = msg.data;
+                state = produce(s, (state) => {
+                  if (s.messages[data.id]) {
+                    state.messages[data.id].message!.content =
+                      (s.messages[data.id].message?.content || "") +
+                      data.message.content;
+                  } else {
+                    state.messages[data.id] = data;
+                  }
+                });
+              } else if (msg.type == "message/ui") {
+                const data = msg.data;
+                state = produce(s, (state) => {
+                  state.messages[data.id] = msg.data;
+                });
+              } else if (msg.type == "message/ui/update") {
+                const data = msg.data;
+                state = produce(s, (state) => {
+                  const prev = s.messages[data.id]?.ui || [];
+                  state.messages[data.id] = {
+                    ...data,
+                    ui: Array.from(
+                      // unique items by render key
+                      new Map(
+                        [...prev, data.ui].map((ui) => [ui["key"], ui])
+                      ).values()
+                    ),
+                  };
+                });
+              } else {
+                throw new Error("unknown message type:" + (msg as any).type);
+              }
+              return produce(state, (state) => {
+                state.inflightRequest = { responseReceived: true };
+                state.sortedMessageIds = sortMessages(state.messages);
+              });
+            });
+          },
+          async error(error) {
+            const err = await init.middleware?.response?.error?.(error);
+            setProduce((state) => {
+              state.inflightRequest = null;
+              state.error = err;
+            });
+          },
+          complete() {
+            setProduce((state) => {
+              state.inflightRequest = null;
+            });
+          },
+        });
+
         const sortMessages = (messages: Record<string, Chat.Message>) => {
           return Object.values(messages)
             .sort((m1, m2) => {
@@ -176,8 +238,7 @@ export const createChatStore = (
                 state.sortedMessageIds = sortMessages(state.messages);
               });
             });
-
-            const result = client.send({
+            client.send({
               events: [
                 {
                   type: EventType.INVOKE,
@@ -185,69 +246,6 @@ export const createChatStore = (
                   node: { id: options.nodeId },
                 },
               ] as WorkflowRunEvent[],
-            });
-            result.subscribe({
-              next(msg) {
-                set((s) => {
-                  let state: ChatState;
-                  if (msg.type == "message/content") {
-                    const message = msg.data;
-                    state = produce(s, (state) => {
-                      state.messages[message.id] = message;
-                    });
-                  } else if (msg.type == "message/content/delta") {
-                    const data = msg.data;
-                    state = produce(s, (state) => {
-                      if (s.messages[data.id]) {
-                        state.messages[data.id].message!.content =
-                          (s.messages[data.id].message?.content || "") +
-                          data.message.content;
-                      } else {
-                        state.messages[data.id] = data;
-                      }
-                    });
-                  } else if (msg.type == "message/ui") {
-                    const data = msg.data;
-                    state = produce(s, (state) => {
-                      state.messages[data.id] = msg.data;
-                    });
-                  } else if (msg.type == "message/ui/update") {
-                    const data = msg.data;
-                    state = produce(s, (state) => {
-                      const prev = s.messages[data.id]?.ui || [];
-                      state.messages[data.id] = {
-                        ...data,
-                        ui: Array.from(
-                          // unique items by render key
-                          new Map(
-                            [...prev, data.ui].map((ui) => [ui["key"], ui])
-                          ).values()
-                        ),
-                      };
-                    });
-                  } else {
-                    throw new Error(
-                      "unknown message type:" + (msg as any).type
-                    );
-                  }
-                  return produce(state, (state) => {
-                    state.inflightRequest = { responseReceived: true };
-                    state.sortedMessageIds = sortMessages(state.messages);
-                  });
-                });
-              },
-              async error(error) {
-                const err = await init.middleware?.response?.error?.(error);
-                setProduce((state) => {
-                  state.inflightRequest = null;
-                  state.error = err;
-                });
-              },
-              complete() {
-                setProduce((state) => {
-                  state.inflightRequest = null;
-                });
-              },
             });
           },
           async reset() {

@@ -138,7 +138,7 @@ const createHttpClient = (
       return state.isIdle;
     },
     send(...args) {
-      return send.bind({
+      send.bind({
         topLevel: true,
         states: undefined,
         workflowSubscribers: [...globalSubscribers],
