@@ -38,6 +38,8 @@ const createHttpClient = (
   }
 
   async function resumePendingTasks(tasks: PendingTasks) {
+    updateStatus({ isIdle: false });
+
     const { states, pendingExecutions, pendingPrompts } = tasks;
 
     await Promise.allSettled(
@@ -121,7 +123,32 @@ const createHttpClient = (
         });
       });
     }
+    updateStatus({ isIdle: true });
   }
+
+  const updateStatus = (update: { isIdle: boolean }) => {
+    state.isIdle = update.isIdle;
+    globalSubscribers.forEach((subscriber) =>
+      subscriber.onStatusUpdate?.({ idle: state.isIdle })
+    );
+  };
+
+  const client: ExecutionClient = {
+    get isIdle() {
+      return state.isIdle;
+    },
+    send(...args) {
+      return send.bind({
+        topLevel: true,
+        states: undefined,
+        workflowSubscribers: [...globalSubscribers],
+      })(...args);
+    },
+    resumePendingTasks,
+    subscribe(subscriber) {
+      globalSubscribers.push(subscriber);
+    },
+  };
 
   function send(request: {
     session?: { id: string };
@@ -148,9 +175,8 @@ const createHttpClient = (
         body = options.middleware.request(body);
       }
 
+      updateStatus({ isIdle: false });
       const { url } = options.http;
-
-      state.isIdle = false;
       let res: Response;
       try {
         res = await fetch(url, {
@@ -210,7 +236,6 @@ const createHttpClient = (
           // Note: no need to call next for localSubscribers
         }
       }
-      state.isIdle = true;
       if (pendingExecutions.length == 0 && pendingPrompts.length == 0) {
         if (options.showPrompt) {
           options.showPrompt(undefined);
@@ -224,11 +249,16 @@ const createHttpClient = (
             "onPendingTasks should be passed if autoRunPendingTasks is false"
           );
         } else {
-          onPendingTasks({
-            states,
-            pendingExecutions,
-            pendingPrompts,
-          });
+          onPendingTasks(
+            {
+              states,
+              pendingExecutions,
+              pendingPrompts,
+            },
+            {
+              client,
+            }
+          );
         }
       } else if (onPendingTasks) {
         throw new Error(
@@ -241,6 +271,8 @@ const createHttpClient = (
           pendingPrompts,
         });
       }
+
+      updateStatus({ isIdle: true });
       localSubscribers.forEach((subscriber) => subscriber.complete?.());
     })();
     promise.catch((e) => {
@@ -258,22 +290,7 @@ const createHttpClient = (
     };
   }
 
-  return {
-    get isIdle() {
-      return state.isIdle;
-    },
-    send(...args) {
-      return send.bind({
-        topLevel: true,
-        states: undefined,
-        workflowSubscribers: [...globalSubscribers],
-      })(...args);
-    },
-    resumePendingTasks,
-    subscribe(subscriber) {
-      globalSubscribers.push(subscriber);
-    },
-  };
+  return client;
 };
 
 export { createHttpClient };

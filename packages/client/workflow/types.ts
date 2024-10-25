@@ -10,6 +10,7 @@ export namespace ExecutionResponse {
   export type Error = Response | { error?: string };
 
   export type Subscriber = {
+    onStatusUpdate?(status: { idle: boolean }): void;
     next?(value: any): void;
     error?(error: Error): void;
     complete?(): void;
@@ -60,7 +61,10 @@ export type WorkflowClientOptions = {
   // defaults to true
   autoRunPendingTasks?: boolean;
   middleware?: {
-    onPendingTasks?: (tasks: PendingTasks) => void;
+    onPendingTasks?: (
+      tasks: PendingTasks,
+      options: { client: ExecutionClient }
+    ) => void;
     request?: (
       options: ExecutionRequest
     ) => ExecutionRequest & Record<string, any>;
