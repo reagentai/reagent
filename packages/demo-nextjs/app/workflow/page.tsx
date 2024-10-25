@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { createWorkflowClient } from "@reagentai/client/workflow";
 
 import * as workflow from "./workflow";
@@ -9,25 +9,29 @@ export default function () {
   const [prompt, setPrompt] = useState<
     { Component: any; props: any } | undefined
   >();
-  const client = createWorkflowClient({
-    http: {
-      url: "/api/chat",
-    },
-    templates: workflow.nodes,
-    showPrompt(options) {
-      setPrompt(options);
-    },
-  });
+  const client = useMemo(() => {
+    const client = createWorkflowClient({
+      http: {
+        url: "/api/chat",
+      },
+      templates: workflow.nodes,
+      showPrompt(options) {
+        setPrompt(options);
+      },
+    });
+
+    client.subscribe({
+      complete() {
+        console.log("WORKFLOW DONE");
+      },
+    });
+    return client;
+  }, []);
 
   const triggerWorkflow = useCallback(async () => {
     const run = client.start({
       nodeId: "input",
       input: {},
-    });
-    run.subscribe({
-      complete() {
-        console.log("WORKFLOW DONE");
-      },
     });
   }, []);
   return (
