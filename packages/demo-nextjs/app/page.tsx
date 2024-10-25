@@ -1,11 +1,7 @@
 "use client";
 import { useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import {
-  ReagentContextProvider,
-  ReagentChat,
-  createChatStore,
-} from "@reagentai/react/chat";
+import { ReagentChat, createChatStore } from "@reagentai/react/chat";
 
 import * as agent from "./workflow/workflow";
 
@@ -49,9 +45,11 @@ const ChatAgent = () => {
               </div>
             )}
             <div className="h-full">
-              <ReagentContextProvider templates={agent.nodes || []}>
-                <ReagentChat store={store} />
-              </ReagentContextProvider>
+              <ReagentChat
+                store={store}
+                templates={agent.nodes || []}
+                Loader={<div>Loading...</div>}
+              />
             </div>
           </ErrorBoundary>
         </div>
