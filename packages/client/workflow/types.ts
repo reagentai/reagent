@@ -30,7 +30,7 @@ export type ExecutionRequest = {
 
 export type ExecutionClient = {
   isIdle: boolean;
-  send(request: ExecutionRequest): void;
+  send(request: ExecutionRequest): ExecutionResponse;
   resumePendingTasks(tasks: PendingTasks): Promise<void>;
   subscribe(subscriber: ExecutionResponse.Subscriber): void;
 };

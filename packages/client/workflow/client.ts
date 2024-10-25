@@ -36,10 +36,9 @@ const createWorkflowClient = (
           },
         ],
       });
-      return res;
     },
     send(options) {
-      return client.send(options);
+      client.send(options);
     },
     resumePendingTasks(tasks) {
       client.resumePendingTasks(tasks);
