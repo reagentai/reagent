@@ -53,7 +53,6 @@ For this example, we are using a data analysis agent built using `E2B` code inte
 ```typescript
 "use client";
 import { ReagentChat, createChatStore } from "@reagentai/react/chat";
-import { ReagentContextProvider } from "@reagentai/react/workflow";
 import * as workflow from "@reagentai/react-examples/e2b";
 
 const ChatWorkflow = () => {
@@ -72,9 +71,7 @@ const ChatWorkflow = () => {
 
   return (
     <div className="h-full">
-      <ReagentContextProvider nodes={workflow.nodes || []}>
-        <ReagentChat store={store} />
-      </ReagentContextProvider>
+      <ReagentChat store={store} templates={workflow.nodes || []} />
     </div>
   );
 };
