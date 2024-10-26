@@ -10,4 +10,5 @@ export type {
   ExecutionClient,
   ExecutionRequest,
   ExecutionResponse,
+  PendingTasks,
 } from "./types.js";
