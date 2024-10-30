@@ -171,7 +171,8 @@ export type WorkflowRunOptions = {
   ) => StepState | void | Promise<StepState | undefined | void>;
   updateStepState?: (
     node: NodeMetadata,
-    state: StepState
+    state: StepState,
+    { session }: { session: Session }
   ) => void | Promise<void>;
   events: WorkflowRunEvent[];
 };

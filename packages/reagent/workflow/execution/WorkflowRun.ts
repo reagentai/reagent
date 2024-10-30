@@ -13,6 +13,7 @@ import {
   take,
 } from "redux-saga/effects";
 import { deserializeError } from "serialize-error";
+import { klona } from "klona";
 
 import {
   NodeMetadata,
@@ -109,6 +110,7 @@ class WorkflowRun {
   ) {
     const self = this;
     let stepStates: Record<string, any> = {};
+    const session = klona(self.#session);
     return runSaga(
       {
         channel: self.#channel,
@@ -130,7 +132,9 @@ class WorkflowRun {
                 stepStates[node.id] || {},
                 state as any
               );
-              options.updateStepState(node, stepStates[node.id]);
+              options.updateStepState(node, stepStates[node.id], {
+                session,
+              });
             }
           },
           dispatch(output: any) {
