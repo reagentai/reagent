@@ -24,6 +24,7 @@ const ReagentChat = (props: {
   Loader?: React.ReactNode;
   ChatBox?: React.ReactNode;
   markdown?: MarkdownOptions;
+  visible?: boolean;
 }) => {
   const templatesById = useMemo(() => {
     return props.templates.reduce((agg, curr) => {
@@ -43,6 +44,7 @@ const ReagentChat = (props: {
               EmptyScreen={props.EmptyScreen}
               Loader={props.Loader}
               markdown={props.markdown}
+              visible={props.visible}
             />
           </div>
           <div className="chatbox-container absolute bottom-0 w-full px-4 flex justify-center pointer-events-none">

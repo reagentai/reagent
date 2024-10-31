@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import { useStore } from "zustand";
 import { HiOutlinePaperAirplane } from "react-icons/hi";
@@ -7,7 +7,7 @@ import { uniqueId } from "@reagentai/reagent/utils";
 import { useChatTheme } from "../../theme.js";
 import { useReagentChatContext } from "../../Chat.js";
 
-const Chatbox = () => {
+const Chatbox = memo(() => {
   const { store } = useReagentChatContext();
   const { invoke } = useStore(store);
   const [message, setMessage] = useState("");
@@ -83,6 +83,6 @@ const Chatbox = () => {
       </form>
     </div>
   );
-};
+});
 
 export { Chatbox };

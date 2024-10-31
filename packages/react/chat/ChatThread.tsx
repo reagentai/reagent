@@ -27,6 +27,7 @@ const ChatThread = memo(
     EmptyScreen?: React.ReactNode;
     Loader?: React.ReactNode;
     markdown?: MarkdownOptions;
+    visible?: boolean;
   }) => {
     let scrolledToBottom = false;
     let chatMessagesContainerRef = useRef<HTMLDivElement>(null);
@@ -44,7 +45,7 @@ const ChatThread = memo(
         }
         scrolledToBottom = true;
         chatMessagesContainerRef.current!.scrollTo({
-          top: (containerHeight || 0) + 100_000,
+          top: containerHeight + 100_000,
           left: 0,
           behavior: "smooth",
         });
@@ -110,61 +111,67 @@ const Error = (props: { store: ChatStore }) => {
   );
 };
 
-const ChatMessages = (props: {
-  store: ChatStore;
-  scrollToBottom: () => void;
-  Loader?: React.ReactNode;
-  markdown?: MarkdownOptions;
-}) => {
-  const theme = useChatTheme();
-  const { messages, sortedMessageIds, inflightRequest } = useStore(props.store);
-  const sortedMessages = useMemo(() => {
-    return sortedMessageIds.map((id) => messages[id]);
-  }, [messages, sortedMessageIds]);
+const ChatMessages = memo(
+  (props: {
+    store: ChatStore;
+    scrollToBottom: () => void;
+    Loader?: React.ReactNode;
+    markdown?: MarkdownOptions;
+  }) => {
+    const theme = useChatTheme();
+    const { messages, sortedMessageIds, inflightRequest } = useStore(
+      props.store
+    );
+    const sortedMessages = useMemo(() => {
+      return sortedMessageIds.map((id) => messages[id]);
+    }, [messages, sortedMessageIds]);
 
-  const [lastMessage, setLastMessage] = useState(null);
-  useEffect(() => {
-    props.scrollToBottom();
-  }, [sortedMessages]);
+    const [lastMessage, setLastMessage] = useState(null);
+    useEffect(() => {
+      props.scrollToBottom();
+    }, [sortedMessages]);
 
-  return (
-    <>
-      {sortedMessages.length > 0 &&
-        sortedMessages.map((message, index) => {
-          const isLastMessage = index == sortedMessages.length - 1;
-          if (isLastMessage && lastMessage !== message) {
-            setLastMessage(message as any);
-            props.scrollToBottom();
-          }
-          return (
+    return (
+      <>
+        {sortedMessages.length > 0 &&
+          sortedMessages.map((message, index) => {
+            const isLastMessage = index == sortedMessages.length - 1;
+            if (isLastMessage && lastMessage !== message) {
+              setLastMessage(message as any);
+              props.scrollToBottom();
+            }
+            return (
+              <ChatMessage
+                key={message.id}
+                message={message}
+                store={props.store}
+                showRole={
+                  index == 0 || sortedMessages[index - 1].role != message.role
+                }
+                theme={theme}
+                markdown={props.markdown}
+              />
+            );
+          })}
+        {props.Loader &&
+          inflightRequest &&
+          !inflightRequest.responseReceived && (
             <ChatMessage
-              key={message.id}
-              message={message}
+              message={{
+                id: "loading",
+                role: "ai",
+                Loader: props.Loader,
+              }}
               store={props.store}
-              showRole={
-                index == 0 || sortedMessages[index - 1].role != message.role
-              }
+              showRole={true}
               theme={theme}
               markdown={props.markdown}
             />
-          );
-        })}
-      {props.Loader && inflightRequest && !inflightRequest.responseReceived && (
-        <ChatMessage
-          message={{
-            id: "loading",
-            role: "ai",
-            Loader: props.Loader,
-          }}
-          store={props.store}
-          showRole={true}
-          theme={theme}
-          markdown={props.markdown}
-        />
-      )}
-    </>
-  );
-};
+          )}
+      </>
+    );
+  }
+);
 
 const PromptComponent = memo((props: { store: ChatStore }) => {
   const prompt = useStore(props.store, (s) => s.prompt);
