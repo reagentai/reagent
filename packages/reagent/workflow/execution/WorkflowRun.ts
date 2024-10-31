@@ -81,6 +81,10 @@ class WorkflowRun {
     return this.#id;
   }
 
+  get session() {
+    return klona(this.#session);
+  }
+
   get events() {
     return this.#streams.events;
   }
