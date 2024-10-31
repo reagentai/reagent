@@ -28,6 +28,7 @@ const ChatThread = memo(
     Loader?: React.ReactNode;
     markdown?: MarkdownOptions;
   }) => {
+    let scrolledToBottom = false;
     let chatMessagesContainerRef = useRef<HTMLDivElement>(null);
     let chatMessagesRef = useRef<HTMLDivElement>(null);
     const theme = useChatTheme();
@@ -38,6 +39,10 @@ const ChatThread = memo(
         const containerHeight = parseFloat(
           getComputedStyle(chatMessagesRef.current!).height
         );
+        if (Number.isNaN(containerHeight)) {
+          return;
+        }
+        scrolledToBottom = true;
         chatMessagesContainerRef.current!.scrollTo({
           top: (containerHeight || 0) + 100_000,
           left: 0,
@@ -47,8 +52,10 @@ const ChatThread = memo(
     }, []);
 
     useEffect(() => {
-      scrollToBottom();
-    }, [chatMessagesRef.current, chatMessagesContainerRef.current]);
+      if (!scrolledToBottom) {
+        scrollToBottom();
+      }
+    });
     return (
       <div
         ref={chatMessagesContainerRef}
