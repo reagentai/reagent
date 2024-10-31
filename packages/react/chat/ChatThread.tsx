@@ -27,9 +27,8 @@ const ChatThread = memo(
     EmptyScreen?: React.ReactNode;
     Loader?: React.ReactNode;
     markdown?: MarkdownOptions;
-    visible?: boolean;
   }) => {
-    let scrolledToBottom = false;
+    let scrolledToBottom = useRef(false);
     let chatMessagesContainerRef = useRef<HTMLDivElement>(null);
     let chatMessagesRef = useRef<HTMLDivElement>(null);
     const theme = useChatTheme();
@@ -43,7 +42,7 @@ const ChatThread = memo(
         if (Number.isNaN(containerHeight)) {
           return;
         }
-        scrolledToBottom = true;
+        scrolledToBottom.current = true;
         chatMessagesContainerRef.current!.scrollTo({
           top: containerHeight + 100_000,
           left: 0,
@@ -53,8 +52,12 @@ const ChatThread = memo(
     }, []);
 
     useEffect(() => {
-      if (!scrolledToBottom) {
-        scrollToBottom();
+      if (!scrolledToBottom.current) {
+        // use timeout to allow hidden chat container to render
+        // and set computed height
+        setTimeout(() => {
+          scrollToBottom();
+        }, 200);
       }
     });
     return (
