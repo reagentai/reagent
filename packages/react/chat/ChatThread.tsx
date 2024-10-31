@@ -39,7 +39,7 @@ const ChatThread = memo(
           getComputedStyle(chatMessagesRef.current!).height
         );
         chatMessagesContainerRef.current!.scrollTo({
-          top: containerHeight + 100_000,
+          top: (containerHeight || 0) + 100_000,
           left: 0,
           behavior: "smooth",
         });
