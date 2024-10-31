@@ -2,7 +2,7 @@ import React, { createContext, useContext, useMemo } from "react";
 import { BaseReagentNodeOptions, WorkflowNode } from "@reagentai/reagent";
 
 import { Chatbox } from "./chatbox/simple/index.js";
-import { ChatThread } from "./ChatThread.js";
+import { ChatThread, MarkdownOptions } from "./ChatThread.js";
 import { ChatStore } from "./state.js";
 
 type ReagentChatContext = {
@@ -23,6 +23,7 @@ const ReagentChat = (props: {
   EmptyScreen?: React.ReactNode;
   Loader?: React.ReactNode;
   ChatBox?: React.ReactNode;
+  markdown?: MarkdownOptions;
 }) => {
   const templatesById = useMemo(() => {
     return props.templates.reduce((agg, curr) => {
@@ -41,6 +42,7 @@ const ReagentChat = (props: {
               store={props.store}
               EmptyScreen={props.EmptyScreen}
               Loader={props.Loader}
+              markdown={props.markdown}
             />
           </div>
           <div className="chatbox-container absolute bottom-0 w-full px-4 flex justify-center pointer-events-none">

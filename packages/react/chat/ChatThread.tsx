@@ -9,18 +9,24 @@ import {
 } from "react";
 import { useStore } from "zustand";
 import clsx from "clsx";
-import Markdown from "react-markdown";
+import Markdown, { Components as MarkdownComponents } from "react-markdown";
 import type { Chat } from "@reagentai/reagent/chat";
 
 import { AgentNodeRenderer } from "./node.js";
 import { ChatStore } from "./state.js";
 import { useChatTheme } from "./theme.js";
 
+type MarkdownOptions = {
+  remarkPlugins?: any[];
+  components?: Partial<MarkdownComponents>;
+};
+
 const ChatThread = memo(
   (props: {
     store: ChatStore;
     EmptyScreen?: React.ReactNode;
     Loader?: React.ReactNode;
+    markdown?: MarkdownOptions;
   }) => {
     let chatMessagesContainerRef = useRef<HTMLDivElement>(null);
     let chatMessagesRef = useRef<HTMLDivElement>(null);
@@ -64,6 +70,7 @@ const ChatThread = memo(
                 store={props.store}
                 scrollToBottom={scrollToBottom}
                 Loader={props.Loader}
+                markdown={props.markdown}
               />
               <PromptComponent store={props.store} />
               <Error store={props.store} />
@@ -100,6 +107,7 @@ const ChatMessages = (props: {
   store: ChatStore;
   scrollToBottom: () => void;
   Loader?: React.ReactNode;
+  markdown?: MarkdownOptions;
 }) => {
   const theme = useChatTheme();
   const { messages, sortedMessageIds, inflightRequest } = useStore(props.store);
@@ -130,6 +138,7 @@ const ChatMessages = (props: {
                 index == 0 || sortedMessages[index - 1].role != message.role
               }
               theme={theme}
+              markdown={props.markdown}
             />
           );
         })}
@@ -143,6 +152,7 @@ const ChatMessages = (props: {
           store={props.store}
           showRole={true}
           theme={theme}
+          markdown={props.markdown}
         />
       )}
     </>
@@ -192,6 +202,7 @@ const ChatMessage = memo(
     store: ChatStore;
     showRole: boolean;
     theme: ReturnType<typeof useChatTheme>;
+    markdown?: MarkdownOptions;
   }) => {
     const theme = props.theme;
     const { classNames } = theme;
@@ -274,7 +285,10 @@ const ChatMessage = memo(
                 )}
                 data-role={role.id}
               >
-                <Markdown remarkPlugins={[]}>
+                <Markdown
+                  remarkPlugins={props.markdown?.remarkPlugins}
+                  components={props.markdown?.components}
+                >
                   {props.message.message!.content}
                 </Markdown>
               </div>
@@ -297,3 +311,4 @@ const ChatMessage = memo(
 );
 
 export { ChatThread };
+export type { MarkdownOptions };
