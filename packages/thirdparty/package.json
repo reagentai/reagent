@@ -1,6 +1,6 @@
 {
   "name": "@reagentai/thirdparty",
-  "version": "0.7.10",
+  "version": "0.7.11",
   "description": "Thirdparty integrations for Reagent AI",
   "type": "module",
   "scripts": {
