@@ -194,7 +194,7 @@ const PromptComponent = memo((props: { store: ChatStore }) => {
     <ChatMessage
       message={message as any}
       store={undefined!}
-      showRole={false}
+      showRole={prompt.props.requiresUserInput}
       theme={theme}
     />
   );
