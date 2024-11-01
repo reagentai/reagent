@@ -536,15 +536,21 @@ class WorkflowStepRef<
         };
       },
       prompt(step, options) {
-        const key = options?.key || "0";
+        const {
+          key: promptKey,
+          transform,
+          requiresUserInput = true,
+          ...rest
+        } = options || {};
+        const key = promptKey || "0";
         // since this runs in server side,
         // render will be transpiled to only pass prompt component id
         const stepId = step as unknown as string;
         const prompt = state!["@@prompt"]?.[stepId]?.[key];
         if (prompt) {
           let result = prompt.result;
-          if (options?.transform) {
-            result = options.transform(result);
+          if (transform) {
+            result = transform(result);
           }
           return Object.assign({ [STEP_RESULT]: result });
         }
@@ -565,7 +571,8 @@ class WorkflowStepRef<
           render: {
             step: stepId,
             key,
-            data: options?.data,
+            requiresUserInput,
+            ...rest,
           },
         });
         context.stop();

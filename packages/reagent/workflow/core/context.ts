@@ -75,6 +75,8 @@ export type Context<
     options?: {
       key?: string;
       data?: Data;
+      // default to true
+      requiresUserInput?: boolean;
       transform?: (value: Value) => TransformedValue;
     }
   ): TransformedValue;
