@@ -122,7 +122,7 @@ const ChatMessages = memo(
     markdown?: MarkdownOptions;
   }) => {
     const theme = useChatTheme();
-    const { messages, sortedMessageIds, inflightRequest, prompt } = useStore(
+    const { messages, sortedMessageIds, inflightRequest } = useStore(
       props.store
     );
     const sortedMessages = useMemo(() => {
@@ -158,8 +158,7 @@ const ChatMessages = memo(
           })}
         {props.Loader &&
           inflightRequest &&
-          !inflightRequest.responseReceived &&
-          !prompt && (
+          !inflightRequest.responseReceived && (
             <ChatMessage
               message={{
                 id: "loading",
