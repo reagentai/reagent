@@ -25,7 +25,7 @@ const createWorkflowClient = (
       return client.isIdle;
     },
     start({ nodeId, input }) {
-      const res = client.send({
+      client.send({
         events: [
           {
             type: EventType.INVOKE,

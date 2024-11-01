@@ -7,6 +7,8 @@ export namespace Context {
       key: string;
     };
     data: Data;
+    // default to true
+    requiresUserInput: boolean;
     React: {
       useEffect: any;
       useContext: any;
@@ -78,7 +80,9 @@ export type Context<
       // default to true
       requiresUserInput?: boolean;
       transform?: (value: Value) => TransformedValue;
-    }
+    } & Partial<
+      Pick<Context.PromptProps<Data, Value>, "data" | "requiresUserInput">
+    >
   ): TransformedValue;
   step<O = void>(
     stepId: string,

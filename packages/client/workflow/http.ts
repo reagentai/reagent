@@ -85,6 +85,7 @@ const createHttpClient = (
               key: render.key,
             },
             data: render.data,
+            requiresUserInput: render.requiresUserInput,
             submit(result) {
               if (submitted) {
                 return;
@@ -205,7 +206,7 @@ const createHttpClient = (
 
       const response = jsonStreamToAsyncIterator<Chat.Response>(res.body!);
       const pendingExecutions = [];
-      const pendingPrompts = [];
+      const pendingPrompts: PendingTasks["pendingPrompts"] = [];
       const states: any = {
         ...(self.states || {}),
       };
@@ -224,7 +225,7 @@ const createHttpClient = (
                 input: event.input,
               });
             } else if (event.type == EventType.PROMPT) {
-              pendingPrompts.push(event);
+              pendingPrompts.push(event as any);
             }
           } else if (event.type == "UPDATE_NODE_STATE") {
             const path = event.node.path || [];

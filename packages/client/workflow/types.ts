@@ -38,7 +38,23 @@ export type ExecutionClient = {
 export type PendingTasks = {
   states: any;
   pendingExecutions: any[];
-  pendingPrompts: any[];
+  pendingPrompts: {
+    session: {
+      id: string;
+    };
+    node: {
+      id: string;
+      path?: string[];
+      type: string;
+    };
+    render: Pick<
+      Context.PromptProps<any, any>,
+      "data" | "requiresUserInput"
+    > & {
+      step: string;
+      key: string;
+    };
+  }[];
 };
 
 export type WorkflowClientOptions = {
@@ -53,7 +69,7 @@ export type WorkflowClientOptions = {
           Component: any;
           props: Pick<
             Context.PromptProps<any, any>,
-            "render" | "data" | "submit"
+            "render" | "data" | "submit" | "requiresUserInput"
           >;
         }
       | undefined
