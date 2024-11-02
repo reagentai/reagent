@@ -52,23 +52,6 @@ const AgentNodeRenderer = (
         useContext,
         useEffect,
       }}
-      useAgentNode={() => {
-        const { persistentStateByMessageId, setPersistentState: setState } =
-          useStore(props.store);
-        const state = persistentStateByMessageId[props.messageId];
-        return {
-          state,
-          setState(state: any) {
-            if (typeof state == "function") {
-              state = state(persistentStateByMessageId[props.messageId]);
-            }
-            setState({
-              messageId: props.messageId,
-              state,
-            });
-          },
-        };
-      }}
     />
   );
 };

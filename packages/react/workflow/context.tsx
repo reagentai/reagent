@@ -9,7 +9,6 @@ type Context = {
     string,
     BaseReagentNodeOptions<any, any, any> & { components: [] }
   >;
-  AppContext?: any;
 };
 const AgentContext = createContext<Context>({
   templatesById: {},
@@ -18,7 +17,6 @@ const useReagentContext = () => useContext(AgentContext)!;
 
 const ReagentContextProvider = (props: {
   templates: WorkflowNode<any, any, any>[];
-  AppContext?: any;
   children: any;
 }) => {
   const templatesById = useMemo(() => {
@@ -30,9 +28,7 @@ const ReagentContextProvider = (props: {
   }, [props.templates]);
 
   return (
-    <AgentContext.Provider
-      value={{ templatesById, AppContext: props.AppContext }}
-    >
+    <AgentContext.Provider value={{ templatesById }}>
       {props.children}
     </AgentContext.Provider>
   );

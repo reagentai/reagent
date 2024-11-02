@@ -26,7 +26,6 @@ export type NewMessage = {
 export type ChatState = {
   client: WorkflowClient;
   messages: Record<string, Chat.Message>;
-  persistentStateByMessageId: Record<string, any>;
   sortedMessageIds: string[];
   prompt: Parameters<Required<WorkflowClientOptions>["showPrompt"]>[0];
   inflightRequest: {
@@ -35,7 +34,6 @@ export type ChatState = {
   error?: string;
   resetError(): void;
   setMessages: (messages: Record<string, Chat.Message>) => void;
-  setPersistentState(options: { messageId: string; state: any }): void;
   invoke: (options: { nodeId: string; input: NewMessage }) => Promise<void>;
   reset(): Promise<void>;
 };
@@ -78,6 +76,23 @@ export const createChatStore = (
     : (x: any) => {
         return x;
       };
+
+  const sortMessages = (messages: Record<string, Chat.Message>) => {
+    return Object.values(messages)
+      .sort((m1, m2) => {
+        const d1 = new Date(m1.createdAt).getTime();
+        const d2 = new Date(m2.createdAt).getTime();
+        if (d1 == d2) {
+          return 0;
+        } else if (d1 > d2) {
+          return 1;
+        } else {
+          return -1;
+        }
+      })
+      .map((m) => m.id);
+  };
+
   return createStore(
     withPerisist<ChatState>(
       (set, get, store) => {
@@ -172,31 +187,9 @@ export const createChatStore = (
           },
         });
 
-        const sortMessages = (messages: Record<string, Chat.Message>) => {
-          return Object.values(messages)
-            .sort((m1, m2) => {
-              const d1 = new Date(m1.createdAt).getTime();
-              const d2 = new Date(m2.createdAt).getTime();
-              if (d1 == d2) {
-                return 0;
-              } else if (d1 > d2) {
-                return 1;
-              } else {
-                return -1;
-              }
-            })
-            .map((m) => m.id);
-        };
-
         return {
           client,
           messages: init.messages,
-          // persistent state of a node
-          // since each message can have only one UI node, store
-          // state by message id
-          persistentStateByMessageId: {
-            // [messageId]: state
-          },
           sortedMessageIds: sortMessages(init.messages),
           prompt: undefined,
           inflightRequest: null,
@@ -209,13 +202,6 @@ export const createChatStore = (
             setProduce((state) => {
               state.messages = messages;
               state.sortedMessageIds = sortMessages(messages);
-            });
-          },
-          setPersistentState(options: { messageId: string; state: any }) {
-            // TODO: pass the state to server since the state is persistent
-            setProduce((state) => {
-              state.persistentStateByMessageId[options.messageId] =
-                options.state;
             });
           },
           async invoke(options: { nodeId: string; input: NewMessage }) {
@@ -252,7 +238,6 @@ export const createChatStore = (
             store.persist.clearStorage();
             set({
               messages: {},
-              persistentStateByMessageId: {},
               sortedMessageIds: [],
               prompt: undefined,
               error: undefined,
@@ -265,11 +250,14 @@ export const createChatStore = (
         name: options?.persistKey!,
         // @ts-expect-error
         partialize(state) {
-          return includeKeys(state, [
-            "messages",
-            "persistentStateByMessageId",
-            "sortedMessageIds",
-          ]);
+          return includeKeys(state, ["messages", "sortedMessageIds"]);
+        },
+        merge(persistedState, currentState) {
+          return {
+            ...currentState,
+            ...(persistedState as any),
+            sortedMessageIds: sortMessages((persistedState as any).messages),
+          };
         },
       }
     )
