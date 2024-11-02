@@ -119,6 +119,8 @@ const createHttpClient = (
                   resolve(null);
                 },
               });
+              // clear the prompt once submitted
+              options.showPrompt?.(undefined);
             },
           },
         });
