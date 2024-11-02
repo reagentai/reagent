@@ -99,12 +99,6 @@ export const createChatStore = (
           templates: init.templates as BaseReagentNodeOptions<any, any, any>[],
           showPrompt(prompt) {
             setProduce((state) => {
-              if (prompt?.props.requiresUserInput) {
-                if (!state.inflightRequest) {
-                  state.inflightRequest = { responseReceived: true };
-                }
-                state.inflightRequest.responseReceived = true;
-              }
               state.prompt = prompt;
             });
           },
