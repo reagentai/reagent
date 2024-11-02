@@ -160,8 +160,9 @@ const ChatMessages = memo(
             );
           })}
         {props.Loader &&
-          ((inflightRequest && !inflightRequest.responseReceived) ||
-            prompt?.props?.requiresUserInput) && (
+          inflightRequest &&
+          !inflightRequest.responseReceived &&
+          !(prompt && prompt.props.requiresUserInput) && (
             <ChatMessage
               message={{
                 id: "loading",
