@@ -191,14 +191,14 @@ const PromptComponent = memo(
         prompt,
       };
     }, [prompt]);
-    if (!prompt?.Component) {
-      return null;
-    }
 
     useEffect(() => {
       props.scrollToBottom();
     }, [prompt]);
 
+    if (!prompt?.Component) {
+      return null;
+    }
     return (
       <ChatMessage
         message={message as any}
