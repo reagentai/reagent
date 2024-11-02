@@ -83,7 +83,10 @@ const ChatThread = memo(
                 Loader={props.Loader}
                 markdown={props.markdown}
               />
-              <PromptComponent store={props.store} />
+              <PromptComponent
+                store={props.store}
+                scrollToBottom={scrollToBottom}
+              />
               <Error store={props.store} />
             </div>
           </div>
@@ -176,29 +179,36 @@ const ChatMessages = memo(
   }
 );
 
-const PromptComponent = memo((props: { store: ChatStore }) => {
-  const prompt = useStore(props.store, (s) => s.prompt);
+const PromptComponent = memo(
+  (props: { store: ChatStore; scrollToBottom: () => void }) => {
+    const prompt = useStore(props.store, (s) => s.prompt);
 
-  const theme = useChatTheme();
-  const message = useMemo(() => {
-    return {
-      id: "prompt",
-      role: "ai",
-      prompt,
-    };
-  }, [prompt]);
-  if (!prompt?.Component) {
-    return null;
+    const theme = useChatTheme();
+    const message = useMemo(() => {
+      return {
+        id: "prompt",
+        role: "ai",
+        prompt,
+      };
+    }, [prompt]);
+    if (!prompt?.Component) {
+      return null;
+    }
+
+    useEffect(() => {
+      props.scrollToBottom();
+    }, [prompt]);
+
+    return (
+      <ChatMessage
+        message={message as any}
+        store={undefined!}
+        showRole={prompt.props.requiresUserInput}
+        theme={theme}
+      />
+    );
   }
-  return (
-    <ChatMessage
-      message={message as any}
-      store={undefined!}
-      showRole={prompt.props.requiresUserInput}
-      theme={theme}
-    />
-  );
-});
+);
 
 const ChatMessage = memo(
   (props: {
