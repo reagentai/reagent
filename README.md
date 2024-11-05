@@ -30,7 +30,7 @@ It supports rendering custom UI components directly from the workflow nodes and 
 - **Supports Any AI Model**: Use OpenAI, Anthropic, Mistral, Groq or any other model provider
 - **Framework Agnostic**: Works with any modern JavaScript framework: React, Solid, Svelte and Vue
 - **Easy Integration**: Easily integrate into your existing application
-- **Full type safety**: It is written in Typescript and supoprts type inference when building an agent graph
+- **Full type safety**: It is written in Typescript and supports type inference when building an agent graph
 
 ## Use cases
 
