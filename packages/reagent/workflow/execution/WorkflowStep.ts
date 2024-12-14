@@ -434,7 +434,7 @@ class WorkflowStepRef<
         return state["@@state"];
       },
       async setState(state) {
-        const prev = await options.getStepState(node.id);
+        const prev = await context.getState();
         dispatch({
           type: EventType.UPDATE_STATE,
           node,
