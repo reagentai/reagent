@@ -1,6 +1,6 @@
 {
   "name": "@reagentai/serve",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "Reagent AI server module",
   "type": "module",
   "scripts": {
