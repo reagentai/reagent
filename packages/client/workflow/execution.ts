@@ -53,10 +53,12 @@ const executeNode = async (
       node,
       session,
       config: {},
-      state: undefined,
       PENDING: Symbol("__PENDING__"),
       TASK: Symbol("__TASK__"),
-      updateState() {
+      getState() {
+        throw new Error("unsupported");
+      },
+      setState() {
         throw new Error("unsupported");
       },
       emit() {
@@ -82,6 +84,9 @@ const executeNode = async (
         throw new Error("unsupported");
       },
       step() {
+        throw new Error("unsupported");
+      },
+      steps() {
         throw new Error("unsupported");
       },
       sendOutput(output: any) {
