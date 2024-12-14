@@ -121,6 +121,11 @@ class WorkflowRun {
         context: {
           session: self.#session,
           async getStepState(nodeId: string) {
+            // stepStates[nodeId] will be set after step state is updated once
+            // during the current workflow run
+            if (stepStates[nodeId]) {
+              return stepStates[nodeId];
+            }
             if (options.getStepState) {
               return await options.getStepState(nodeId);
             }

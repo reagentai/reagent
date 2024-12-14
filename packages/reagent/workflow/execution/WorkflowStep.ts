@@ -225,6 +225,7 @@ class WorkflowStepRef<
 
     const dispatch = yield getContext("dispatch");
     const session = yield getContext("session");
+    const getStepState = yield getContext("getStepState");
     const updateStepState = yield getContext("updateStepState");
     const node = {
       id: self.nodeId,
@@ -255,6 +256,7 @@ class WorkflowStepRef<
           dispatch,
           input: action.input,
           state,
+          getStepState,
         });
 
         const generator = self.node.execute(context, action.input);
@@ -303,9 +305,11 @@ class WorkflowStepRef<
     try {
       const session = yield getContext("session");
       const dispatch = yield getContext("dispatch");
+      const getStepState = yield getContext("getStepState");
       const context = self.#buildContext({
         session,
         dispatch,
+        getStepState,
       });
 
       function createValueResolver(v: any) {
@@ -404,6 +408,7 @@ class WorkflowStepRef<
     dispatch: any;
     input?: any;
     state?: StepState;
+    getStepState(nodeId: string): Promise<any>;
   }): Context<any, any> {
     const { session, dispatch, input, state } = options;
     const self = this;
@@ -424,15 +429,18 @@ class WorkflowStepRef<
       config: self.config || {},
       PENDING,
       TASK,
-      state,
-      updateState(n: NodeMetadata, s: StepState) {
-        const path = [...(n.path ?? []), n.id];
-        const state = {};
-        dset(state, path, s);
+      async getState() {
+        const state = await options.getStepState(node.id);
+        return state["@@state"];
+      },
+      async setState(state) {
+        const prev = await options.getStepState(node.id);
         dispatch({
           type: EventType.UPDATE_STATE,
           node,
-          state,
+          state: {
+            "@@state": typeof state == "function" ? state(prev) : state,
+          },
         });
       },
       emit(event: any) {
@@ -487,7 +495,12 @@ class WorkflowStepRef<
             node,
             state: {
               "@@renders": {
-                [stepId]: { [key]: { rendered: true } },
+                [stepId]: {
+                  [key]: {
+                    rendered: true,
+                    data: options?.data,
+                  },
+                },
               },
             },
           });
@@ -598,6 +611,36 @@ class WorkflowStepRef<
           });
           return { result };
         }
+      },
+      async steps(groupId: string, ...cbs: any[]) {
+        let output: any = { result: undefined, cached: undefined };
+        for (let i = 0; i < cbs.length; i++) {
+          const stepId = `${groupId}-@index-${i}`;
+          let step = state!["@@steps"]?.[stepId];
+          if (step) {
+            output = {
+              result: step.result,
+              cached: true,
+            };
+          } else {
+            const result = await Promise.resolve(
+              cbs[i](output.result, {
+                cached: output.cached,
+              })
+            );
+            dispatch({
+              type: EventType.UPDATE_STATE,
+              node,
+              state: {
+                "@@steps": {
+                  [stepId]: { result },
+                },
+              },
+            });
+            output = { result };
+          }
+        }
+        return output;
       },
       task(fn, ...args) {
         return {

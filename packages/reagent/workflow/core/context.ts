@@ -17,6 +17,9 @@ export namespace Context {
     submit(value: Value): void;
   };
 }
+
+type StepFn<I, O> = (input: I, options: { cached?: boolean }) => O | Promise<O>;
+
 export type Context<
   Config extends Record<string, unknown> | void,
   Output extends Record<string, unknown>,
@@ -28,10 +31,8 @@ export type Context<
     id: string;
   };
   config: Config;
-  // only set if the node is in progress
-  // node will be in progress if `context.setProgress(...)` is called
-  state: StepState | undefined;
-  updateState(node: NodeMetadata, state: StepState): void;
+  getState(): Promise<any>;
+  setState(state: any | ((prev: any) => any)): Promise<void>;
   emit(event: any): void;
   sendOutput(output: Partial<Output>): void;
   // stop the current node execution. This node will be resumed when
@@ -47,11 +48,6 @@ export type Context<
       React: {
         useEffect: any;
         useContext: any;
-      };
-      AppContext?: any;
-      useAgentNode<State = any>(): {
-        state: State | undefined;
-        setState(state: ((prev: State | undefined) => State) | State): void;
       };
     }) => JSX.Element,
     // additional props that's passed directly to component
@@ -84,12 +80,63 @@ export type Context<
       Pick<Context.PromptProps<Data, Value>, "data" | "requiresUserInput">
     >
   ): TransformedValue;
-  step<O = void>(
+  step<O = any>(
     stepId: string,
     fn: () => O | Promise<O>
   ): Promise<{
     result: O;
     // set to true if the step was already run and cached result is returned
+    cached?: boolean;
+  }>;
+  steps<O1 = any, O2 = any>(
+    stepsGroupId: string,
+    fn1: () => O1 | Promise<O1>,
+    fn2: StepFn<O1, O2>
+  ): Promise<{
+    result: O2;
+    // set to true if the step was already run and cached result is returned
+    cached?: boolean;
+  }>;
+  steps<O1 = any, O2 = any, O3 = any>(
+    stepsGroupId: string,
+    fn1: () => O1 | Promise<O1>,
+    fn2: StepFn<O1, O2>,
+    fn3: StepFn<O2, O3>
+  ): Promise<{
+    result: O3;
+    cached?: boolean;
+  }>;
+  steps<O1 = any, O2 = any, O3 = any, O4 = any>(
+    stepsGroupId: string,
+    fn1: () => O1 | Promise<O1>,
+    fn2: StepFn<O1, O2>,
+    fn3: StepFn<O2, O3>,
+    fn4: StepFn<O3, O4>
+  ): Promise<{
+    result: O4;
+    cached?: boolean;
+  }>;
+  steps<O1 = any, O2 = any, O3 = any, O4 = any, O5 = any>(
+    stepsGroupId: string,
+    fn1: () => O1 | Promise<O1>,
+    fn2: StepFn<O1, O2>,
+    fn3: StepFn<O2, O3>,
+    fn4: StepFn<O3, O4>,
+    fn5: StepFn<O4, O5>
+  ): Promise<{
+    result: O5;
+    cached?: boolean;
+  }>;
+  steps<O1 = any, O2 = any, O3 = any, O4 = any, O5 = any, O6 = any>(
+    stepsGroupId: string,
+    fn1: () => O1 | Promise<O1>,
+    fn2: StepFn<O1, O2>,
+    fn3: StepFn<O2, O3>,
+    fn4: StepFn<O3, O4>,
+    fn5: StepFn<O4, O5>,
+    fn6: StepFn<O5, O6>
+  ): Promise<{
+    result: O6;
     cached?: boolean;
   }>;
 
