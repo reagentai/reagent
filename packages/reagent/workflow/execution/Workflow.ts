@@ -217,7 +217,7 @@ class Workflow<Input = undefined> {
     });
   }
 
-  emit(options: WorkflowRunOptions) {
+  emit(options: WorkflowRunOptions<Input>) {
     return this.#ref.emit(options);
   }
 

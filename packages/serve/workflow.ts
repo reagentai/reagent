@@ -19,9 +19,9 @@ type OutputStream = Observable<any> & {
   toResponse(): Response;
 };
 
-const triggerReagentWorkflow = (
-  workflow: Workflow,
-  options: WorkflowRunOptions
+const triggerReagentWorkflow = <Input>(
+  workflow: Workflow<Input>,
+  options: WorkflowRunOptions<Input>
 ) => {
   const workflowOutputStream = new ReplaySubject<Chat.Response>();
   const run = workflow.emit(options);
