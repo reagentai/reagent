@@ -1,6 +1,6 @@
 {
   "name": "@reagentai/cli",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "description": "Reagent cli",
   "type": "module",
   "bin": {
