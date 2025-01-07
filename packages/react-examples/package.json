@@ -1,6 +1,6 @@
 {
   "name": "@reagentai/react-examples",
-  "version": "0.9.2",
+  "version": "0.9.3",
   "description": "React examples of Reagent AI agent",
   "type": "module",
   "scripts": {
