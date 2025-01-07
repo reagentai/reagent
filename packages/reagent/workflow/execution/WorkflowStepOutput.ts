@@ -2,6 +2,7 @@ import { Observable, Observer, ReplaySubject, Subscription } from "rxjs";
 import { channel } from "redux-saga";
 import {
   actionChannel,
+  call,
   cancel,
   getContext,
   put,
@@ -39,7 +40,7 @@ type SubscribedValue<Value> = {
   value: Value;
 };
 
-type Mapper<In, Out> = (value: In) => Out;
+type Mapper<In, Out> = (value: In) => Out | Promise<Out>;
 
 type InternalValueProvider<Value> = {
   dependencies: NodeDependency[];
@@ -290,8 +291,12 @@ class WorkflowToolProvider<Input> extends AbstractValueProvider<
 class OutputValueProvider<Output> extends AbstractValueProvider<Output> {
   #ref: AnyWorkflowStepRef;
   #field: string;
-  #mapCallbacks: any | undefined;
-  constructor(ref: AnyWorkflowStepRef, field: string, cbs: any[] = []) {
+  #mapCallbacks: Mapper<any, any>[];
+  constructor(
+    ref: AnyWorkflowStepRef,
+    field: string,
+    cbs: Mapper<any, any>[] = []
+  ) {
     super(ref);
     this.#ref = ref;
     this.#field = field;
@@ -332,7 +337,7 @@ class OutputValueProvider<Output> extends AbstractValueProvider<Output> {
     }
     let value = action.output[self.#field];
     for (const cb of self.#mapCallbacks) {
-      value = cb(value);
+      value = yield call(cb, value);
     }
 
     if (options.listener) {
@@ -365,8 +370,8 @@ class OutputValueProvider<Output> extends AbstractValueProvider<Output> {
 
 class RenderOutputProvider<Value> extends AbstractValueProvider<Value> {
   #ref: AnyWorkflowStepRef;
-  #mapCallbacks: any | undefined;
-  constructor(ref: AnyWorkflowStepRef, cbs: any[] = []) {
+  #mapCallbacks: Mapper<any, any>[];
+  constructor(ref: AnyWorkflowStepRef, cbs: Mapper<any, any>[] = []) {
     super(ref);
     this.#ref = ref;
     this.#mapCallbacks = cbs;
@@ -392,7 +397,7 @@ class RenderOutputProvider<Value> extends AbstractValueProvider<Value> {
       const action = yield take(renderChannel);
       let value = action.render;
       for (const cb of self.#mapCallbacks) {
-        value = cb(value);
+        value = yield call(cb, value);
       }
 
       if (options.listener) {
@@ -417,8 +422,8 @@ class RenderOutputProvider<Value> extends AbstractValueProvider<Value> {
 
 class WorkflowInputProvider<Input> extends AbstractValueProvider<Input> {
   #ref: InternalWorkflowRef;
-  #mapCallbacks: any | undefined;
-  constructor(ref: InternalWorkflowRef, cbs: any[] = []) {
+  #mapCallbacks: Mapper<any, any>[];
+  constructor(ref: InternalWorkflowRef, cbs: Mapper<any, any>[] = []) {
     super(ref);
     this.#ref = ref;
     this.#mapCallbacks = cbs;
@@ -436,7 +441,7 @@ class WorkflowInputProvider<Input> extends AbstractValueProvider<Input> {
 
     let value = action.input;
     for (const cb of self.#mapCallbacks) {
-      value = cb(value);
+      value = yield call(cb, value);
     }
 
     const node = {
