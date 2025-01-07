@@ -109,7 +109,7 @@ const Error = (props: { store: ChatStore }) => {
   return (
     <>
       {error && (
-        <div className="px-4 py-3 text-center text-base text-red-700 overflow-hidden text-ellipsis">
+        <div className="error px-4 py-3 text-center text-red-700 overflow-hidden text-ellipsis">
           Error sending message: {error}
         </div>
       )}
