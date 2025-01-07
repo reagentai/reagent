@@ -12,6 +12,7 @@ import type { WorkflowOutputBindings } from "./types.js";
 import {
   AbstractValueProvider,
   ValueProvider,
+  WorkflowInputProvider,
   WorkflowToolProvider,
 } from "./WorkflowStepOutput.js";
 import { PublicEventType, EventType, WorkflowEvent } from "./types.js";
@@ -77,11 +78,11 @@ class InternalWorkflowRef {
   // Dispatch events to the workflow
   // This will start a workflow run based on existing state
   // To start a new workflow, dispatch "INVOKE" event
-  emit(options: WorkflowRunOptions) {
+  emit(options: WorkflowRunOptions<any>) {
     const sessionId = options.sessionId || uniqueId();
     const run = new WorkflowRun(this, {
       sessionId,
-      ...includeKeys(options, ["getStepState", "updateStepState"]),
+      ...includeKeys(options, ["input", "getStepState", "updateStepState"]),
     });
 
     for (const event of options.events) {
@@ -111,12 +112,13 @@ class InternalWorkflowRef {
     run.queueEvents({
       // @ts-expect-error
       type: EventType.START,
+      input: options.input,
     });
     return run;
   }
 }
 
-class Workflow {
+class Workflow<Input = undefined> {
   #ref;
   constructor(config: WorkflowConfig) {
     this.#ref = new InternalWorkflowRef(config);
@@ -128,6 +130,10 @@ class Workflow {
 
   get description() {
     return this.#ref.config.description;
+  }
+
+  get input(): WorkflowInputProvider<Input> {
+    return new WorkflowInputProvider(this.#ref);
   }
 
   bind(bindings: WorkflowOutputBindings) {
@@ -192,17 +198,20 @@ class Workflow {
     return new WorkflowToolProvider<any>(this.#ref, options);
   }
 
-  start(
-    options: Omit<WorkflowRunOptions, "events"> &
-      Pick<WorkflowEvent.Invoke, "node" | "input">
+  invoke(
+    event: Pick<WorkflowEvent.Invoke, "node" | "input">,
+    options: Input extends undefined
+      ? Omit<WorkflowRunOptions<Input>, "events" | "input"> | void
+      : Omit<WorkflowRunOptions<Input>, "events">
   ) {
     return this.#ref.emit({
       ...options,
+      input: (options as any).input || undefined,
       events: [
         {
           type: PublicEventType.INVOKE,
-          node: options.node,
-          input: options.input,
+          node: event.node,
+          input: event.input,
         },
       ],
     });

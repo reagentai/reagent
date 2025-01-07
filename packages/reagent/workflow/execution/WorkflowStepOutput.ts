@@ -39,10 +39,12 @@ type SubscribedValue<Value> = {
   value: Value;
 };
 
+type Mapper<In, Out> = (value: In) => Out;
+
 type InternalValueProvider<Value> = {
   dependencies: NodeDependency[];
   saga(options?: SagaOptions): () => Generator<any, Value, any>;
-  map<Output>(mapper: (value: Value) => Output): ValueProvider<Output>;
+  map<Output>(mapper: Mapper<Value, Output>): ValueProvider<Output>;
 } & Pick<Observable<SubscribedValue<Value>>, "subscribe">;
 
 type ValueProvider<Value> = Pick<
@@ -84,7 +86,9 @@ abstract class AbstractValueProvider<Value>
 
   abstract saga(options: SagaOptions): () => Generator<any, Value, any>;
 
-  abstract map<Output>(mapper: any): InternalValueProvider<Output>;
+  abstract map<Output>(
+    mapper: Mapper<Value, Output>
+  ): InternalValueProvider<Output>;
 
   subscribe(
     observerOrNext?:
@@ -258,6 +262,7 @@ class WorkflowToolProvider<Input> extends AbstractValueProvider<
         execute: async (args: any[]) => {
           const run = self.#ref.emit({
             sessionId: session.id,
+            input: undefined,
             events: [
               {
                 type: PublicEventType.INVOKE,
@@ -350,8 +355,8 @@ class OutputValueProvider<Output> extends AbstractValueProvider<Output> {
     };
   }
 
-  map<Output>(mapper: any): InternalValueProvider<Output> {
-    return new OutputValueProvider<Output>(this.#ref, this.#field, [
+  map<Out>(mapper: Mapper<Output, Out>): InternalValueProvider<Out> {
+    return new OutputValueProvider<Out>(this.#ref, this.#field, [
       ...this.#mapCallbacks,
       mapper,
     ]);
@@ -405,8 +410,57 @@ class RenderOutputProvider<Value> extends AbstractValueProvider<Value> {
     }
   }
 
-  map<Output>(mapper: any): InternalValueProvider<Output> {
+  map<Output>(mapper: Mapper<Value, Output>): InternalValueProvider<Output> {
     return new RenderOutputProvider(this.#ref, [...this.#mapCallbacks, mapper]);
+  }
+}
+
+class WorkflowInputProvider<Input> extends AbstractValueProvider<Input> {
+  #ref: InternalWorkflowRef;
+  #mapCallbacks: any | undefined;
+  constructor(ref: InternalWorkflowRef, cbs: any[] = []) {
+    super(ref);
+    this.#ref = ref;
+    this.#mapCallbacks = cbs;
+  }
+
+  get dependencies() {
+    return [];
+  }
+
+  *saga(): any {
+    const self = this;
+    const action = yield take((e: any) => {
+      return e.type == EventType.START;
+    });
+
+    let value = action.input;
+    for (const cb of self.#mapCallbacks) {
+      value = cb(value);
+    }
+
+    const node = {
+      id: "@workflow",
+      type: "@workflow",
+      version: "0.0.0",
+    };
+    self.next({
+      session: action.session,
+      node,
+      value,
+    });
+    return {
+      session: action.session,
+      node,
+      value,
+    };
+  }
+
+  map<Out>(mapper: Mapper<Input, Out>): InternalValueProvider<Out> {
+    return new WorkflowInputProvider<Out>(this.#ref, [
+      ...this.#mapCallbacks,
+      mapper,
+    ]);
   }
 }
 
@@ -414,6 +468,7 @@ export {
   AbstractValueProvider,
   ToolProvider,
   WorkflowToolProvider,
+  WorkflowInputProvider,
   OutputValueProvider,
   RenderOutputProvider,
 };

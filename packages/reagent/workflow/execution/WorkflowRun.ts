@@ -59,7 +59,7 @@ class WorkflowRun {
 
   constructor(
     ref: InternalWorkflowRef,
-    options: Omit<WorkflowRunOptions, "events">
+    options: Omit<WorkflowRunOptions<any>, "events">
   ) {
     this.#ref = ref;
     this.#id = uniqueId();
@@ -346,6 +346,8 @@ class WorkflowRun {
     return function* root(): any {
       self.#status = WorkflowStatus.IN_PROGRESS;
       const incomingEvents = yield actionChannel("INCOMING_EVENT");
+
+      yield all([...self.#ref.subscriptions]);
       const _queueEvents = yield fork(startWorkflow, incomingEvents);
       const completionSaga = yield fork(allNodesRunCompletion);
       const _job3 = yield fork(eventsSubscriber);

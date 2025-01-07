@@ -164,7 +164,7 @@ export type WorkflowRunEvent =
   | Omit<WorkflowEvent.Output, "session">
   | Omit<WorkflowEvent.RunCompleted, "session">;
 
-export type WorkflowRunOptions = {
+export type WorkflowRunOptions<Input = void> = {
   sessionId?: string;
   getStepState?: (
     nodeId: string
@@ -175,7 +175,11 @@ export type WorkflowRunOptions = {
     { session }: { session: Session }
   ) => void | Promise<void>;
   events: WorkflowRunEvent[];
-};
+} & (Input extends undefined
+  ? { input: undefined }
+  : {
+      input: Input;
+    });
 
 // LLM tool
 export type Tool<Params, Result> = {
