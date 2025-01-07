@@ -21,7 +21,9 @@ const Chatbox = memo(() => {
 
   const submitForm = () => {
     invoke({
-      nodeId: "input",
+      node: {
+        id: "input",
+      },
       input: {
         id: uniqueId(19),
         query: message,

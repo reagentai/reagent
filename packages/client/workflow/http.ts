@@ -23,6 +23,9 @@ const createHttpClient = (
   } & WorkflowClientOptions
 ): ExecutionClient => {
   const state = {
+    workflow: {
+      input: undefined,
+    },
     isIdle: true,
   };
 
@@ -46,11 +49,14 @@ const createHttpClient = (
       pendingExecutions.map((execution) => {
         return executeNode(
           {
-            send(...args) {
+            send(request) {
               return send.bind({
+                workflow: {
+                  input: tasks.input,
+                },
                 states,
                 workflowSubscribers: [...globalSubscribers],
-              })(...args);
+              })(request);
             },
           },
           {
@@ -104,6 +110,9 @@ const createHttpClient = (
               });
 
               const res = send.bind({
+                workflow: {
+                  input: tasks.input,
+                },
                 states,
                 workflowSubscribers: [...globalSubscribers],
               })({
@@ -140,12 +149,15 @@ const createHttpClient = (
     get isIdle() {
       return state.isIdle;
     },
-    send(...args) {
+    send(request) {
       return send.bind({
         topLevel: true,
+        workflow: {
+          input: request.input,
+        },
         states: undefined,
         workflowSubscribers: [...globalSubscribers],
-      })(...args);
+      })(request);
     },
     resumePendingTasks,
     subscribe(subscriber) {
@@ -159,7 +171,14 @@ const createHttpClient = (
     states?: Record<string, any>;
   }) {
     // @ts-expect-error
-    const self = this as any;
+    const self = this as {
+      topLevel: boolean;
+      workflow: {
+        input: any;
+      };
+      states: Record<string, any>;
+      workflowSubscribers: any[];
+    };
     const localSubscribers: ExecutionResponse.Subscriber[] = [];
     const workflowSubscribers: ExecutionResponse.Subscriber[] = [
       ...self.workflowSubscribers,
@@ -171,7 +190,9 @@ const createHttpClient = (
       });
 
       let body: ExecutionRequest = {
-        ...request,
+        session: request.session,
+        events: request.events,
+        input: self.workflow.input,
         states: self.states,
       };
       if (options.middleware?.request) {
@@ -254,6 +275,7 @@ const createHttpClient = (
         } else {
           onPendingTasks(
             {
+              input: self.workflow.input,
               states,
               pendingExecutions,
               pendingPrompts,
@@ -269,6 +291,7 @@ const createHttpClient = (
         );
       } else {
         await resumePendingTasks({
+          input: self.workflow.input,
           states,
           pendingExecutions,
           pendingPrompts,

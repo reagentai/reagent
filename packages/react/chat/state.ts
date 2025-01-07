@@ -34,7 +34,16 @@ export type ChatState = {
   error?: string;
   resetError(): void;
   setMessages: (messages: Record<string, Chat.Message>) => void;
-  invoke: (options: { nodeId: string; input: NewMessage }) => Promise<void>;
+  invoke: (
+    event: {
+      node: { id: string };
+      input: NewMessage;
+    },
+    options?: {
+      // workflow input
+      input?: any;
+    }
+  ) => Promise<void>;
   reset(): Promise<void>;
 };
 
@@ -204,9 +213,15 @@ export const createChatStore = (
               state.sortedMessageIds = sortMessages(messages);
             });
           },
-          async invoke(options: { nodeId: string; input: NewMessage }) {
+          async invoke(
+            event: {
+              node: { id: string };
+              input: NewMessage;
+            },
+            options?: { input?: any }
+          ) {
             set((s) => {
-              const message = options.input;
+              const message = event.input;
               const state = produce(s, (state) => {
                 state.error = undefined;
                 state.messages[message.id] = {
@@ -225,11 +240,12 @@ export const createChatStore = (
               });
             });
             client.send({
+              input: options?.input,
               events: [
                 {
                   type: EventType.INVOKE,
-                  input: options.input,
-                  node: { id: options.nodeId },
+                  input: event.input,
+                  node: event.node,
                 },
               ] as WorkflowRunEvent[],
             });

@@ -21,8 +21,9 @@ type ExecutionResponse = {
   subscribe(subscriber: ExecutionResponse.Subscriber): void;
 };
 
-export type ExecutionRequest = {
+export type ExecutionRequest<Input = any> = {
   session?: { id: string };
+  input?: Input;
   events: WorkflowRunEvent[];
   // updated stated by node id
   states?: Record<string, StepState>;
@@ -36,6 +37,8 @@ export type ExecutionClient = {
 };
 
 export type PendingTasks = {
+  // workflow input
+  input?: any;
   states: any;
   pendingExecutions: any[];
   pendingPrompts: {
@@ -89,7 +92,13 @@ export type WorkflowClientOptions = {
 
 export type WorkflowClient = {
   isIdle: boolean;
-  start(options: { nodeId: string; input: any }): void;
+  start(
+    event: { node: { id: string }; input: any },
+    options?: {
+      // workflow input
+      input?: any;
+    }
+  ): void;
   send(emitOptions: ExecutionRequest): void;
   resumePendingTasks(tasks: PendingTasks): void;
   subscribe(subscriber: ExecutionResponse.Subscriber): void;
