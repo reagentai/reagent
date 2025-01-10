@@ -38,6 +38,7 @@ const GetWeather = createReagentNode({
       unit: input.unit,
     };
     context.render(
+      "weather",
       (props) => {
         return <Component {...props.data} />;
       },

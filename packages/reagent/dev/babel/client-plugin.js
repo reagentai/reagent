@@ -9,7 +9,6 @@ const tranformCreateAgentNode = {
         targetClient: false,
         components: {},
         renderCalls: [],
-        renderCallCount: 0,
       };
     },
     exit(path) {
@@ -126,8 +125,8 @@ const transformCreateAgentNodeExecuteMethod = {
     this.renderCalls.push(
       t.arrayExpression([
         // add render id as the first argument
-        t.stringLiteral(`component-${this.renderCallCount++}`),
         path.node.arguments[0],
+        path.node.arguments[1],
       ])
     );
   },

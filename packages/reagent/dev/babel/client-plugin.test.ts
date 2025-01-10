@@ -114,10 +114,10 @@ test("extract only render calls from createReagentNode", () => {
       name: "Get weather",
       version: "0.0.1",
       components: [
-        ["component-0", props => {
+        ["id-1", props => {
           return <div>FIRST</div>;
         }],
-        ["component-1", props => {
+        ["id-2", props => {
           return <div>SECOND</div>;
         }]
       ]
@@ -136,7 +136,7 @@ test("extract only render calls from createReagentNode", () => {
       }),
       output: outputSchema,
       async *execute(context, input) {
-        const gen = context.render(
+        const gen = context.render("id-1",
           (props) => {
             return <div>FIRST</div>;
           },
@@ -145,7 +145,7 @@ test("extract only render calls from createReagentNode", () => {
           }
         );
         if (input.msg.length > 10) {
-          context.render(
+          context.render("id-2",
             (props) => {
               return <div>SECOND</div>;
             }
@@ -166,7 +166,7 @@ test("extract only render calls from createReagentNode when using variable", () 
       name: "Get weather",
       version: "0.0.1",
       components: [
-        ["component-0", props => <QueryComponent {...props.data} />]
+        ["id-1", props => <QueryComponent {...props.data} />]
       ]
     };
   `);
@@ -183,7 +183,7 @@ test("extract only render calls from createReagentNode when using variable", () 
       }),
       output: outputSchema,
       async *execute(context, input) {
-        const ui = context.render((props) => <QueryComponent {...props.data} />, {
+        const ui = context.render("id-1", (props) => <QueryComponent {...props.data} />, {
           sql: input.sql,
           result: [] as any[]
         });
@@ -203,11 +203,11 @@ test("leave execute method intact if target is client", () => {
       version: "0.0.1",
       target: "client",
       async *execute(context, input) {
-        context.render((props) => <div>NICE</div>);
+        context.render("id-1", (props) => <div>NICE</div>);
         yield { msg: "Hello" };
       },
       components: [
-        ["component-0", props => <div>NICE</div>]
+        ["id-1", props => <div>NICE</div>]
       ]
     };
   `);
@@ -225,7 +225,7 @@ test("leave execute method intact if target is client", () => {
       }),
       output: outputSchema,
       async *execute(context, input) {
-        context.render((props) => <div>NICE</div>);
+        context.render("id-1", (props) => <div>NICE</div>);
         yield { msg: "Hello" };
       },
     });

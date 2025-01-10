@@ -22,6 +22,7 @@ const CodeInterpreter = createReagentNode({
   output: outputSchema,
   async *execute(context, input) {
     const render = context.render(
+      "code-interpreter",
       (props) => <CodeInterpreterComponent {...props} />,
       {
         data: {

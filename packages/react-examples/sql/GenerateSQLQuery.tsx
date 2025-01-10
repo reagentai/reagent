@@ -24,6 +24,7 @@ const GenerateSQLQuery = createReagentNode({
   async *execute(context, input) {
     const query = formatSql(input.sql);
     const ui = context.render<any>(
+      "query",
       (props) => <QueryComponent {...props.data} />,
       {
         data: {

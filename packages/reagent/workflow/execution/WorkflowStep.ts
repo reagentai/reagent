@@ -483,7 +483,7 @@ class WorkflowStepRef<
           output,
         });
       },
-      render(step, options) {
+      render(step, _, options) {
         const key = options?.key || "0";
         // since this runs in server side,
         // render will be transpiled to only pass component id
@@ -548,7 +548,7 @@ class WorkflowStepRef<
           },
         };
       },
-      prompt(step, options) {
+      prompt(step, _, options) {
         const {
           key: promptKey,
           transform,

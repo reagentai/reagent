@@ -30,13 +30,8 @@ const transformCreateAgentNodeRunMethod = {
     if (!isContextRender) {
       return;
     }
-    const [_, ...callArgs] = path.node.arguments;
-    const args = [
-      // TODO: maybe use content hash of the render function as
-      // render id instead of counter to guarantee component + state
-      // consistency
-      t.stringLiteral(`component-${this.renderCallCount++}`),
-    ];
+    const [_, __, ...callArgs] = path.node.arguments;
+    const args = [path.node.arguments[0], t.nullLiteral()];
     if (callArgs.length > 0) {
       args.push(...callArgs);
     }

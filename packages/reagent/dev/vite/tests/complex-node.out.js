@@ -7,7 +7,7 @@ const CopilotNode = {
   version: "0.1.0",
   components: [
     [
-      "component-0",
+      "fetch",
       ({ key, data, submit, React }) => {
         React.useEffect(() => {
           ky(data.url, {
@@ -28,7 +28,7 @@ const CopilotNode = {
       },
     ],
     [
-      "component-1",
+      "status",
       (props) => {
         return (
           <div className="status flex items-center py-3 px-3 font-medium rounded-md border border-gray-100 space-x-2">

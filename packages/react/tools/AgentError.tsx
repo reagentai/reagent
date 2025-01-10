@@ -10,6 +10,7 @@ const AgentError = createReagentNode({
   output: z.object({}),
   async *execute(context, input) {
     context.render(
+      "error",
       (props) => <div className="text-red-700">Error: {props.data.error}</div>,
       {
         data: {

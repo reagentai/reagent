@@ -43,6 +43,7 @@ export type Context<
   // be called to stop the node execution
   done(): void;
   render<Data>(
+    id: string,
     Component: (props: {
       data: Data;
       React: {
@@ -69,6 +70,7 @@ export type Context<
   };
   // `context.prompt(...)` must be yielded
   prompt<Data, Value = any, TransformedValue = Value>(
+    id: string,
     Component: (props: Context.PromptProps<Data, Value>) => JSX.Element,
     options?: {
       key?: string;

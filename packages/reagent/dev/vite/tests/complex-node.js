@@ -42,6 +42,7 @@ const CopilotNode = createReagentNode({
       step: context.step,
       fetch(stepId, options) {
         return context.prompt(
+          "fetch",
           ({ key, data, submit, React }) => {
             React.useEffect(() => {
               ky(data.url, {
@@ -68,6 +69,7 @@ const CopilotNode = createReagentNode({
       },
       showStatus(step, options) {
         const updater = context.render(
+          "status",
           (props) => {
             return (
               <div className="status flex items-center py-3 px-3 font-medium rounded-md border border-gray-100 space-x-2">
