@@ -1,5 +1,4 @@
 import { ReplaySubject } from "rxjs";
-import deepmerge from "deepmerge";
 import { channel, runSaga, stdChannel } from "redux-saga";
 import {
   actionChannel,
@@ -137,7 +136,7 @@ class WorkflowRun {
                   ? await options.getStepState(node.id)
                   : {};
               }
-              stepStates[node.id] = deepmerge(
+              stepStates[node.id] = Object.assign(
                 stepStates[node.id] || {},
                 state as any
               );
