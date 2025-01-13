@@ -4,6 +4,7 @@ const tranformCreateAgentNode = {
   ObjectMethod(path, state) {
     if (path.node.key.name != "execute") {
       path.skip();
+      return;
     }
     const context = path.get("params")[0];
     const runState = {
