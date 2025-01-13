@@ -75,7 +75,7 @@ test("test vite plugin - should remove default export", () => {
   expect(cleanUpCode(code)).to.equal(expected);
 });
 
-test.only("only keep used imports - complex-node.js", () => {
+test("only keep used imports - complex-node.js", () => {
   const expected = cleanUpCode(
     fs.readFileSync(
       path.join(__dirname, "./tests/complex-node.out.js"),
