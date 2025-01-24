@@ -24,6 +24,9 @@ export type NewMessage = {
 };
 
 export type ChatState = {
+  ui: {
+    showMessageSentTimestamp?: boolean;
+  };
   client: WorkflowClient;
   messages: Record<string, Chat.Message>;
   sortedMessageIds: string[];
@@ -47,8 +50,8 @@ export type ChatState = {
   reset(): Promise<void>;
 };
 
-type StoreInit = {
-  messages: Record<string, Chat.Message>;
+type StoreInit = Pick<ChatState, "messages"> & {
+  ui?: ChatState["ui"];
   // workflow execution url
   url: string;
   templates:
@@ -197,6 +200,7 @@ export const createChatStore = (
         });
 
         return {
+          ui: init.ui || {},
           client,
           messages: init.messages,
           sortedMessageIds: sortMessages(init.messages),

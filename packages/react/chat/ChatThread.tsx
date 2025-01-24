@@ -14,7 +14,7 @@ import type { Chat } from "@reagentai/reagent/chat";
 import * as duration from "human-duration";
 
 import { AgentNodeRenderer } from "./node.js";
-import { ChatStore } from "./state.js";
+import { ChatState, ChatStore } from "./state.js";
 import { useChatTheme } from "./theme.js";
 
 type MarkdownOptions = {
@@ -127,9 +127,8 @@ const ChatMessages = memo(
     markdown?: MarkdownOptions;
   }) => {
     const theme = useChatTheme();
-    const { messages, sortedMessageIds, inflightRequest, prompt } = useStore(
-      props.store
-    );
+    const { messages, sortedMessageIds, inflightRequest, prompt, ui } =
+      useStore(props.store);
     const sortedMessages = useMemo(() => {
       return sortedMessageIds.map((id) => messages[id]);
     }, [messages, sortedMessageIds]);
@@ -151,6 +150,7 @@ const ChatMessages = memo(
             return (
               <ChatMessage
                 key={message.id}
+                ui={ui}
                 message={message}
                 store={props.store}
                 showRole={
@@ -166,6 +166,7 @@ const ChatMessages = memo(
           !inflightRequest.responseReceived &&
           !(prompt && prompt.props.requiresUserInput) && (
             <ChatMessage
+              ui={ui}
               message={{
                 id: "loading",
                 role: "ai",
@@ -185,6 +186,7 @@ const ChatMessages = memo(
 const PromptComponent = memo(
   (props: { store: ChatStore; scrollToBottom: () => void }) => {
     const prompt = useStore(props.store, (s) => s.prompt);
+    const ui = useStore(props.store, (s) => s.ui);
 
     const theme = useChatTheme();
     const message = useMemo(() => {
@@ -204,6 +206,7 @@ const PromptComponent = memo(
     }
     return (
       <ChatMessage
+        ui={ui}
         message={message as any}
         store={undefined!}
         showRole={prompt.props.requiresUserInput}
@@ -230,6 +233,7 @@ const ChatMessage = memo(
           node?: undefined;
           createdAt?: undefined;
         };
+    ui: ChatState["ui"];
     store: ChatStore;
     showRole: boolean;
     theme: ReturnType<typeof useChatTheme>;
@@ -300,7 +304,10 @@ const ChatMessage = memo(
                 key={index}
               >
                 {props.message.createdAt && (
-                  <CreatedAtTooltip createdAt={props.message.createdAt} />
+                  <CreatedAtTooltip
+                    createdAt={props.message.createdAt}
+                    showTimestamp={!!props.ui.showMessageSentTimestamp}
+                  />
                 )}
                 <AgentNodeRenderer
                   messageId={props.message.id}
@@ -323,7 +330,10 @@ const ChatMessage = memo(
                 data-role={role.id}
               >
                 {props.message.createdAt && (
-                  <CreatedAtTooltip createdAt={props.message.createdAt} />
+                  <CreatedAtTooltip
+                    createdAt={props.message.createdAt}
+                    showTimestamp={!!props.ui.showMessageSentTimestamp}
+                  />
                 )}
                 <Markdown
                   remarkPlugins={props.markdown?.remarkPlugins}
@@ -350,14 +360,32 @@ const ChatMessage = memo(
   }
 );
 
-const CreatedAtTooltip = (props: { createdAt: string }) => {
+const CreatedAtTooltip = (props: {
+  createdAt: string;
+  showTimestamp: boolean;
+}) => {
   return (
     <div className="select-none opacity-0 group-hover/message:opacity-100 absolute right-0 bottom-0 px-2 py-0.5 text-xs rounded-md bg-gray-900/70 text-gray-200 transition ease-in delay-500 duration-200">
-      {duration
-        .fmt(Date.now() - new Date(props.createdAt).getTime())
-        .grading([duration.day, duration.hour, duration.minute])
-        .segments(2)}{" "}
-      ago
+      {props.showTimestamp ? (
+        <div>
+          {new Date(props.createdAt).toLocaleString("en-US", {
+            month: "long",
+            day: "numeric",
+            year: "numeric",
+            hour: "numeric",
+            minute: "2-digit",
+            hour12: true,
+          })}
+        </div>
+      ) : (
+        <div>
+          {duration
+            .fmt(Date.now() - new Date(props.createdAt).getTime())
+            .grading([duration.day, duration.hour, duration.minute])
+            .segments(2)}{" "}
+          ago
+        </div>
+      )}
     </div>
   );
 };
