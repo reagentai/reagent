@@ -1,6 +1,9 @@
-import { createReagentNode, z, Workflow } from "@reagentai/reagent";
+import { createReagentNode, z, Workflow, Context } from "@reagentai/reagent";
+import { generateText } from "ai";
+import { openai } from "@ai-sdk/openai";
 
 const outputSchema = z.object({
+  query: z.string(),
   done: z.boolean(),
 });
 
@@ -9,12 +12,14 @@ const FirstStep = createReagentNode({
   name: "Step One",
   description: `Description for step 1`,
   version: "0.0.1",
-  input: z.object({}),
-  target: "client",
+  input: z.object({
+    query: z.string(),
+  }),
+  // target: "client",
   output: outputSchema,
   async *execute(context, input) {
-    console.log("EXECUTING STEP 1");
-    yield { done: true };
+    console.log("EXECUTING STEP 1: input =", input);
+    yield { done: true, query: input.query };
   },
 });
 
@@ -61,39 +66,71 @@ const ThirdStep = createReagentNode({
     let value = null;
     for (let i = 0; i < 3; i++) {
       value = yield context.prompt(
-        (props) => {
-          // <form
-          //   onSubmit={(e: any) => {
-          //     e.preventDefault();
-          //     var formData = new FormData(e.target);
-          //     props.submit(Object.fromEntries(formData.entries()));
-          //   }}
-          //   className="p-4 border border-gray-100"
-          // >
-          //   <div>Enter some text</div>
-          //   <input
-          //     name="text"
-          //     className="px-3 py-1 border border-gray-200"
-          //     placeholder="Enter some text..."
-          //   />
-          // </form>
-
+        "prompt-1",
+        ({ data, submit }) => {
+          // pipe(
+          //   { memoize: true },
+          //   () => {
+          //     window.location.reload();
+          //   },
+          //   () => {
+          //     submit("VALUE " + data);
+          //   }
+          // );
           setTimeout(() => {
-            props.submit("VALUE " + props.data);
+            submit("VALUE " + data);
           }, 2_000);
-          return <div>Running step 3, prompt index = {props.data}</div>;
+          return <div>Running step 3, prompt index = {data}</div>;
         },
         {
           key: "prompt-" + i,
           data: i,
+          transform(value) {
+            return "[PROMOT TRANSFORMED]: " + value;
+          },
         }
       );
       console.log("value =", value);
     }
     console.log("PROMPT value =", value);
+
+    const provider = {
+      prompt(options: { key: string; data: any }) {
+        return context.prompt(
+          "prompt-2",
+          ({ data, submit }) => {
+            // pipe(
+            //   { memoize: true },
+            //   () => {
+            //     window.location.reload();
+            //   },
+            //   () => {
+            //     submit("VALUE " + data);
+            //   }
+            // );
+            setTimeout(() => {
+              submit("VALUE " + data);
+            }, 2_000);
+            return <div>[PROMPTS] Running prompts, prompt index = {data}</div>;
+          },
+          options
+        );
+      },
+    };
+
+    yield* prompts(provider);
     yield { done: true };
   },
 });
+
+function* prompts(provider: any) {
+  for (let i = 0; i < 3; i++) {
+    yield provider.prompt({
+      key: "prompts-prompt-" + i,
+      data: i,
+    });
+  }
+}
 
 const FourthStep = createReagentNode({
   id: "step-4",
@@ -102,14 +139,22 @@ const FourthStep = createReagentNode({
   version: "0.0.1",
   // target: "client",
   input: z.object({
+    query: z.string(),
     start: z.boolean(),
   }),
   output: z.object({
-    done: z.boolean(),
+    text: z.string(),
   }),
   async *execute(context, input) {
     console.log("EXECUTING STEP 4: input =", input);
-    yield { done: true };
+    // yield { done: true };
+
+    console.log("input =", input);
+    const { text } = await generateText({
+      model: openai("gpt-4o-mini"),
+      prompt: input.query,
+    });
+    yield { text };
   },
 });
 
@@ -133,11 +178,13 @@ step3.bind({
 });
 
 step4.bind({
-  start: step3.output.done,
+  query: step1.output.query,
+  start: step1.output.done,
 });
 
 workflow.bind({
   ui: [step2.renderOutput, step3.renderOutput],
+  markdown: [step4.output.text],
 });
 
 export default workflow;

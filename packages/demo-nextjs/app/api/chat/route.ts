@@ -31,10 +31,6 @@ export async function POST(request: Request) {
     events,
     states = {},
   } = invokeSchema.parse(await request.json());
-  const model = new OpenAI({
-    model: "gpt-3.5-turbo",
-  });
-
   const workflowOutput = triggerReagentWorkflow(workflow, {
     sessionId: session?.id,
     // @ts-expect-error

@@ -35,8 +35,8 @@ const ChatAgent = () => {
   );
 
   return (
-    <div className="flex">
-      <div className="flex-1 h-screen">
+    <div className="flex dark">
+      <div className="flex-1 h-screen dark:bg-gray-800">
         <div className="flex flex-col flex-1 h-full overflow-auto">
           <ErrorBoundary fallback={<div>ERROR!</div>}>
             {invokeError && (

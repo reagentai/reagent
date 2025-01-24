@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { createWorkflowClient } from "@reagentai/client/workflow";
 
 import * as workflow from "./workflow";
@@ -9,6 +9,9 @@ export default function () {
   const [prompt, setPrompt] = useState<
     { Component: any; props: any } | undefined
   >();
+
+  const [idle, setIdle] = useState(true);
+  const hasPendingTasks = useRef(false);
   const client = useMemo(() => {
     const client = createWorkflowClient({
       http: {
@@ -18,11 +21,27 @@ export default function () {
       showPrompt(options) {
         setPrompt(options);
       },
+      autoRunPendingTasks: false,
+      middleware: {
+        onPendingTasks(tasks) {
+          hasPendingTasks.current =
+            tasks.pendingExecutions.length > 0 ||
+            tasks.pendingPrompts.length > 0;
+          console.log("TASKS =", tasks);
+          setTimeout(() => {
+            console.log("resuming pending tasks...");
+            client.resumePendingTasks(tasks);
+          }, 1_000);
+        },
+      },
     });
 
     client.subscribe({
+      onStatusUpdate(status) {
+        setIdle(status.idle && !hasPendingTasks.current);
+      },
       complete() {
-        console.log("WORKFLOW DONE");
+        console.log("WORKFLOW COMPLETED");
       },
     });
     return client;
@@ -45,7 +64,7 @@ export default function () {
             }}
             className="flex px-3 py-1 border border-indigo-400 bg-indigo-100 rounded"
           >
-            RUN workflow
+            {!idle ? "Running workflow" : "RUN workflow"}
           </button>
         </div>
         <div>{prompt && <prompt.Component {...prompt.props} />}</div>
