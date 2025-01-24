@@ -29,6 +29,7 @@ const GetWeather = createReagentNode({
   }),
   output: outputSchema,
   async *execute(context, input) {
+    // @ts-expect-error
     const randomData = generateMock(outputSchema);
     const weather = {
       ...randomData,
