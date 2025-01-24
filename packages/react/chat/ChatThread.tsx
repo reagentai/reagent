@@ -295,7 +295,13 @@ const ChatMessage = memo(
           )}
           {props.message.ui &&
             props.message.ui.map((ui, index) => (
-              <div className="chat-message-ui" key={index}>
+              <div
+                className="chat-message-ui group/message relative"
+                key={index}
+              >
+                {props.message.createdAt && (
+                  <CreatedAtTooltip createdAt={props.message.createdAt} />
+                )}
                 <AgentNodeRenderer
                   messageId={props.message.id}
                   store={props.store}
@@ -317,15 +323,7 @@ const ChatMessage = memo(
                 data-role={role.id}
               >
                 {props.message.createdAt && (
-                  <div className="select-none opacity-0 group-hover/message:opacity-100 absolute right-0 bottom-0 px-2 py-0.5 text-xs rounded-md bg-gray-900/70 text-gray-200 transition ease-in delay-300 duration-200">
-                    {duration
-                      .fmt(
-                        Date.now() - new Date(props.message.createdAt).getTime()
-                      )
-                      .grading([duration.day, duration.hour, duration.minute])
-                      .segments(2)}{" "}
-                    ago
-                  </div>
+                  <CreatedAtTooltip createdAt={props.message.createdAt} />
                 )}
                 <Markdown
                   remarkPlugins={props.markdown?.remarkPlugins}
@@ -351,6 +349,18 @@ const ChatMessage = memo(
     );
   }
 );
+
+const CreatedAtTooltip = (props: { createdAt: string }) => {
+  return (
+    <div className="select-none opacity-0 group-hover/message:opacity-100 absolute right-0 bottom-0 px-2 py-0.5 text-xs rounded-md bg-gray-900/70 text-gray-200 transition ease-in delay-500 duration-200">
+      {duration
+        .fmt(Date.now() - new Date(props.createdAt).getTime())
+        .grading([duration.day, duration.hour, duration.minute])
+        .segments(2)}{" "}
+      ago
+    </div>
+  );
+};
 
 export { ChatThread };
 export type { MarkdownOptions };
