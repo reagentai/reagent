@@ -20,6 +20,7 @@ const useReagentChatContext = () => useContext(ReagentChatContext)!;
 const ReagentChat = (props: {
   store: ChatStore;
   templates: WorkflowNode<any, any, any>[];
+  smoothScroll?: boolean;
   EmptyScreen?: React.ReactNode;
   Loader?: React.ReactNode;
   ChatBox?: React.ReactNode;
@@ -40,6 +41,7 @@ const ReagentChat = (props: {
           <div className="h-full text-xs">
             <ChatThread
               store={props.store}
+              smoothScroll={props.smoothScroll}
               EmptyScreen={props.EmptyScreen}
               Loader={props.Loader}
               markdown={props.markdown}

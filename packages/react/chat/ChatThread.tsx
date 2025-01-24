@@ -11,6 +11,7 @@ import { useStore } from "zustand";
 import clsx from "clsx";
 import Markdown, { Components as MarkdownComponents } from "react-markdown";
 import type { Chat } from "@reagentai/reagent/chat";
+import * as duration from "human-duration";
 
 import { AgentNodeRenderer } from "./node.js";
 import { ChatStore } from "./state.js";
@@ -24,6 +25,7 @@ type MarkdownOptions = {
 const ChatThread = memo(
   (props: {
     store: ChatStore;
+    smoothScroll?: boolean;
     EmptyScreen?: React.ReactNode;
     Loader?: React.ReactNode;
     markdown?: MarkdownOptions;
@@ -46,7 +48,7 @@ const ChatThread = memo(
         chatMessagesContainerRef.current!.scrollTo({
           top: containerHeight + 100_000,
           left: 0,
-          behavior: "smooth",
+          behavior: props.smoothScroll ? "smooth" : "instant",
         });
       }
     }, []);
@@ -214,7 +216,7 @@ const PromptComponent = memo(
 const ChatMessage = memo(
   (props: {
     message:
-      | (Pick<Chat.Message, "id" | "message" | "ui" | "role" | "node"> & {
+      | (Chat.Message & {
           Loader?: React.ReactNode;
           prompt?: undefined;
         })
@@ -226,6 +228,7 @@ const ChatMessage = memo(
           ui?: undefined;
           message?: undefined;
           node?: undefined;
+          createdAt?: undefined;
         };
     store: ChatStore;
     showRole: boolean;
@@ -308,11 +311,22 @@ const ChatMessage = memo(
               <div
                 ref={markdownRef}
                 className={clsx(
-                  "chat-message-content prose select-text",
+                  "chat-message-content group/message relative prose select-text",
                   classNames.messageContent
                 )}
                 data-role={role.id}
               >
+                {props.message.createdAt && (
+                  <div className="select-none opacity-0 group-hover/message:opacity-100 absolute right-0 bottom-0 px-2 py-0.5 text-xs rounded-md bg-gray-900/70 text-gray-200 transition ease-in delay-300 duration-200">
+                    {duration
+                      .fmt(
+                        Date.now() - new Date(props.message.createdAt).getTime()
+                      )
+                      .grading([duration.day, duration.hour, duration.minute])
+                      .segments(2)}{" "}
+                    ago
+                  </div>
+                )}
                 <Markdown
                   remarkPlugins={props.markdown?.remarkPlugins}
                   components={props.markdown?.components}
