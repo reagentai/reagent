@@ -1,5 +1,4 @@
-import { useContext, useEffect, useMemo } from "react";
-import { useStore } from "zustand";
+import { useCallback, useContext, useEffect, useMemo, useRef } from "react";
 import type { Chat } from "@reagentai/reagent/chat";
 
 import { ChatStore } from "./state.js";
@@ -49,8 +48,11 @@ const AgentNodeRenderer = (
         },
       }}
       React={{
+        useMemo,
+        useRef,
         useContext,
         useEffect,
+        useCallback,
       }}
     />
   );

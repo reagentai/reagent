@@ -1,5 +1,3 @@
-import { NodeMetadata, StepState } from "../client.js";
-
 export namespace Context {
   export type PromptProps<Data, Value = any> = {
     render: {
@@ -10,9 +8,11 @@ export namespace Context {
     // default to true
     requiresUserInput: boolean;
     React: {
+      useMemo: any;
+      useRef: any;
+      useCallbac: any;
       useEffect: any;
       useContext: any;
-      useMemo: any;
     };
     submit(value: Value): void;
   };
