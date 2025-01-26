@@ -1,4 +1,12 @@
 export namespace Context {
+  export type React = {
+    useMemo: any;
+    useRef: any;
+    useCallbac: any;
+    useEffect: any;
+    useContext: any;
+  };
+
   export type PromptProps<Data, Value = any> = {
     render: {
       // need to pass key under render since key is a reserved React prop
@@ -7,13 +15,7 @@ export namespace Context {
     data: Data;
     // default to true
     requiresUserInput: boolean;
-    React: {
-      useMemo: any;
-      useRef: any;
-      useCallbac: any;
-      useEffect: any;
-      useContext: any;
-    };
+    React: React;
     submit(value: Value): void;
   };
 }
@@ -44,13 +46,7 @@ export type Context<
   done(): void;
   render<Data>(
     id: string,
-    Component: (props: {
-      data: Data;
-      React: {
-        useEffect: any;
-        useContext: any;
-      };
-    }) => JSX.Element,
+    Component: (props: { data: Data; React: Context.React }) => JSX.Element,
     // additional props that's passed directly to component
     // props is evaludated on the server and only value is sent
     // to the client
