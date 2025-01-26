@@ -303,18 +303,18 @@ const ChatMessage = memo(
                 className="chat-message-ui group/message relative"
                 key={index}
               >
-                {props.message.createdAt && (
-                  <CreatedAtTooltip
-                    createdAt={props.message.createdAt}
-                    showTimestamp={!!props.ui.showMessageSentTimestamp}
-                  />
-                )}
                 <AgentNodeRenderer
                   messageId={props.message.id}
                   store={props.store}
                   node={props.message.node}
                   ui={ui}
                 />
+                {props.message.createdAt && (
+                  <CreatedAtTooltip
+                    createdAt={props.message.createdAt}
+                    showTimestamp={!!props.ui.showMessageSentTimestamp}
+                  />
+                )}
               </div>
             ))}
           {
@@ -329,18 +329,18 @@ const ChatMessage = memo(
                 )}
                 data-role={role.id}
               >
-                {props.message.createdAt && (
-                  <CreatedAtTooltip
-                    createdAt={props.message.createdAt}
-                    showTimestamp={!!props.ui.showMessageSentTimestamp}
-                  />
-                )}
                 <Markdown
                   remarkPlugins={props.markdown?.remarkPlugins}
                   components={props.markdown?.components}
                 >
                   {props.message.message!.content}
                 </Markdown>
+                {props.message.createdAt && (
+                  <CreatedAtTooltip
+                    createdAt={props.message.createdAt}
+                    showTimestamp={!!props.ui.showMessageSentTimestamp}
+                  />
+                )}
               </div>
             )
           }
