@@ -280,12 +280,19 @@ const ChatMessage = memo(
         </div>
         <div
           className={clsx(
-            "chat-message flex-1 overflow-x-hidden",
+            "chat-message group/chat-message relative flex-1 overflow-x-hidden",
             classNames.message
           )}
           data-message-id={props.message.id}
           data-role={role.id}
         >
+          {props.message.createdAt && (
+            <CreatedAtTooltip
+              createdAt={props.message.createdAt}
+              showTimestamp={!!props.ui.showMessageSentTimestamp}
+              theme={props.theme}
+            />
+          )}
           {props.message.Loader && (
             <div
               className={clsx(
@@ -299,22 +306,13 @@ const ChatMessage = memo(
           )}
           {props.message.ui &&
             props.message.ui.map((ui, index) => (
-              <div
-                className="chat-message-ui group/message relative"
-                key={index}
-              >
+              <div className="chat-message-ui" key={index}>
                 <AgentNodeRenderer
                   messageId={props.message.id}
                   store={props.store}
                   node={props.message.node}
                   ui={ui}
                 />
-                {props.message.createdAt && (
-                  <CreatedAtTooltip
-                    createdAt={props.message.createdAt}
-                    showTimestamp={!!props.ui.showMessageSentTimestamp}
-                  />
-                )}
               </div>
             ))}
           {
@@ -335,12 +333,6 @@ const ChatMessage = memo(
                 >
                   {props.message.message!.content}
                 </Markdown>
-                {props.message.createdAt && (
-                  <CreatedAtTooltip
-                    createdAt={props.message.createdAt}
-                    showTimestamp={!!props.ui.showMessageSentTimestamp}
-                  />
-                )}
               </div>
             )
           }
@@ -363,9 +355,15 @@ const ChatMessage = memo(
 const CreatedAtTooltip = (props: {
   createdAt: string;
   showTimestamp: boolean;
+  theme: ReturnType<typeof useChatTheme>;
 }) => {
   return (
-    <div className="select-none opacity-0 group-hover/message:opacity-100 absolute right-0 bottom-0 px-2 py-0.5 text-xs rounded-md bg-gray-900/70 text-gray-200 transition ease-in delay-500 duration-200">
+    <div
+      className={clsx(
+        "select-none opacity-0 group-hover/chat-message:opacity-100 absolute right-0 bottom-0 px-2 py-0.5 text-xs rounded-md bg-gray-900/70 text-gray-200 transition ease-in delay-500 duration-200 z-10",
+        props.theme.classNames.timestampTooltip
+      )}
+    >
       {props.showTimestamp ? (
         <div>
           {new Date(props.createdAt).toLocaleString("en-US", {

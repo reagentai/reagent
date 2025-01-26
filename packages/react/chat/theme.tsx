@@ -17,6 +17,7 @@ type ChatTheme = {
     chatboxTextarea: string;
     chatboxButtonContainer: string;
     chatboxButton: string;
+    timestampTooltip: string;
   };
   avatars: {
     ai: React.ReactNode;
@@ -32,7 +33,7 @@ const defaultTheme: ChatTheme = {
     roleContainer: "w-8 mr-5",
     role: "mt-2 text-[0.6rem] font-medium leading-8 rounded border overflow-hidden dark:border-gray-400 text-gray-600 dark:text-gray-300",
     messageContainer: "w-full",
-    message: "space-y-2",
+    message: "",
     messageUI: "px-4 py-2",
     messageContent:
       "px-4 py-3 rounded-lg leading-6 space-y-2 tracking-[0.1px] group-has-[.user]:bg-[hsl(60_28%_95%)] dark:group-has-[.user]:bg-gray-600 dark:data-[role=user]:text-gray-100 dark:data-[role=ai]:text-gray-200",
@@ -45,6 +46,7 @@ const defaultTheme: ChatTheme = {
       "sticky top-0 flex px-2 pt-1 h-[inherit] max-h-[inherit] items-end",
     chatboxButton:
       "p-1 rounded text-white bg-indigo-500 data-[empty=true]:text-gray-500 data-[empty=true]:bg-indigo-200",
+    timestampTooltip: "",
   },
   avatars: {
     ai: "AI",
