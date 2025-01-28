@@ -88,7 +88,6 @@ const ChatCompletionWithToolCalling = createReagentNode({
     >,
     input: z.infer<typeof inputSchema>
   ) {
-    // console.log("ChatCompletionWithToolCalling tools:", input.tools);
     const config = configSchema.parse(context.config);
     const prompt = ChatPromptTemplate.fromMessages([
       [
@@ -133,7 +132,15 @@ const ChatCompletionWithToolCalling = createReagentNode({
     const res = executor.invoke(completionOptions);
 
     yield { stream };
-    const invokeContext = await res.catch((e) => e.context);
+    const invokeContext = await res.catch((e) => {
+      console.error(e);
+      // if the error has context, return context
+      // else propagate error
+      if (e.context) {
+        return e.context;
+      }
+      throw e;
+    });
 
     const response = parseStringResponse(invokeContext);
     const toolCalls = parseToolCallsResponse(invokeContext);
@@ -170,7 +177,14 @@ const ChatCompletionWithToolCalling = createReagentNode({
 
         const result2 = await chatCompletionWithToolCallResult
           .invoke(completionOptions)
-          .catch((e) => e.context);
+          .catch((e) => {
+            // if the error has context, return context
+            // else propagate error
+            if (e.context) {
+              return e.context;
+            }
+            throw e;
+          });
         const response = parseStringResponse(result2);
         const error = parseStringErrorMessage(result2);
         yield {
@@ -255,6 +269,7 @@ class ToolsProvider extends Runnable {
           tool_call_id: toolCall.id,
           role: "tool",
           name: toolCall.function.name,
+          output,
           content: typeof output == "object" ? JSON.stringify(output) : output,
         };
       })

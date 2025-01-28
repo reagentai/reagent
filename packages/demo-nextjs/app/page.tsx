@@ -10,6 +10,9 @@ const ChatAgent = () => {
   const [invokeError, setInvokeError] = useState<string | null>(null);
   const store = createChatStore(
     {
+      ui: {
+        showMessageSentTimestamp: true,
+      },
       messages: {},
       url: "/api/chat",
       templates: agent.nodes as any[],
@@ -35,7 +38,7 @@ const ChatAgent = () => {
   );
 
   return (
-    <div className="flex dark">
+    <div className="flex">
       <div className="flex-1 h-screen dark:bg-gray-800">
         <div className="flex flex-col flex-1 h-full overflow-auto">
           <ErrorBoundary fallback={<div>ERROR!</div>}>

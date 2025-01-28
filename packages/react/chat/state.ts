@@ -37,10 +37,10 @@ export type ChatState = {
   error?: string;
   resetError(): void;
   setMessages: (messages: Record<string, Chat.Message>) => void;
-  invoke: (
+  invoke: <Message extends NewMessage = NewMessage>(
     event: {
       node: { id: string };
-      input: NewMessage;
+      input: Message;
     },
     options?: {
       // workflow input
