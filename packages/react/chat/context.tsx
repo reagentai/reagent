@@ -5,6 +5,7 @@ import { ChatStore } from "./state";
 import { MarkdownOptions } from "./ChatThread";
 
 type ReagentChatContext = {
+  open?: boolean;
   store: ChatStore;
   templatesById: Record<
     string,

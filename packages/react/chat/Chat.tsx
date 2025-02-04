@@ -7,7 +7,11 @@ import { ChatStore } from "./state.js";
 import { ReagentChatContext } from "./context.js";
 
 const ReagentChat = memo(
-  (props: {
+  ({
+    templates,
+    ...props
+  }: {
+    open?: boolean;
     store: ChatStore;
     templates: WorkflowNode<any, any, any>[];
     smoothScroll?: boolean;
@@ -17,23 +21,15 @@ const ReagentChat = memo(
     markdown?: MarkdownOptions;
   }) => {
     const templatesById = useMemo(() => {
-      return props.templates.reduce((agg, curr) => {
+      return templates.reduce((agg, curr) => {
         // @ts-expect-error
         agg[curr.id] = curr;
         return agg;
       }, {});
-    }, [props.templates]);
+    }, [templates]);
 
     return (
-      <ReagentChatContext.Provider
-        value={{
-          store: props.store,
-          templatesById,
-          ChatBox: props.ChatBox,
-          Loader: props.Loader,
-          markdown: props.markdown,
-        }}
-      >
+      <ReagentChatContext.Provider value={{ templatesById, ...props }}>
         <div className="chat relative flex-1 h-full overflow-hidden">
           <div className="relative h-full min-w-[300px] overflow-hidden">
             <div className="h-full text-xs">
@@ -50,7 +46,7 @@ const ReagentChat = memo(
     );
   },
   (prev, next) => {
-    return prev.store === next.store;
+    return prev.store === next.store && prev.open === next.open;
   }
 );
 
