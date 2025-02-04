@@ -5,7 +5,7 @@ import { HiOutlinePaperAirplane } from "react-icons/hi";
 import { uniqueId } from "@reagentai/reagent/utils";
 
 import { useChatTheme } from "../../theme.js";
-import { useReagentChatContext } from "../../Chat.js";
+import { useReagentChatContext } from "../../context.js";
 
 const Chatbox = memo(() => {
   const { store } = useReagentChatContext();

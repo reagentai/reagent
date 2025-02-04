@@ -7,6 +7,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { ErrorBoundary } from "react-error-boundary";
 import { useStore } from "zustand";
 import clsx from "clsx";
 import Markdown, { Components as MarkdownComponents } from "react-markdown";
@@ -14,8 +15,9 @@ import type { Chat } from "@reagentai/reagent/chat";
 import * as duration from "human-duration";
 
 import { AgentNodeRenderer } from "./node.js";
-import { ChatState, ChatStore } from "./state.js";
+import { ChatState } from "./state.js";
 import { useChatTheme } from "./theme.js";
+import { useReagentChatContext } from "./context.js";
 
 type MarkdownOptions = {
   remarkPlugins?: any[];
@@ -23,13 +25,7 @@ type MarkdownOptions = {
 };
 
 const ChatThread = memo(
-  (props: {
-    store: ChatStore;
-    smoothScroll?: boolean;
-    EmptyScreen?: React.ReactNode;
-    Loader?: React.ReactNode;
-    markdown?: MarkdownOptions;
-  }) => {
+  (props: { smoothScroll?: boolean }) => {
     let scrolledToBottom = useRef(false);
     let chatMessagesContainerRef = useRef<HTMLDivElement>(null);
     let chatMessagesRef = useRef<HTMLDivElement>(null);
@@ -74,40 +70,34 @@ const ChatThread = memo(
               classNames.messagesContainer
             )}
           >
-            <EmptyScreen store={props.store} EmptyScreen={props.EmptyScreen} />
+            <EmptyScreen />
             <div
               ref={chatMessagesRef}
               className={clsx("chat-messages", classNames.messages)}
             >
-              <ChatMessages
-                store={props.store}
-                scrollToBottom={scrollToBottom}
-                Loader={props.Loader}
-                markdown={props.markdown}
-              />
-              <PromptComponent
-                store={props.store}
-                scrollToBottom={scrollToBottom}
-              />
-              <Error store={props.store} />
+              <ChatMessages scrollToBottom={scrollToBottom} />
+              <PromptComponent scrollToBottom={scrollToBottom} />
+              <Error />
             </div>
           </div>
         </div>
       </div>
     );
+  },
+  (prev, next) => {
+    return true;
   }
 );
 
-const EmptyScreen = (props: {
-  store: ChatStore;
-  EmptyScreen?: React.ReactNode;
-}) => {
-  const { sortedMessageIds } = useStore(props.store);
-  return <>{sortedMessageIds.length == 0 && props.EmptyScreen}</>;
+const EmptyScreen = () => {
+  const { store, EmptyScreen } = useReagentChatContext();
+  const { sortedMessageIds } = useStore(store);
+  return <>{sortedMessageIds.length == 0 && EmptyScreen}</>;
 };
 
-const Error = (props: { store: ChatStore }) => {
-  const { error } = useStore(props.store);
+const Error = () => {
+  const { store } = useReagentChatContext();
+  const { error } = useStore(store);
   return (
     <>
       {error && (
@@ -121,14 +111,14 @@ const Error = (props: { store: ChatStore }) => {
 
 const ChatMessages = memo(
   (props: {
-    store: ChatStore;
+    // store: ChatStore;
     scrollToBottom: () => void;
-    Loader?: React.ReactNode;
-    markdown?: MarkdownOptions;
+    // Loader?: React.ReactNode;
+    // markdown?: MarkdownOptions;
   }) => {
+    const { store, Loader } = useReagentChatContext();
     const theme = useChatTheme();
-    const { messages, sortedMessageIds, inflightRequest, prompt, ui } =
-      useStore(props.store);
+    const { messages, sortedMessageIds, ui } = useStore(store);
     const sortedMessages = useMemo(() => {
       return sortedMessageIds.map((id) => messages[id]);
     }, [messages, sortedMessageIds]);
@@ -152,69 +142,77 @@ const ChatMessages = memo(
                 key={message.id}
                 ui={ui}
                 message={message}
-                store={props.store}
                 showRole={
                   index == 0 || sortedMessages[index - 1].role != message.role
                 }
                 theme={theme}
-                markdown={props.markdown}
               />
             );
           })}
-        {props.Loader &&
-          inflightRequest &&
-          !inflightRequest.responseReceived &&
-          !(prompt && prompt.props.requiresUserInput) && (
-            <ChatMessage
-              ui={ui}
-              message={{
-                id: "loading",
-                role: "ai",
-                Loader: props.Loader,
-              }}
-              store={props.store}
-              showRole={true}
-              theme={theme}
-              markdown={props.markdown}
-            />
-          )}
+
+        <InflightMessageLoader />
       </>
     );
   }
 );
 
-const PromptComponent = memo(
-  (props: { store: ChatStore; scrollToBottom: () => void }) => {
-    const prompt = useStore(props.store, (s) => s.prompt);
-    const ui = useStore(props.store, (s) => s.ui);
+const InflightMessageLoader = memo(() => {
+  const { store, Loader } = useReagentChatContext();
+  const theme = useChatTheme();
+  const { inflightRequest, prompt, ui } = useStore(store);
 
-    const theme = useChatTheme();
-    const message = useMemo(() => {
-      return {
-        id: "prompt",
-        role: "ai",
-        prompt,
-      };
-    }, [prompt]);
-
-    useEffect(() => {
-      props.scrollToBottom();
-    }, [prompt]);
-
-    if (!prompt?.Component) {
-      return null;
-    }
+  if (
+    Loader &&
+    inflightRequest &&
+    !inflightRequest.responseReceived &&
+    !(prompt && prompt.props.requiresUserInput)
+  ) {
     return (
       <ChatMessage
         ui={ui}
-        message={message as any}
-        store={undefined!}
-        showRole={prompt.props.requiresUserInput}
+        message={{
+          id: "loading",
+          role: "ai",
+          Loader,
+        }}
+        showRole={true}
         theme={theme}
       />
     );
   }
-);
+  return null;
+});
+
+const PromptComponent = memo((props: { scrollToBottom: () => void }) => {
+  const { store } = useReagentChatContext();
+  const prompt = useStore(store, (s) => s.prompt);
+  const ui = useStore(store, (s) => s.ui);
+
+  const theme = useChatTheme();
+  const message = useMemo(() => {
+    return {
+      id: "prompt",
+      role: "ai",
+      prompt,
+    };
+  }, [prompt]);
+
+  useEffect(() => {
+    props.scrollToBottom();
+  }, [prompt]);
+
+  if (!prompt?.Component) {
+    return null;
+  }
+  return (
+    <ChatMessage
+      ui={ui}
+      message={message as any}
+      showRole={prompt.props.requiresUserInput}
+      theme={theme}
+    />
+  );
+});
 
 const ChatMessage = memo(
   (props: {
@@ -234,11 +232,10 @@ const ChatMessage = memo(
           createdAt?: undefined;
         };
     ui: ChatState["ui"];
-    store: ChatStore;
     showRole: boolean;
     theme: ReturnType<typeof useChatTheme>;
-    markdown?: MarkdownOptions;
   }) => {
+    const { markdown } = useReagentChatContext();
     const theme = props.theme;
     const { classNames } = theme;
     const markdownRef = useRef<HTMLDivElement>(null);
@@ -307,12 +304,19 @@ const ChatMessage = memo(
           {props.message.ui &&
             props.message.ui.map((ui, index) => (
               <div className="chat-message-ui" key={index}>
-                <AgentNodeRenderer
-                  messageId={props.message.id}
-                  store={props.store}
-                  node={props.message.node}
-                  ui={ui}
-                />
+                <ErrorBoundary
+                  fallback={
+                    <div className="py-3 px-3 rounded-md text-red-700 border border-gray-100">
+                      Something went wrong
+                    </div>
+                  }
+                >
+                  <AgentNodeRenderer
+                    messageId={props.message.id}
+                    node={props.message.node}
+                    ui={ui}
+                  />
+                </ErrorBoundary>
               </div>
             ))}
           {
@@ -328,8 +332,8 @@ const ChatMessage = memo(
                 data-role={role.id}
               >
                 <Markdown
-                  remarkPlugins={props.markdown?.remarkPlugins}
-                  components={props.markdown?.components}
+                  remarkPlugins={markdown?.remarkPlugins}
+                  components={markdown?.components}
                 >
                   {props.message.message!.content}
                 </Markdown>
@@ -360,7 +364,7 @@ const CreatedAtTooltip = (props: {
   return (
     <div
       className={clsx(
-        "select-none opacity-0 group-hover/chat-message:opacity-100 absolute right-0 bottom-0 px-2 py-0.5 text-xs rounded-md bg-gray-900/70 text-gray-200 transition ease-in delay-500 duration-200 z-10",
+        "select-none pointer-events-none opacity-0 group-hover/chat-message:opacity-100 absolute right-0 bottom-0 px-2 py-0.5 text-xs rounded-md bg-gray-900/70 text-gray-200 transition ease-in delay-500 duration-200 z-10",
         props.theme.classNames.timestampTooltip
       )}
     >
